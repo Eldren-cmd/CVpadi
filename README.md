@@ -30,6 +30,7 @@ Current milestone: Phase 1 foundation through auth, the conversational CV builde
 - NYSC guide hub at `/nysc` with evergreen pages and email-verified PPA company submissions
 - CV version timeline and forking dashboard at `/dashboard/versions`
 - Referral landing at `/ref/[code]` with first-view sharing and auto-applied account credits
+- Supabase Edge Function scraper at `supabase/functions/scrape-jobs` for legal job sources only
 
 ## Local Development
 
@@ -81,3 +82,7 @@ Completed:
 - The delayed email processor expects `EMAIL_SEQUENCE_CRON_SECRET` and is designed to be invoked by the `supabase/functions/process-email-sequences` wrapper on an hourly cron.
 - Run `supabase/migrations/202603030004_cv_versioning.sql` before testing the version timeline and fork flow.
 - Run `supabase/migrations/202603030005_referral_system.sql` before testing referral checkout crediting.
+- Run `supabase/migrations/202603030006_job_scraper_source_index.sql` before testing job imports.
+- Set `RELIEFWEB_APPNAME` in your Supabase function secrets. ReliefWeb's v2 API now requires a pre-approved appname.
+- Optional extra sources go in `JOB_SCRAPER_SOURCES_JSON` and must stay within the legal-source rules from Checkpoint 4.
+- Schedule the deployed `scrape-jobs` Edge Function daily at `6:00 AM WAT`.

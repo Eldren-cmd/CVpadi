@@ -19,6 +19,7 @@ const foundationChecklist = [
   "Free feature F6 is live: the NYSC hub now covers CV guidance, PPA company research, and after-service career planning.",
   "Free feature F7 is live: every builder save now writes a timeline snapshot and older versions can be forked into new CV branches.",
   "Free feature F8 is live: the first completed CV view now combines share and referral prompts, and verified referred payments credit the referrer automatically.",
+  "Phase 2.1 is live: a Supabase Edge Function now scrapes legal job sources only, checks robots.txt, and upserts jobs by source URL.",
 ];
 
 const deploymentReminders = [
@@ -40,6 +41,8 @@ const envVars = [
   "EMAIL_SEQUENCE_CRON_SECRET",
   "NEXT_PUBLIC_RECAPTCHA_SITE_KEY",
   "RECAPTCHA_SECRET_KEY",
+  "RELIEFWEB_APPNAME",
+  "JOB_SCRAPER_SOURCES_JSON",
   "NEXT_PUBLIC_APP_URL",
 ];
 
