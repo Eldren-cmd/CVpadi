@@ -22,6 +22,8 @@ const foundationChecklist = [
   "Phase 2.1 is now aligned to v4: the scraper loads stable sources from job_sources, corporate sources from JOB_SCRAPER_SOURCES_JSON, checks robots.txt, and auto-disables failing stable sources.",
   "Checkpoint 5 is now wired: verified payments enqueue a Claude Haiku enhancement pass that regenerates updated assets and emails the refreshed files off the payment critical path.",
   "Phase 2.2 is live on the backend: daily weighted job matching now persists only scores >= 40 and sends one top-3 digest at 8am WAT.",
+  "Phase 2.3 is live: the authenticated dashboard now unifies CV access, job matches, tracker state, profile nudges, and notification controls across desktop and mobile navigation.",
+  "Phase 2.4 guardrails are live: matched job details now require auth, are rate-limited, and support honeypot-account flagging while the preference centre handles less-often, jobs-only, and unsubscribe-all retention controls.",
 ];
 
 const deploymentReminders = [
@@ -63,14 +65,15 @@ export default function Home() {
             CVPadi
           </p>
           <h1 className="mt-3 max-w-2xl font-heading text-4xl leading-tight text-foreground sm:text-5xl">
-            Auth, the CV builder, delivery, the queued Claude worker, and the first v4 Phase 2 matching slice are now wired.
+            Auth, the CV builder, delivery, the queued Claude worker, and the current v4 Phase 2 dashboard and guardrail slices are now wired.
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--ink-light)] sm:text-lg">
             The app now has Sentry, Supabase auth, a protected conversational builder,
             local recovery logic, CV scoring, public free-feature surfaces, a hardened
             Paystack payment flow, private delivery assets, a queued Claude enhancement
             path that stays off the webhook critical path, the two-tier legal-source
-            job scraper, and the weighted daily top-3 matching digest required by v4.
+            job scraper, the weighted daily top-3 matching digest, the authenticated
+            dashboard, and the Phase 2 loophole fixes required by v4.
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <a
@@ -90,6 +93,12 @@ export default function Home() {
               href="/salary"
             >
               Salary database
+            </a>
+            <a
+              className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"
+              href="/dashboard"
+            >
+              Dashboard
             </a>
             <a
               className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"

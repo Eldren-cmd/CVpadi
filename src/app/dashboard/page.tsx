@@ -324,7 +324,7 @@ export default async function DashboardPage() {
                       {match.clicked ? "clicked" : match.notified ? "emailed" : "new"}
                     </span>
                     {match.jobs?.source_url ? (
-                      <JobMatchLink jobId={match.job_id} sourceUrl={match.jobs.source_url} />
+                      <JobMatchLink jobId={match.job_id} />
                     ) : (
                       <span className="text-xs text-[var(--ink-light)]">No source link yet</span>
                     )}
@@ -493,6 +493,14 @@ export default async function DashboardPage() {
                     ? "Reduced"
                     : "On"
               }
+            />
+            <NotificationRow
+              label="Email verification"
+              value={user.email_confirmed_at ? "Verified" : "Check your inbox"}
+            />
+            <NotificationRow
+              label="Phone on CV"
+              value={cvFormData?.phone ? "Added" : "Optional but recommended"}
             />
           </div>
 

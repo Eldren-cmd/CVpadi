@@ -1,6 +1,6 @@
 # CVPadi
 
-Current milestone: Phase 1 foundation through auth, the conversational CV builder, the Paystack payment flow, server-side CV delivery, the queued Claude enhancement worker, and the first live Phase 2 backend slice. The repo now includes Supabase runtime integration, Sentry wiring, auth flows, the draft-saving build wizard, verified Paystack routes, PDF/JPG asset generation, Resend-based delivery, the v4 off-path AI refresh flow, and the weighted job-matching processor.
+Current milestone: Phase 1 foundation through auth, the conversational CV builder, the Paystack payment flow, server-side CV delivery, the queued Claude enhancement worker, and the current live Phase 2 dashboard and guardrail slices. The repo now includes Supabase runtime integration, Sentry wiring, auth flows, the draft-saving build wizard, verified Paystack routes, PDF/JPG asset generation, Resend-based delivery, the v4 off-path AI refresh flow, the weighted job-matching processor, the authenticated dashboard home, and the Phase 2 loophole fixes around protected job access.
 
 ## Included
 
@@ -33,6 +33,8 @@ Current milestone: Phase 1 foundation through auth, the conversational CV builde
 - Supabase Edge Function scraper at `supabase/functions/scrape-jobs` for legal job sources only, using v4's two-tier source model
 - Background Claude enhancement queue with the protected processor route at `/api/ai-enhancement/process` and the Supabase wrapper at `supabase/functions/process-ai-queue`
 - Weighted job-match processor at `/api/job-matches/process` with the Supabase wrapper at `supabase/functions/process-job-matches`
+- Authenticated dashboard home at `/dashboard` with desktop sidebar and mobile bottom navigation
+- Authenticated job-detail route at `/jobs/[jobId]` backed by the rate-limited `/api/jobs/[jobId]` endpoint
 
 ## Local Development
 
@@ -53,7 +55,9 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - `/check` public CV score checker
 - `/salary` public salary database
 - `/dashboard/tracker` protected application tracker
+- `/dashboard` protected dashboard home
 - `/dashboard/versions` protected CV version timeline and forking
+- `/jobs/[jobId]` authenticated matched-job details
 - `/ref/[code]` referral landing route that stores attribution before auth/build
 - `/cv-tips/[industry]` static industry CV tips pages
 - `/nysc` hub with `/nysc/cv-guide`, `/nysc/ppa-companies`, and `/nysc/after-nysc`
@@ -100,3 +104,5 @@ Completed:
 - The automated scraper schedule is `6:00 AM WAT` (`0 5 * * *` UTC).
 - Verified payments now enqueue a separate Claude Haiku enhancement pass that rewrites the objective, suggests missing skills, regenerates delivery assets, and emails the refreshed files without blocking the payment webhook.
 - Daily job matches now use the v4 weighted formula: industry 30, location 25, experience 25, skills overlap up to 20. Only matches scoring `>= 40` are persisted in `job_matches`.
+- Run `supabase/migrations/202603030012_phase2_loophole_fixes.sql` before testing honeypot job flagging and the authenticated job-details flow.
+- Job details now require authentication, are rate-limited at 10 requests per minute per IP, and only resolve for jobs already matched to the current user.
