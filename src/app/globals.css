@@ -25,6 +25,9 @@
   --radius-badge: 4px;
   --shadow-card: 0 1px 4px rgba(0, 0, 0, 0.06);
   --shadow-elevated: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --font-heading: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  --font-body: Aptos, "Avenir Next", "Segoe UI", sans-serif;
+  --font-mono: "Cascadia Code", Consolas, "SFMono-Regular", monospace;
 }
 
 * {

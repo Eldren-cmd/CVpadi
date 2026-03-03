@@ -26,7 +26,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 Complete these before writing any Supabase runtime code:
 
 1. Create the Supabase project.
-2. Add `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to `.env.local`.
+2. Add `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to `.env.local`.
 3. Run `supabase/migrations/202603030001_checkpoint1_schema.sql` in the Supabase SQL Editor.
 4. Enable Email auth, magic links, and Google OAuth in Supabase Auth settings.
 5. Create the private `cv-assets` storage bucket.
