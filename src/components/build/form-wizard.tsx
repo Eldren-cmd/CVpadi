@@ -17,6 +17,7 @@ import { computeCVScore } from "@/lib/cv/score";
 import type { CVFormData, SyncStatus } from "@/lib/cv/types";
 import { isAtLeast13, nigerianPhoneRegex } from "@/lib/cv/validation";
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import { PaymentPanel } from "./payment-panel";
 import { ScoreDial } from "./score-dial";
 import { Field, inputClassName, RepeaterStep, StepLabel, SyncIndicator, TagStep } from "./wizard-ui";
 
@@ -45,13 +46,17 @@ type Errors = Record<string, string>;
 export function FormWizard({
   initialCvId,
   initialDraft,
+  initialPaymentReference,
   initialUpdatedAt,
+  isPaid,
   userId,
   userEmail,
 }: {
   initialCvId: string;
   initialDraft: CVFormData;
+  initialPaymentReference?: string | null;
   initialUpdatedAt: string;
+  isPaid: boolean;
   userId: string;
   userEmail: string;
 }) {
@@ -249,7 +254,14 @@ export function FormWizard({
         </div>
       </section>
 
-      <ScoreDial onJump={setStep} score={scoreResult.score} suggestions={scoreResult.suggestions} />
+      <div className="grid gap-6">
+        <ScoreDial onJump={setStep} score={scoreResult.score} suggestions={scoreResult.suggestions} />
+        <PaymentPanel
+          cvId={cvId}
+          initialPaymentReference={initialPaymentReference}
+          isPaid={isPaid}
+        />
+      </div>
     </div>
   );
 

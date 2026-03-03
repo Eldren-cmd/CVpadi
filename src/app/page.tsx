@@ -4,14 +4,16 @@ const foundationChecklist = [
   "Login supports email and password, magic link, and Google sign-in.",
   "The /build wizard saves drafts to Supabase on step transitions and keeps a local recovery copy.",
   "CV score suggestions, restore-banner logic, and visible sync-state feedback are active.",
+  "Paystack initialize, status, and webhook routes are wired with server-side amount checks.",
+  "The builder waits for verified webhook confirmation before treating a payment as unlocked.",
 ];
 
-const paystackCheckpointSteps = [
-  "Create the Paystack account and open API Keys and Webhooks.",
-  "Copy the public key into NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY in .env.local.",
-  "Copy the secret key into PAYSTACK_SECRET_KEY in .env.local.",
-  "Leave the secret key server-only and do not write payment code before those values exist.",
-  "Resume implementation only after Setup Checkpoint 2 is complete.",
+const resendCheckpointSteps = [
+  "Create the Resend account and verify your email.",
+  "Create RESEND_API_KEY and add it to .env.local.",
+  "Set EMAIL_FROM in .env.local.",
+  "Verify your sending domain or use the Resend test sender during development.",
+  "Resume implementation only after Setup Checkpoint 3 is complete.",
 ];
 
 const envVars = [
@@ -21,6 +23,8 @@ const envVars = [
   "SUPABASE_SERVICE_ROLE_KEY",
   "NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY",
   "PAYSTACK_SECRET_KEY",
+  "RESEND_API_KEY",
+  "EMAIL_FROM",
   "NEXT_PUBLIC_APP_URL",
 ];
 
@@ -36,12 +40,12 @@ export default function Home() {
             CVPadi
           </p>
           <h1 className="mt-3 max-w-2xl font-heading text-4xl leading-tight text-foreground sm:text-5xl">
-            Auth and the CV builder core are in place. Payments are paused at Checkpoint 2.
+            Auth, the CV builder, and Paystack are in place. Delivery is paused at Checkpoint 3.
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--ink-light)] sm:text-lg">
             The app now has Sentry, Supabase auth, a protected conversational builder,
-            local recovery logic, and CV scoring. Payment and delivery flows have not been
-            started yet because the next blocker is Paystack setup.
+            local recovery logic, CV scoring, and server-verified Paystack payment flow.
+            PDF and email delivery remain blocked until Resend is configured.
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <a
@@ -77,11 +81,11 @@ export default function Home() {
           <section className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
             <h2 className="font-heading text-2xl text-foreground">Stop line</h2>
             <p className="mt-4 text-sm leading-6 text-[var(--ink-light)] sm:text-base">
-              Resume only after the Paystack keys exist locally. No payment modal, webhook,
-              or unlock logic should be added before Setup Checkpoint 2 is complete.
+              Resume only after the Resend keys and sender identity exist locally. Email and
+              PDF delivery should not be added before Setup Checkpoint 3 is complete.
             </p>
             <ol className="mt-4 grid gap-3 text-sm leading-6 text-[var(--ink-light)] sm:text-base">
-              {paystackCheckpointSteps.map((item, index) => (
+              {resendCheckpointSteps.map((item, index) => (
                 <li
                   key={item}
                   className="rounded-[var(--radius-input)] border border-[var(--border-light)] bg-white/70 px-4 py-3"
@@ -98,12 +102,12 @@ export default function Home() {
             <div>
               <h2 className="font-heading text-2xl text-foreground">Current env surface</h2>
               <p className="mt-2 text-sm leading-6 text-[var(--ink-light)] sm:text-base">
-                These variables are expected by the current foundation. Paystack stays as the
-                next unfulfilled checkpoint.
+                These variables are expected by the current foundation. Resend is the next
+                unfulfilled checkpoint.
               </p>
             </div>
             <span className="inline-flex min-h-11 items-center rounded-full bg-[var(--gold-light)] px-4 text-sm font-medium text-[var(--gold)]">
-              Waiting on Paystack
+              Waiting on Resend
             </span>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">

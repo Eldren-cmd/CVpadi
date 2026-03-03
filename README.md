@@ -1,6 +1,6 @@
 # CVPadi
 
-Current milestone: Phase 1 foundation through auth and the conversational CV builder. This repo now includes Supabase runtime integration, Sentry wiring, auth flows, and the draft-saving build wizard. Payment, email delivery, and other third-party-dependent features are intentionally paused at Setup Checkpoint 2.
+Current milestone: Phase 1 foundation through auth, the conversational CV builder, and the Paystack payment flow. The repo now includes Supabase runtime integration, Sentry wiring, auth flows, the draft-saving build wizard, and server-verified Paystack routes. PDF and email delivery are intentionally paused at Setup Checkpoint 3.
 
 ## Included
 
@@ -12,6 +12,8 @@ Current milestone: Phase 1 foundation through auth and the conversational CV bui
 - Supabase browser/server clients and auth-refresh middleware
 - `/login` with email-password, magic-link, and Google sign-in
 - `/build` conversational CV wizard with local backup, restore banner, sync indicator, and score suggestions
+- `/api/paystack/initialize`, `/api/paystack/status/[reference]`, and `/api/paystack/webhook`
+- Builder-side Paystack panel that waits for server confirmation before showing the CV as unlocked
 
 ## Local Development
 
@@ -38,22 +40,23 @@ Completed:
 
 1. Setup Checkpoint 0: Sentry
 2. Setup Checkpoint 1: Supabase
+3. Setup Checkpoint 2: Paystack
 
-## Setup Checkpoint 2
+## Setup Checkpoint 3
 
-Stop here before writing any Paystack payment integration. Complete these first:
+Stop here before writing any email delivery code. Complete these first:
 
-1. Go to `https://paystack.com` and create an account.
-2. Complete business verification if Paystack requires it for live usage.
-3. Open `Settings -> API Keys & Webhooks`.
-4. Copy the public key into `.env.local` as `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=`.
-5. Copy the secret key into `.env.local` as `PAYSTACK_SECRET_KEY=`.
-6. Create a webhook endpoint placeholder for the future app URL.
-7. Keep the secret key server-only and never expose it in client code.
-8. Confirm both keys are present in `.env.local` before any payment code is added.
+1. Go to `https://resend.com` and create an account.
+2. Verify your email.
+3. Open `API Keys` and create a key named `cvpadi`.
+4. Copy the key into `.env.local` as `RESEND_API_KEY=`.
+5. Set `EMAIL_FROM=` in `.env.local`.
+6. Add and verify your sending domain, or use Resend's test sender for early development.
+7. Do not write email-sending code until those values are ready.
 
 ## Notes
 
 - The schema migration includes RLS, core policies, timestamp triggers, the atomic free-generation counter function, and the AI enhancement queue table.
 - The build wizard writes to `localStorage` only as a crash-recovery backup. Supabase remains the primary store.
-- Payment, PDF delivery, and email flows are not started yet because those are gated behind later setup checkpoints.
+- The Paystack webhook verifies HMAC SHA-512 signatures and checks the amount against a server-side price constant before unlocking a CV.
+- PDF delivery and email sending are not started yet because those are gated behind the Resend checkpoint.

@@ -73,7 +73,7 @@ export function ScoreDial({
                 onClick={() => onJump(suggestion.step)}
                 type="button"
               >
-                Fix this →
+                Fix this {"->"}
               </button>
             </div>
           ))

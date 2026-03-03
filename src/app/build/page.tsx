@@ -5,7 +5,11 @@ import type { CVFormData } from "@/lib/cv/types";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
-export default async function BuildPage() {
+export default async function BuildPage({
+  searchParams,
+}: {
+  searchParams?: { reference?: string };
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -17,7 +21,7 @@ export default async function BuildPage() {
 
   const { data: existingDraft } = await supabase
     .from("cvs")
-    .select("id, form_data, updated_at")
+    .select("id, form_data, is_paid, updated_at")
     .eq("user_id", user.id)
     .order("updated_at", { ascending: false })
     .limit(1)
@@ -32,7 +36,7 @@ export default async function BuildPage() {
         user_id: user.id,
         form_data: createDefaultCVFormData(user.email ?? ""),
       })
-      .select("id, form_data, updated_at")
+      .select("id, form_data, is_paid, updated_at")
       .single();
 
     if (error) {
@@ -54,7 +58,9 @@ export default async function BuildPage() {
           <FormWizard
             initialCvId={draft.id}
             initialDraft={initialDraft}
+            initialPaymentReference={searchParams?.reference ?? null}
             initialUpdatedAt={draft.updated_at}
+            isPaid={draft.is_paid}
             userEmail={user.email ?? ""}
             userId={user.id}
           />
