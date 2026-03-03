@@ -13,8 +13,17 @@ import {
   ResumeSavedEmail,
 } from "./templates";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
+function getResendClient() {
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("RESEND_API_KEY is missing.");
+  }
+
+  return new Resend(apiKey);
+}
 
 type SequenceType = "abandonment" | "post_payment";
 
@@ -518,6 +527,8 @@ async function sendEmail({
   react: ReactElement;
   subject: string;
 }) {
+  const resend = getResendClient();
+
   await resend.emails.send({
     from: process.env.EMAIL_FROM!,
     react,
