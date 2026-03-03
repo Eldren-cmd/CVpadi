@@ -358,6 +358,8 @@ export function FormWizard({
           draft={draft}
           honeypot={honeypot}
           initialFreePreviewsUsed={initialFreePreviewsUsed}
+          isComplete={scoreResult.suggestions.length === 0}
+          score={scoreResult.score}
         />
         <PaymentPanel
           cvId={cvId}

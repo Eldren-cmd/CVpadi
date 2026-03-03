@@ -22,6 +22,7 @@ Current milestone: Phase 1 foundation through auth, the conversational CV builde
 - Scheduled sequence processor at `/api/email-sequences/process`
 - Free preview route at `/api/cv/preview/[cvId]` rendered server-side into a watermarked 600px canvas preview
 - FingerprintJS soft-signal tracking, disposable-email blocking, edge preview rate limiting, and the atomic free-preview counter
+- CV score share card route at `/api/og/cv-score?score=87&name=Adaeze`, triggered after the first completed preview
 
 ## Local Development
 

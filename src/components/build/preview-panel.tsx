@@ -3,6 +3,7 @@
 import { FREE_PREVIEW_LIMIT } from "@/lib/cv/constants";
 import type { CVFormData } from "@/lib/cv/types";
 import { useRef, useState } from "react";
+import { ScoreSharePrompt } from "./score-share-prompt";
 
 declare global {
   interface Window {
@@ -19,18 +20,23 @@ export function PreviewPanel({
   draft,
   honeypot,
   initialFreePreviewsUsed,
+  isComplete,
+  score,
 }: {
   cvId: string;
   deviceFingerprint: string | null;
   draft: CVFormData;
   honeypot: string;
   initialFreePreviewsUsed: number;
+  isComplete: boolean;
+  score: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [remainingPreviews, setRemainingPreviews] = useState(
     Math.max(0, FREE_PREVIEW_LIMIT - initialFreePreviewsUsed),
   );
+  const [showSharePrompt, setShowSharePrompt] = useState(false);
   const [statusMessage, setStatusMessage] = useState(
     "Free preview is watermarked over your name, phone, and email. It is capped at 600px and prints badly by design.",
   );
@@ -78,6 +84,11 @@ export function PreviewPanel({
         blob: previewBlob,
         canvas: canvasRef.current,
       });
+      maybeShowSharePrompt({
+        cvId,
+        isComplete,
+        onShow: () => setShowSharePrompt(true),
+      });
 
       setStatusMessage(
         "Watermarked preview ready. It sits on a canvas, not an image tag, and stays intentionally low-resolution.",
@@ -108,6 +119,15 @@ export function PreviewPanel({
       </div>
 
       <p className="mt-4 text-sm leading-6 text-[var(--ink-light)]">{statusMessage}</p>
+      {showSharePrompt ? (
+        <div className="mt-4">
+          <ScoreSharePrompt
+            name={draft.fullName || "Nigerian Candidate"}
+            onDismiss={() => setShowSharePrompt(false)}
+            score={score}
+          />
+        </div>
+      ) : null}
 
       <div className="mt-5 flex flex-col gap-3">
         <button
@@ -134,6 +154,28 @@ export function PreviewPanel({
       </div>
     </section>
   );
+}
+
+function maybeShowSharePrompt({
+  cvId,
+  isComplete,
+  onShow,
+}: {
+  cvId: string;
+  isComplete: boolean;
+  onShow: () => void;
+}) {
+  if (!isComplete) {
+    return;
+  }
+
+  const storageKey = `cvpadi_score_share_prompt_${cvId}`;
+  if (localStorage.getItem(storageKey)) {
+    return;
+  }
+
+  localStorage.setItem(storageKey, "shown");
+  onShow();
 }
 
 async function drawPreviewOnCanvas({

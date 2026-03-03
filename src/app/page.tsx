@@ -11,6 +11,7 @@ const foundationChecklist = [
   "Phase 1 email sequences now schedule abandoned-draft follow-ups and post-download reminders.",
   "A preference centre and hourly email-sequence processor route are scaffolded for the next cron step.",
   "Phase 1 loophole fixes now include a server-rendered free preview canvas, FingerprintJS soft-signal tracking, and atomic free-preview limits.",
+  "Free feature F1 is live: CV score share cards now render through a server OG route and trigger after the first completed preview.",
 ];
 
 const deploymentReminders = [
