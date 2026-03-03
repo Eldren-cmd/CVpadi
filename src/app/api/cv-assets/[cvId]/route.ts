@@ -1,3 +1,4 @@
+import { generateAndDeliverCvAssets } from "@/lib/delivery/cv-delivery";
 import { getSignedCvAssetLinks } from "@/lib/delivery/cv-assets";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
@@ -28,7 +29,7 @@ export async function GET(
     return NextResponse.json({ error: "CV not found." }, { status: 404 });
   }
 
-  if (!cv.is_paid || !cv.pdf_fingerprint) {
+  if (!cv.is_paid) {
     return NextResponse.json(
       { error: "Delivery assets are not ready yet." },
       { status: 409 },
@@ -36,6 +37,13 @@ export async function GET(
   }
 
   try {
+    if (!cv.pdf_fingerprint) {
+      await generateAndDeliverCvAssets({
+        cvId: params.cvId,
+        userId: user.id,
+      });
+    }
+
     const links = await getSignedCvAssetLinks({
       cvId: params.cvId,
       userId: user.id,

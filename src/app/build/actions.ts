@@ -54,19 +54,16 @@ export async function saveCvDraftAction({
 
   const scoreResult = computeCVScore(formData);
 
-  const { data, error } = await supabase
-    .from("cvs")
-    .update({
-      form_data: formData,
-      cv_score: scoreResult.score,
-    })
-    .eq("id", cvId)
-    .eq("user_id", user.id)
-    .select("id, updated_at")
-    .single();
+  const { data, error } = await supabase.rpc("save_cv_version_snapshot", {
+    p_cv_id: cvId,
+    p_cv_score: scoreResult.score,
+    p_form_data: formData,
+  });
 
-  if (error) {
-    throw new Error(error.message);
+  const savedVersion = Array.isArray(data) ? data[0] : null;
+
+  if (error || !savedVersion) {
+    throw new Error(error?.message ?? "Unable to save this CV version right now.");
   }
 
   await supabase
@@ -98,8 +95,8 @@ export async function saveCvDraftAction({
   }
 
   return {
-    id: data.id,
-    updatedAt: data.updated_at,
+    id: savedVersion.id,
+    updatedAt: savedVersion.updated_at,
     score: scoreResult.score,
     suggestions: scoreResult.suggestions,
   };

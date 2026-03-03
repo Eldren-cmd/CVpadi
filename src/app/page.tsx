@@ -17,6 +17,7 @@ const foundationChecklist = [
   "Free feature F4 is live: registered users now get a kanban application tracker with an interview-stage CV update prompt.",
   "Free feature F5 is live: static industry CV tips pages now pre-select the build flow via URL params.",
   "Free feature F6 is live: the NYSC hub now covers CV guidance, PPA company research, and after-service career planning.",
+  "Free feature F7 is live: every builder save now writes a timeline snapshot and older versions can be forked into new CV branches.",
 ];
 
 const deploymentReminders = [
@@ -91,6 +92,12 @@ export default function Home() {
               href="/nysc"
             >
               NYSC hub
+            </a>
+            <a
+              className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"
+              href="/dashboard/versions"
+            >
+              CV versions
             </a>
             <a
               className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"
