@@ -14,6 +14,7 @@ const foundationChecklist = [
   "Free feature F1 is live: CV score share cards now render through a server OG route and trigger after the first completed preview.",
   "Free feature F2 is live: a public CV checker now scores pasted text or uploaded PDFs and hands captured email into the free build flow.",
   "Free feature F3 is live: the public salary page now enforces the five-submission rule and uses magic-link email verification for submissions.",
+  "Free feature F4 is live: registered users now get a kanban application tracker with an interview-stage CV update prompt.",
 ];
 
 const deploymentReminders = [
@@ -76,6 +77,12 @@ export default function Home() {
               href="/salary"
             >
               Salary database
+            </a>
+            <a
+              className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"
+              href="/dashboard/tracker"
+            >
+              Application tracker
             </a>
             <a
               className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"
