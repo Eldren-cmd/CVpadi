@@ -33,7 +33,8 @@ type HtmlSourceConfig = {
   url: string;
 };
 
-const SUPABASE_URL = Deno.env.get("NEXT_PUBLIC_SUPABASE_URL");
+const SUPABASE_URL =
+  Deno.env.get("SUPABASE_URL") || Deno.env.get("NEXT_PUBLIC_SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const RELIEFWEB_APPNAME = Deno.env.get("RELIEFWEB_APPNAME");
 const JOB_SCRAPER_SOURCES_JSON = Deno.env.get("JOB_SCRAPER_SOURCES_JSON");
