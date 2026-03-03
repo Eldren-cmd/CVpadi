@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/nextjs";
 import { generateAndDeliverCvAssets } from "@/lib/delivery/cv-delivery";
 import { parsePaymentMetadata, verifyPaystackSignature } from "@/lib/payments/paystack";
 import type { PaymentType, PaystackChargeSuccessEvent } from "@/lib/payments/types";
+import { REFERRAL_CREDIT_KOBO } from "@/lib/referrals/constants";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
@@ -33,6 +34,14 @@ export async function POST(request: Request) {
   const cvId = typeof metadata.cvId === "string" ? metadata.cvId : null;
   const userId = typeof metadata.userId === "string" ? metadata.userId : null;
   const paymentType = isPaymentType(metadata.paymentType) ? metadata.paymentType : null;
+  const creditAppliedKobo =
+    typeof metadata.creditAppliedKobo === "number"
+      ? metadata.creditAppliedKobo
+      : Number.parseInt(String(metadata.creditAppliedKobo ?? "0"), 10) || 0;
+  const referralCodeUsed =
+    typeof metadata.referralCodeUsed === "string" && metadata.referralCodeUsed.trim()
+      ? metadata.referralCodeUsed.trim().toUpperCase()
+      : null;
 
   if (!reference || !cvId || !userId || !paymentType) {
     Sentry.captureMessage("Paystack webhook missing required metadata.", "warning");
@@ -40,7 +49,7 @@ export async function POST(request: Request) {
   }
 
   const supabase = createAdminClient();
-  const { data: existingPayment } = await supabase
+  let { data: existingPayment } = await supabase
     .from("payments")
     .select(
       "amount_kobo, credit_applied_kobo, referral_credit_kobo, referrer_user_id, status, webhook_verified",
@@ -49,8 +58,63 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (!existingPayment) {
-    Sentry.captureMessage("Paystack webhook arrived without a matching payment row.", "warning");
-    return NextResponse.json({ received: true });
+    let referrerUserId: string | null = null;
+
+    if (referralCodeUsed) {
+      const { data: referrer } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("referral_code", referralCodeUsed)
+        .neq("id", userId)
+        .maybeSingle();
+
+      referrerUserId = referrer?.id ?? null;
+    }
+
+    const { data: upsertedPayment, error: upsertError } = await supabase
+      .from("payments")
+      .upsert(
+        {
+          amount_kobo: event.data.amount,
+          base_amount_kobo: event.data.amount + creditAppliedKobo,
+          credit_applied_kobo: creditAppliedKobo,
+          currency: event.data.currency ?? "NGN",
+          cv_id: cvId,
+          payment_type: paymentType,
+          paystack_reference: reference,
+          referral_code_used: referralCodeUsed,
+          referral_credit_kobo: referrerUserId ? REFERRAL_CREDIT_KOBO : 0,
+          referrer_user_id: referrerUserId,
+          status: "success",
+          user_id: userId,
+          webhook_verified: true,
+        },
+        { onConflict: "paystack_reference" },
+      )
+      .select(
+        "amount_kobo, credit_applied_kobo, referral_credit_kobo, referrer_user_id, status, webhook_verified",
+      )
+      .single();
+
+    if (upsertError || !upsertedPayment) {
+      Sentry.withScope((scope) => {
+        scope.setTag("paystack_reference", reference);
+        scope.setTag("cv_id", cvId);
+        scope.setTag("user_id", userId);
+        Sentry.captureException(upsertError ?? new Error("Webhook upsert failed."));
+      });
+
+      return NextResponse.json({ error: "Webhook processing failed." }, { status: 500 });
+    }
+
+    Sentry.withScope((scope) => {
+      scope.setTag("paystack_reference", reference);
+      scope.setTag("cv_id", cvId);
+      scope.setTag("user_id", userId);
+      Sentry.captureMessage("Paystack webhook created a missing payment row via upsert.", "warning");
+    });
+
+    existingPayment = upsertedPayment;
   }
 
   if (event.data.amount !== existingPayment.amount_kobo) {

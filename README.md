@@ -30,7 +30,7 @@ Current milestone: Phase 1 foundation through auth, the conversational CV builde
 - NYSC guide hub at `/nysc` with evergreen pages and email-verified PPA company submissions
 - CV version timeline and forking dashboard at `/dashboard/versions`
 - Referral landing at `/ref/[code]` with first-view sharing and auto-applied account credits
-- Supabase Edge Function scraper at `supabase/functions/scrape-jobs` for legal job sources only
+- Supabase Edge Function scraper at `supabase/functions/scrape-jobs` for legal job sources only, using v4's two-tier source model
 
 ## Local Development
 
@@ -67,6 +67,7 @@ Completed:
 2. Setup Checkpoint 1: Supabase
 3. Setup Checkpoint 2: Paystack
 4. Setup Checkpoint 3: Resend
+5. Setup Checkpoint 4: Repo-side v4 scraper alignment (database migration, seed file, and two-tier scraper logic)
 
 ## Notes
 
@@ -83,6 +84,8 @@ Completed:
 - Run `supabase/migrations/202603030004_cv_versioning.sql` before testing the version timeline and fork flow.
 - Run `supabase/migrations/202603030005_referral_system.sql` before testing referral checkout crediting.
 - Run `supabase/migrations/202603030006_job_scraper_source_index.sql` before testing job imports.
-- Set `RELIEFWEB_APPNAME` in your Supabase function secrets. ReliefWeb's v2 API now requires a pre-approved appname.
-- Optional extra sources go in `JOB_SCRAPER_SOURCES_JSON` and must stay within the legal-source rules from Checkpoint 4.
-- Schedule the deployed `scrape-jobs` Edge Function daily at `6:00 AM WAT`.
+- Run `supabase/migrations/202603030007_job_sources_table.sql` and then `supabase/seed.sql` to align the database with the v4 job-source model.
+- Set `JOB_SCRAPER_SOURCES_JSON` and `SENTRY_DSN` as Supabase Edge Function secrets, then verify them with `supabase secrets list`.
+- The scraper now loads stable sources from `job_sources` and corporate sources from `JOB_SCRAPER_SOURCES_JSON`.
+- Stable sources track `last_scrape_status`, `consecutive_failures`, and auto-disable after three failed runs.
+- Schedule the deployed `scrape-jobs` Edge Function daily at `6:00 AM WAT` (`0 5 * * *` UTC).

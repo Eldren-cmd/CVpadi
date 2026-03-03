@@ -70,6 +70,22 @@ create table public.email_sequences (
   clicked boolean not null default false
 );
 
+create table public.job_sources (
+  id uuid primary key default gen_random_uuid(),
+  company text not null,
+  careers_url text not null,
+  industry text,
+  location_state text default 'Lagos',
+  source_tier text not null check (source_tier in ('stable', 'corporate', 'ngo', 'startup')),
+  scrape_selector text,
+  is_active boolean not null default true,
+  last_scraped_at timestamptz,
+  last_scrape_status text not null default 'pending' check (last_scrape_status in ('success', 'failed', 'url_changed', 'pending')),
+  consecutive_failures integer not null default 0,
+  notes text,
+  created_at timestamptz not null default now()
+);
+
 create table public.jobs (
   id uuid primary key default gen_random_uuid(),
   title text not null,
@@ -83,7 +99,7 @@ create table public.jobs (
   salary_min integer,
   salary_max integer,
   currency text not null default 'NGN',
-  source_url text,
+  source_url text unique,
   source_type text check (source_type in ('scraped', 'posted', 'partner')),
   is_active boolean not null default true,
   is_verified boolean not null default false,
@@ -174,6 +190,8 @@ create index cvs_user_id_idx on public.cvs (user_id);
 create index payments_user_id_idx on public.payments (user_id);
 create index payments_reference_idx on public.payments (paystack_reference);
 create index email_sequences_user_id_idx on public.email_sequences (user_id);
+create unique index job_sources_careers_url_idx on public.job_sources (careers_url);
+create index job_sources_active_tier_idx on public.job_sources (is_active, source_tier);
 create index jobs_active_expires_idx on public.jobs (is_active, expires_at);
 create index job_matches_user_id_idx on public.job_matches (user_id);
 create index applications_user_id_idx on public.applications (user_id);
@@ -241,6 +259,7 @@ alter table public.profiles enable row level security;
 alter table public.cvs enable row level security;
 alter table public.payments enable row level security;
 alter table public.email_sequences enable row level security;
+alter table public.job_sources enable row level security;
 alter table public.jobs enable row level security;
 alter table public.job_matches enable row level security;
 alter table public.applications enable row level security;

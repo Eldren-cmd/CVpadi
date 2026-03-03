@@ -23,23 +23,44 @@ type ScrapedJobRow = {
   title: string;
 };
 
-type HtmlSourceConfig = {
-  category?: "company" | "government" | "ngo" | "startup";
+type JobSourceRow = {
+  careers_url: string;
   company: string;
-  experienceLevel?: ExperienceLevel;
+  consecutive_failures: number | null;
+  id: string;
+  industry: string | null;
+  is_active: boolean;
+  last_scrape_status: "success" | "failed" | "url_changed" | "pending" | null;
+  location_state: string | null;
+  scrape_selector: string | null;
+  source_tier: "stable" | "corporate" | "ngo" | "startup";
+};
+
+type CorporateSourceConfig = {
+  company: string;
   industry?: string;
   locationState?: string;
+  url: string;
+};
+
+type UnifiedSource = {
+  company: string;
+  consecutiveFailures: number;
+  id: string | null;
+  industry: string | null;
+  locationState: string | null;
   name: string;
+  scrapeSelector: string | null;
+  sourceTier: "stable" | "corporate" | "ngo" | "startup";
   url: string;
 };
 
 const SUPABASE_URL =
   Deno.env.get("SUPABASE_URL") || Deno.env.get("NEXT_PUBLIC_SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const RELIEFWEB_APPNAME = Deno.env.get("RELIEFWEB_APPNAME");
 const JOB_SCRAPER_SOURCES_JSON = Deno.env.get("JOB_SCRAPER_SOURCES_JSON");
-const RELIEFWEB_LIMIT = Number.parseInt(Deno.env.get("RELIEFWEB_JOB_LIMIT") ?? "25", 10);
-const USER_AGENT = "cvpadi-job-scraper/1.0";
+const SENTRY_DSN = Deno.env.get("SENTRY_DSN");
+const USER_AGENT = "cvpadi-job-scraper/2.0";
 
 const BANNED_DOMAIN_SUFFIXES = [
   "jobberman.com",
@@ -50,17 +71,14 @@ const BANNED_DOMAIN_SUFFIXES = [
 const APPROVED_DOMAIN_SUFFIXES = [
   "gtbank.com",
   "mtn.ng",
-  "airtel.com",
-  "dangote.com",
-  "accessbankplc.com",
   "firstbanknigeria.com",
+  "dangote.com",
   "pwc.com",
   "kpmg.com",
   "deloitte.com",
   "ey.com",
-  "nestle.com",
-  "unilever.com",
-  "shell.com",
+  "nestle-cwa.com",
+  "shell.com.ng",
   "totalenergies.com",
   "cbn.gov.ng",
   "firs.gov.ng",
@@ -107,13 +125,14 @@ const NIGERIAN_STATES = [
   "Taraba",
   "Yobe",
   "Zamfara",
+  "Abuja",
   "Abuja (FCT)",
 ];
 
 Deno.serve(async () => {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     return jsonResponse(
-      { error: "NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing." },
+      { error: "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required." },
       500,
     );
   }
@@ -126,33 +145,40 @@ Deno.serve(async () => {
   });
 
   const scrapeStartedAt = new Date().toISOString();
-  const importedJobs: ScrapedJobRow[] = [];
   const skippedSources: Array<{ name: string; reason: string }> = [];
+  const importedJobs: ScrapedJobRow[] = [];
 
-  if (RELIEFWEB_APPNAME) {
-    try {
-      importedJobs.push(...await fetchReliefWebJobs({ appname: RELIEFWEB_APPNAME }));
-    } catch (error) {
-      skippedSources.push({
-        name: "ReliefWeb",
-        reason: error instanceof Error ? error.message : "ReliefWeb import failed.",
-      });
-    }
-  } else {
-    skippedSources.push({
-      name: "ReliefWeb",
-      reason: "RELIEFWEB_APPNAME is missing, so the official jobs API was skipped.",
-    });
-  }
+  const stableSources = await loadStableSources(supabase);
+  const corporateSources = getCorporateSources();
+  const allSources = [...stableSources, ...corporateSources];
 
-  for (const source of getConfiguredHtmlSources()) {
+  for (const source of allSources) {
+    const url = source.url;
+
     try {
-      importedJobs.push(...await fetchHtmlSourceJobs(source));
+      validateSourceUrl(url);
+
+      const isAlive = await verifyUrl(url);
+      if (!isAlive) {
+        skippedSources.push({
+          name: source.name,
+          reason: "URL verification failed or no longer looks like a careers page.",
+        });
+        await recordSourceFailure(supabase, source, "url_changed", url);
+        continue;
+      }
+
+      const jobs = await fetchHtmlSourceJobs(source);
+      importedJobs.push(...jobs);
+
+      await recordSourceSuccess(supabase, source);
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Source import failed.";
       skippedSources.push({
         name: source.name,
-        reason: error instanceof Error ? error.message : "HTML source import failed.",
+        reason: message,
       });
+      await recordSourceFailure(supabase, source, "failed", url, error);
     }
   }
 
@@ -179,6 +205,11 @@ Deno.serve(async () => {
     .select("id");
 
   if (error) {
+    await captureSentryException(new Error(error.message), {
+      importedAttemptCount: dedupedJobs.length,
+      stage: "jobs_upsert",
+    });
+
     return jsonResponse(
       {
         error: error.message,
@@ -196,98 +227,157 @@ Deno.serve(async () => {
   });
 });
 
-async function fetchReliefWebJobs({
-  appname,
-}: {
-  appname: string;
-}) {
-  const url = new URL("https://api.reliefweb.int/v2/jobs");
-  url.searchParams.set("appname", appname);
-  url.searchParams.set("limit", String(Math.max(1, Math.min(RELIEFWEB_LIMIT, 100))));
+async function loadStableSources(supabase: ReturnType<typeof createClient>) {
+  const { data, error } = await supabase
+    .from("job_sources")
+    .select(
+      "id, company, careers_url, industry, location_state, source_tier, scrape_selector, is_active, last_scrape_status, consecutive_failures",
+    )
+    .eq("is_active", true)
+    .order("company", { ascending: true });
 
-  const response = await fetch(url, {
-    headers: {
-      Accept: "application/json",
-      "User-Agent": USER_AGENT,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`ReliefWeb API failed with status ${response.status}.`);
+  if (error) {
+    throw new Error(error.message);
   }
 
-  const payload = (await response.json()) as {
-    data?: Array<{
-      fields?: Record<string, unknown>;
-      id?: number | string;
-    }>;
-  };
-
-  const now = new Date().toISOString();
-
-  return (payload.data ?? [])
-    .map((item) => mapReliefWebJob(item, now))
-    .filter((job): job is ScrapedJobRow => job !== null);
+  return (data ?? []).map((source) => normalizeStableSource(source as JobSourceRow));
 }
 
-function mapReliefWebJob(
-  item: {
-    fields?: Record<string, unknown>;
-    id?: number | string;
-  },
-  now: string,
-) {
-  const fields = item.fields ?? {};
-  const title = readString(fields.title);
-  if (!title) {
-    return null;
-  }
-
-  const description = sanitizeHtml(readString(fields["body-html"]) || readString(fields.body));
-  const sourceUrl =
-    readString(fields.url)
-    || normalizeReliefWebAlias(readNestedString(fields, "url_alias"))
-    || `https://reliefweb.int/job/${item.id ?? crypto.randomUUID()}`;
-  const company =
-    readNestedStringArray(fields, "source", "shortname")[0]
-    || readNestedStringArray(fields, "source", "name")[0]
-    || "ReliefWeb partner";
-  const locationText = [
-    ...readNestedStringArray(fields, "country", "name"),
-    ...readNestedStringArray(fields, "city", "name"),
-  ].join(", ");
-  const { city, state } = inferNigerianLocation(locationText);
-
-  if (!looksRelevantToNigeria(locationText) && !looksRelevantToNigeria(description || "")) {
-    return null;
-  }
-
+function normalizeStableSource(source: JobSourceRow): UnifiedSource {
   return {
-    company,
-    currency: "NGN",
-    description,
-    experience_level: inferExperienceLevel(
-      `${title} ${readNestedStringArray(fields, "career_categories", "name").join(" ")}`,
-    ),
-    expires_at: readString(fields["date.closing"]) || null,
-    industry: inferIndustry(`${title} ${description ?? ""}`),
-    is_active: true,
-    is_verified: true,
-    location_city: city,
-    location_state: state,
-    required_skills: [],
-    salary_max: null,
-    salary_min: null,
-    scraped_at: now,
-    source_type: "scraped",
-    source_url: normalizeUrl(sourceUrl),
-    title,
+    company: source.company,
+    consecutiveFailures: source.consecutive_failures ?? 0,
+    id: source.id,
+    industry: source.industry,
+    locationState: source.location_state,
+    name: source.company,
+    scrapeSelector: source.scrape_selector,
+    sourceTier: source.source_tier,
+    url: source.careers_url,
   };
 }
 
-async function fetchHtmlSourceJobs(source: HtmlSourceConfig) {
-  validateSourceUrl(source);
+function getCorporateSources() {
+  if (!JOB_SCRAPER_SOURCES_JSON) {
+    return [] as UnifiedSource[];
+  }
 
+  try {
+    const parsed = JSON.parse(JOB_SCRAPER_SOURCES_JSON) as CorporateSourceConfig[];
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed
+      .filter((item) =>
+        typeof item?.company === "string" && typeof item?.url === "string"
+      )
+      .map((item) => ({
+        company: item.company.trim(),
+        consecutiveFailures: 0,
+        id: null,
+        industry: item.industry?.trim() || null,
+        locationState: item.locationState?.trim() || null,
+        name: item.company.trim(),
+        scrapeSelector: null,
+        sourceTier: "corporate" as const,
+        url: item.url.trim(),
+      }));
+  } catch {
+    return [];
+  }
+}
+
+async function verifyUrl(url: string) {
+  try {
+    const response = await fetch(url, {
+      method: "HEAD",
+      redirect: "follow",
+      headers: {
+        "User-Agent": USER_AGENT,
+      },
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const resolvedUrl = response.url.toLowerCase();
+    return (
+      resolvedUrl.includes("career")
+      || resolvedUrl.includes("job")
+      || resolvedUrl.includes("vacancies")
+      || resolvedUrl.includes("work-with-us")
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function recordSourceSuccess(
+  supabase: ReturnType<typeof createClient>,
+  source: UnifiedSource,
+) {
+  if (!source.id) {
+    return;
+  }
+
+  await supabase
+    .from("job_sources")
+    .update({
+      consecutive_failures: 0,
+      last_scraped_at: new Date().toISOString(),
+      last_scrape_status: "success",
+    })
+    .eq("id", source.id);
+}
+
+async function recordSourceFailure(
+  supabase: ReturnType<typeof createClient>,
+  source: UnifiedSource,
+  status: "failed" | "url_changed",
+  url: string,
+  error?: unknown,
+) {
+  if (!source.id) {
+    if (error) {
+      await captureSentryException(error, { company: source.company, status, url });
+    }
+    return;
+  }
+
+  const failures = source.consecutiveFailures + 1;
+  const isActive = failures < 3;
+
+  await supabase
+    .from("job_sources")
+    .update({
+      consecutive_failures: failures,
+      is_active: isActive,
+      last_scraped_at: new Date().toISOString(),
+      last_scrape_status: status,
+    })
+    .eq("id", source.id);
+
+  if (failures >= 3) {
+    await captureSentryMessage(`Job source auto-disabled: ${source.company}`, "warning", {
+      failures,
+      sourceId: source.id,
+      status,
+      url,
+    });
+  } else if (error) {
+    await captureSentryException(error, {
+      company: source.company,
+      failures,
+      sourceId: source.id,
+      status,
+      url,
+    });
+  }
+}
+
+async function fetchHtmlSourceJobs(source: UnifiedSource) {
   const crawlRules = await getRobotsRules(source.url);
   if (!crawlRules.allowed) {
     throw new Error(`robots.txt disallows scraping ${source.url}.`);
@@ -327,7 +417,7 @@ function mapJsonLdJob({
 }: {
   job: Record<string, unknown>;
   now: string;
-  source: HtmlSourceConfig;
+  source: UnifiedSource;
   sourceUrl: string;
 }) {
   const title = readString(job.title) || readString(job.name);
@@ -346,7 +436,7 @@ function mapJsonLdJob({
   const address = readRecord(location.address);
   const city = readString(address.addressLocality);
   const addressRegion = readString(address.addressRegion);
-  const state = addressRegion || source.locationState || inferNigerianLocation(description || "").state;
+  const inferredLocation = inferNigerianLocation(description || "");
   const salary = readRecord(job.baseSalary);
   const salaryValue = readRecord(salary.value);
   const salaryMin = readNumericValue(salaryValue.minValue);
@@ -356,14 +446,13 @@ function mapJsonLdJob({
     company: readString(organization.name) || source.company,
     currency: readString(salary.currency) || "NGN",
     description,
-    experience_level:
-      source.experienceLevel || inferExperienceLevel(`${title} ${description ?? ""}`),
+    experience_level: inferExperienceLevel(`${title} ${description ?? ""}`),
     expires_at: readString(job.validThrough) || null,
     industry: source.industry || inferIndustry(`${title} ${description ?? ""}`),
     is_active: true,
     is_verified: true,
-    location_city: city,
-    location_state: state,
+    location_city: city || inferredLocation.city,
+    location_state: addressRegion || source.locationState || inferredLocation.state,
     required_skills: collectSkills(job.skills),
     salary_max: salaryMax,
     salary_min: salaryMin,
@@ -374,22 +463,20 @@ function mapJsonLdJob({
   };
 }
 
-function validateSourceUrl(source: HtmlSourceConfig) {
-  const url = new URL(source.url);
+function validateSourceUrl(rawUrl: string) {
+  const url = new URL(rawUrl);
   const host = url.hostname.toLowerCase();
 
   if (BANNED_DOMAIN_SUFFIXES.some((suffix) => host === suffix || host.endsWith(`.${suffix}`))) {
     throw new Error(`The domain ${host} is explicitly disallowed by the build rules.`);
   }
 
-  const approvedHost = APPROVED_DOMAIN_SUFFIXES.some(
+  const approved = APPROVED_DOMAIN_SUFFIXES.some(
     (suffix) => host === suffix || host.endsWith(`.${suffix}`),
   );
 
-  if (!approvedHost && source.category !== "startup") {
-    throw new Error(
-      `The domain ${host} is not on the legal-source allowlist. Use startup category only for explicitly approved startup career pages.`,
-    );
+  if (!approved) {
+    throw new Error(`The domain ${host} is not on the v4 legal-source allowlist.`);
   }
 }
 
@@ -469,7 +556,7 @@ function extractJsonLdBlocks(html: string) {
     try {
       blocks.push(JSON.parse(match[1]));
     } catch {
-      // Skip malformed JSON-LD blocks.
+      // Ignore malformed JSON-LD.
     }
   }
 
@@ -530,23 +617,10 @@ function inferNigerianLocation(value: string) {
   return { city, state };
 }
 
-function looksRelevantToNigeria(value: string) {
-  const normalized = value.toLowerCase();
-
-  return (
-    normalized.includes("nigeria")
-    || normalized.includes("lagos")
-    || normalized.includes("abuja")
-    || NIGERIAN_STATES.some((state) => normalized.includes(state.toLowerCase()))
-  );
-}
-
 function inferExperienceLevel(value: string): ExperienceLevel | null {
   const normalized = value.toLowerCase();
 
-  if (
-    /\b(head|director|chief|principal|vp|vice president|executive)\b/.test(normalized)
-  ) {
+  if (/\b(head|director|chief|principal|vp|vice president|executive)\b/.test(normalized)) {
     return "executive";
   }
 
@@ -615,18 +689,6 @@ function normalizeUrl(value: string) {
   }
 }
 
-function normalizeReliefWebAlias(value: string) {
-  if (!value) {
-    return "";
-  }
-
-  if (value.startsWith("/")) {
-    return `https://reliefweb.int${value}`;
-  }
-
-  return value;
-}
-
 function readString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -648,40 +710,8 @@ function readRecord(value: unknown) {
   return isRecord(value) ? value : {};
 }
 
-function readNestedString(record: Record<string, unknown>, key: string) {
-  return readString(record[key]);
-}
-
-function readNestedStringArray(
-  record: Record<string, unknown>,
-  key: string,
-  nestedKey: string,
-) {
-  const collection = record[key];
-  if (!Array.isArray(collection)) {
-    return [];
-  }
-
-  return collection
-    .map((item) => (isRecord(item) ? readString(item[nestedKey]) : ""))
-    .filter(Boolean);
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function getConfiguredHtmlSources() {
-  if (!JOB_SCRAPER_SOURCES_JSON) {
-    return [] as HtmlSourceConfig[];
-  }
-
-  try {
-    const parsed = JSON.parse(JOB_SCRAPER_SOURCES_JSON) as HtmlSourceConfig[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
 }
 
 function delay(ms: number) {
@@ -695,4 +725,80 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
     },
     status,
   });
+}
+
+async function captureSentryMessage(
+  message: string,
+  level: "warning" | "error",
+  extra: Record<string, unknown>,
+) {
+  await sendSentryEvent({
+    extra,
+    level,
+    logger: "cvpadi.scrape-jobs",
+    message,
+  });
+}
+
+async function captureSentryException(error: unknown, extra: Record<string, unknown>) {
+  const normalizedError =
+    error instanceof Error ? error : new Error(typeof error === "string" ? error : "Unknown error");
+
+  await sendSentryEvent({
+    exception: {
+      values: [
+        {
+          type: normalizedError.name,
+          value: normalizedError.message,
+        },
+      ],
+    },
+    extra,
+    level: "error",
+    logger: "cvpadi.scrape-jobs",
+    message: normalizedError.message,
+  });
+}
+
+async function sendSentryEvent(event: Record<string, unknown>) {
+  if (!SENTRY_DSN) {
+    return;
+  }
+
+  try {
+    const dsn = new URL(SENTRY_DSN);
+    const publicKey = dsn.username;
+    const projectId = dsn.pathname.replace(/^\/+/, "");
+
+    if (!publicKey || !projectId) {
+      return;
+    }
+
+    const envelopeUrl = `${dsn.protocol}//${dsn.host}/api/${projectId}/envelope/`;
+    const envelopeHeader = {
+      dsn: SENTRY_DSN,
+      sent_at: new Date().toISOString(),
+    };
+    const itemHeader = {
+      type: "event",
+    };
+    const payload = {
+      environment: Deno.env.get("SUPABASE_ENV") || "production",
+      event_id: crypto.randomUUID().replace(/-/g, ""),
+      platform: "javascript",
+      timestamp: new Date().toISOString(),
+      ...event,
+    };
+
+    await fetch(envelopeUrl, {
+      body: `${JSON.stringify(envelopeHeader)}\n${JSON.stringify(itemHeader)}\n${JSON.stringify(payload)}`,
+      headers: {
+        "Content-Type": "application/x-sentry-envelope",
+        "User-Agent": USER_AGENT,
+      },
+      method: "POST",
+    });
+  } catch {
+    // Do not block the scraper if Sentry transport fails.
+  }
 }

@@ -4,7 +4,7 @@ const foundationChecklist = [
   "Login supports email and password, magic link, and Google sign-in.",
   "The /build wizard saves drafts to Supabase on step transitions and keeps a local recovery copy.",
   "CV score suggestions, restore-banner logic, and visible sync-state feedback are active.",
-  "Paystack initialize, status, and webhook routes are wired with server-side amount checks.",
+  "Paystack initialize, status, and webhook routes are wired with server-side amount checks and missing-row webhook upserts.",
   "The builder waits for verified webhook confirmation before treating a payment as unlocked.",
   "Verified payments now trigger server-side PDF and WhatsApp JPG generation into the private cv-assets bucket.",
   "Paid users receive 2-hour signed delivery links in the builder and by email through Resend.",
@@ -19,12 +19,12 @@ const foundationChecklist = [
   "Free feature F6 is live: the NYSC hub now covers CV guidance, PPA company research, and after-service career planning.",
   "Free feature F7 is live: every builder save now writes a timeline snapshot and older versions can be forked into new CV branches.",
   "Free feature F8 is live: the first completed CV view now combines share and referral prompts, and verified referred payments credit the referrer automatically.",
-  "Phase 2.1 is live: a Supabase Edge Function now scrapes legal job sources only, checks robots.txt, and upserts jobs by source URL.",
+  "Phase 2.1 is now aligned to v4: the scraper loads stable sources from job_sources, corporate sources from JOB_SCRAPER_SOURCES_JSON, checks robots.txt, and auto-disables failing stable sources.",
 ];
 
 const deploymentReminders = [
   "Replace the Resend test sender with a verified production sender before launch.",
-  "Register the live Paystack webhook URL as https://<your-production-domain>/api/paystack/webhook before taking live payments.",
+  "If you migrate Paystack to the v4 Edge Function webhook path, update the dashboard webhook URL before taking live payments.",
   "Do not keep test Paystack keys in production.",
   "Set NEXT_PUBLIC_RECAPTCHA_SITE_KEY and RECAPTCHA_SECRET_KEY before public launch.",
 ];
@@ -41,7 +41,7 @@ const envVars = [
   "EMAIL_SEQUENCE_CRON_SECRET",
   "NEXT_PUBLIC_RECAPTCHA_SITE_KEY",
   "RECAPTCHA_SECRET_KEY",
-  "RELIEFWEB_APPNAME",
+  "SENTRY_DSN",
   "JOB_SCRAPER_SOURCES_JSON",
   "NEXT_PUBLIC_APP_URL",
 ];
@@ -58,13 +58,13 @@ export default function Home() {
             CVPadi
           </p>
           <h1 className="mt-3 max-w-2xl font-heading text-4xl leading-tight text-foreground sm:text-5xl">
-            Auth, the CV builder, Paystack, and paid CV delivery are now wired end to end.
+            Auth, the CV builder, delivery, and the v4 Checkpoint 4 scraper baseline are now wired.
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--ink-light)] sm:text-lg">
             The app now has Sentry, Supabase auth, a protected conversational builder,
-            local recovery logic, CV scoring, a public checker, server-verified
-            Paystack payment flow, private delivery assets, and Resend-based email
-            delivery.
+            local recovery logic, CV scoring, public free-feature surfaces, a hardened
+            Paystack payment flow, private delivery assets, and the two-tier legal-source
+            job scraper required by the updated v4 docs.
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <a
@@ -151,8 +151,8 @@ export default function Home() {
             <div>
               <h2 className="font-heading text-2xl text-foreground">Current env surface</h2>
               <p className="mt-2 text-sm leading-6 text-[var(--ink-light)] sm:text-base">
-                These variables are expected by the current implementation, including
-                test-mode email delivery.
+                These variables and Supabase function secrets are expected by the current
+                implementation, including test-mode email delivery.
               </p>
             </div>
             <span className="inline-flex min-h-11 items-center rounded-full bg-[var(--green-light)] px-4 text-sm font-medium text-[var(--green)]">
