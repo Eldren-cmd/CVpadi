@@ -51,7 +51,7 @@ export function ScoreDial({
           <h2 className="font-heading text-2xl text-foreground">Nigerian CV Score</h2>
           <p className="mt-2 text-sm leading-6 text-[var(--ink-light)]">
             Improve the missing sections and keep the score trending upward before
-            generating the preview.
+            generating the free watermarked preview.
           </p>
         </div>
       </div>
@@ -59,7 +59,7 @@ export function ScoreDial({
       <div className="mt-5 grid gap-3">
         {suggestions.length === 0 ? (
           <div className="rounded-[var(--radius-input)] border border-[var(--green)] bg-[var(--green-light)] px-4 py-3 text-sm text-[var(--green)]">
-            All core sections are in place. The draft is ready for preview.
+            All core sections are in place. The draft is ready for the free watermarked preview.
           </div>
         ) : (
           suggestions.slice(0, 4).map((suggestion) => (

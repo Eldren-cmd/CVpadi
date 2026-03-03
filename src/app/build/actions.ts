@@ -4,16 +4,25 @@ import { computeCVScore } from "@/lib/cv/score";
 import type { CVFormData, DraftSaveResult } from "@/lib/cv/types";
 import { isDisposableEmail } from "@/lib/cv/validation";
 import { scheduleBuildEmailSequences } from "@/lib/email/sequences";
+import { verifyRecaptchaToken } from "@/lib/security/recaptcha";
 import { createClient } from "@/lib/supabase/server";
 
 interface SaveDraftInput {
   cvId: string;
+  deviceFingerprint?: string | null;
   formData: CVFormData;
+  honeypot?: string;
+  recaptchaToken?: string | null;
+  requireRecaptcha?: boolean;
 }
 
 export async function saveCvDraftAction({
   cvId,
+  deviceFingerprint,
   formData,
+  honeypot,
+  recaptchaToken,
+  requireRecaptcha,
 }: SaveDraftInput): Promise<DraftSaveResult> {
   const supabase = await createClient();
   const {
@@ -22,6 +31,21 @@ export async function saveCvDraftAction({
 
   if (!user) {
     throw new Error("Unauthorized");
+  }
+
+  if (honeypot?.trim()) {
+    throw new Error("Unable to save this draft right now.");
+  }
+
+  if (requireRecaptcha) {
+    const recaptchaCheck = await verifyRecaptchaToken({
+      expectedAction: "build_step_one",
+      token: recaptchaToken,
+    });
+
+    if (!recaptchaCheck.ok) {
+      throw new Error("The security check expired. Please try that step again.");
+    }
   }
 
   if (isDisposableEmail(formData.email)) {
@@ -56,6 +80,9 @@ export async function saveCvDraftAction({
       industry: formData.industry,
       experience_level: formData.experienceLevel,
       nysc_status: formData.nyscStatus,
+      ...(deviceFingerprint
+        ? { device_fingerprint: deviceFingerprint.slice(0, 255) }
+        : {}),
     })
     .eq("id", user.id);
 

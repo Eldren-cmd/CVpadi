@@ -16,8 +16,10 @@ import {
 import { computeCVScore } from "@/lib/cv/score";
 import type { CVFormData, SyncStatus } from "@/lib/cv/types";
 import { isAtLeast13, nigerianPhoneRegex } from "@/lib/cv/validation";
+import Script from "next/script";
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { PaymentPanel } from "./payment-panel";
+import { PreviewPanel } from "./preview-panel";
 import { ScoreDial } from "./score-dial";
 import { Field, inputClassName, RepeaterStep, StepLabel, SyncIndicator, TagStep } from "./wizard-ui";
 
@@ -43,9 +45,19 @@ const STEP_TITLES = [
 
 type Errors = Record<string, string>;
 
+declare global {
+  interface Window {
+    grecaptcha?: {
+      execute: (siteKey: string, options: { action: string }) => Promise<string>;
+      ready: (callback: () => void) => void;
+    };
+  }
+}
+
 export function FormWizard({
   initialCvId,
   initialDraft,
+  initialFreePreviewsUsed,
   initialPaymentReference,
   initialUpdatedAt,
   isPaid,
@@ -54,6 +66,7 @@ export function FormWizard({
 }: {
   initialCvId: string;
   initialDraft: CVFormData;
+  initialFreePreviewsUsed: number;
   initialPaymentReference?: string | null;
   initialUpdatedAt: string;
   isPaid: boolean;
@@ -70,10 +83,13 @@ export function FormWizard({
   );
   const [showRestoreBanner, setShowRestoreBanner] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const [deviceFingerprint, setDeviceFingerprint] = useState<string | null>(null);
+  const [honeypot, setHoneypot] = useState("");
   const [scoreResult, setScoreResult] = useState(() => computeCVScore(initialDraft));
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const storageKey = useMemo(() => `cvpadi_draft_${userId}`, [userId]);
   const progress = ((step + 1) / STEP_TITLES.length) * 100;
+  const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
   useEffect(() => {
     const localDraft = localStorage.getItem(storageKey);
@@ -97,7 +113,37 @@ export function FormWizard({
     };
   }, []);
 
-  const saveDraft = (nextDraft: CVFormData) => {
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function loadFingerprint() {
+      try {
+        const FingerprintJS = (await import("@fingerprintjs/fingerprintjs")).default;
+        const agent = await FingerprintJS.load();
+        const result = await agent.get();
+
+        if (!isCancelled) {
+          setDeviceFingerprint(result.visitorId);
+        }
+      } catch {
+        // Fingerprinting is only a soft signal. The rest of the guardrail stack still applies.
+      }
+    }
+
+    void loadFingerprint();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  const saveDraft = (
+    nextDraft: CVFormData,
+    options?: {
+      recaptchaToken?: string | null;
+      requireRecaptcha?: boolean;
+    },
+  ) => {
     localStorage.setItem(storageKey, JSON.stringify(nextDraft));
     setSyncStatus("saving");
     setStatusMessage("");
@@ -111,7 +157,11 @@ export function FormWizard({
         try {
           const result = await saveCvDraftAction({
             cvId,
+            deviceFingerprint,
             formData: nextDraft,
+            honeypot,
+            recaptchaToken: options?.recaptchaToken,
+            requireRecaptcha: options?.requireRecaptcha,
           });
 
           setCvId(result.id);
@@ -139,12 +189,30 @@ export function FormWizard({
     setScoreResult(computeCVScore(nextDraft));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const validationErrors = validateStep(step, draft);
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
       return;
+    }
+
+    if (honeypot.trim()) {
+      setStatusMessage("Unable to continue right now.");
+      return;
+    }
+
+    let recaptchaToken: string | null = null;
+    if (step === 0) {
+      recaptchaToken = await getRecaptchaToken({
+        action: "build_step_one",
+        siteKey: recaptchaSiteKey,
+      });
+
+      if (recaptchaSiteKey && !recaptchaToken) {
+        setStatusMessage("Security check not ready yet. Refresh and try again.");
+        return;
+      }
     }
 
     const nextDraft = {
@@ -158,7 +226,10 @@ export function FormWizard({
     };
 
     setDraft(nextDraft);
-    saveDraft(nextDraft);
+    saveDraft(nextDraft, {
+      recaptchaToken,
+      requireRecaptcha: step === 0,
+    });
     setStep((current) => Math.min(current + 1, STEP_TITLES.length - 1));
   };
 
@@ -194,7 +265,27 @@ export function FormWizard({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+      {recaptchaSiteKey ? (
+        <Script
+          src={`https://www.google.com/recaptcha/api.js?render=${recaptchaSiteKey}`}
+          strategy="afterInteractive"
+        />
+      ) : null}
+
       <section className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
+        <div aria-hidden="true" className="sr-only">
+          <label htmlFor="company-website">Leave this field empty</label>
+          <input
+            autoComplete="off"
+            id="company-website"
+            name="company-website"
+            onChange={(event) => setHoneypot(event.target.value)}
+            tabIndex={-1}
+            type="text"
+            value={honeypot}
+          />
+        </div>
+
         <div className="flex flex-col gap-4 border-b border-[var(--border-light)] pb-5 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.24em] text-[var(--ink-light)]">
@@ -261,6 +352,13 @@ export function FormWizard({
 
       <div className="grid gap-6">
         <ScoreDial onJump={setStep} score={scoreResult.score} suggestions={scoreResult.suggestions} />
+        <PreviewPanel
+          cvId={cvId}
+          deviceFingerprint={deviceFingerprint}
+          draft={draft}
+          honeypot={honeypot}
+          initialFreePreviewsUsed={initialFreePreviewsUsed}
+        />
         <PaymentPanel
           cvId={cvId}
           initialPaymentReference={initialPaymentReference}
@@ -605,6 +703,31 @@ export function FormWizard({
 
     handleFieldChange(field, nextItems as CVFormData[typeof field]);
   }
+}
+
+async function getRecaptchaToken({
+  action,
+  siteKey,
+}: {
+  action: string;
+  siteKey?: string;
+}) {
+  if (!siteKey) {
+    return null;
+  }
+
+  if (!window.grecaptcha) {
+    return null;
+  }
+
+  return new Promise<string | null>((resolve) => {
+    window.grecaptcha?.ready(() => {
+      window.grecaptcha
+        ?.execute(siteKey, { action })
+        .then(resolve)
+        .catch(() => resolve(null));
+    });
+  });
 }
 
 function validateStep(step: number, draft: CVFormData): Errors {

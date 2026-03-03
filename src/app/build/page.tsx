@@ -19,6 +19,12 @@ export default async function BuildPage({
     redirect("/login?next=/build");
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("free_generations_used")
+    .eq("id", user.id)
+    .maybeSingle();
+
   const { data: existingDraft } = await supabase
     .from("cvs")
     .select("id, form_data, is_paid, updated_at")
@@ -59,6 +65,7 @@ export default async function BuildPage({
             initialCvId={draft.id}
             initialDraft={initialDraft}
             initialPaymentReference={searchParams?.reference ?? null}
+            initialFreePreviewsUsed={profile?.free_generations_used ?? 0}
             initialUpdatedAt={draft.updated_at}
             isPaid={draft.is_paid}
             userEmail={user.email ?? ""}

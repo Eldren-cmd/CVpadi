@@ -10,12 +10,14 @@ const foundationChecklist = [
   "Paid users receive 2-hour signed delivery links in the builder and by email through Resend.",
   "Phase 1 email sequences now schedule abandoned-draft follow-ups and post-download reminders.",
   "A preference centre and hourly email-sequence processor route are scaffolded for the next cron step.",
+  "Phase 1 loophole fixes now include a server-rendered free preview canvas, FingerprintJS soft-signal tracking, and atomic free-preview limits.",
 ];
 
 const deploymentReminders = [
   "Replace the Resend test sender with a verified production sender before launch.",
   "Register the live Paystack webhook URL as https://<your-production-domain>/api/paystack/webhook before taking live payments.",
   "Do not keep test Paystack keys in production.",
+  "Set NEXT_PUBLIC_RECAPTCHA_SITE_KEY and RECAPTCHA_SECRET_KEY before public launch.",
 ];
 
 const envVars = [
@@ -28,6 +30,8 @@ const envVars = [
   "RESEND_API_KEY",
   "EMAIL_FROM",
   "EMAIL_SEQUENCE_CRON_SECRET",
+  "NEXT_PUBLIC_RECAPTCHA_SITE_KEY",
+  "RECAPTCHA_SECRET_KEY",
   "NEXT_PUBLIC_APP_URL",
 ];
 

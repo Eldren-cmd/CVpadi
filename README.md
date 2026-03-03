@@ -20,6 +20,8 @@ Current milestone: Phase 1 foundation through auth, the conversational CV builde
 - Email sequence scheduling for abandoned drafts and post-download follow-ups
 - Preference centre at `/email-preferences`
 - Scheduled sequence processor at `/api/email-sequences/process`
+- Free preview route at `/api/cv/preview/[cvId]` rendered server-side into a watermarked 600px canvas preview
+- FingerprintJS soft-signal tracking, disposable-email blocking, edge preview rate limiting, and the atomic free-preview counter
 
 ## Local Development
 
@@ -54,8 +56,11 @@ Completed:
 
 - The schema migration includes RLS, core policies, timestamp triggers, the atomic free-generation counter function, and the AI enhancement queue table.
 - The build wizard writes to `localStorage` only as a crash-recovery backup. Supabase remains the primary store.
+- Free preview generation now happens on the server, returns a low-resolution JPG for a `<canvas>` preview, and burns a watermark across the name, phone, and email fields.
+- FingerprintJS is only a soft signal. The live guardrail stack combines it with disposable-email blocking, edge rate limiting, reCAPTCHA when keys are configured, and the atomic SQL counter.
 - The Paystack webhook verifies HMAC SHA-512 signatures and checks the amount against a server-side price constant before unlocking a CV.
 - Delivery assets are generated on the server, stored in the private `cv-assets` bucket, and exposed through 2-hour signed URLs only after verified payment.
 - Development email delivery should use Resend's test sender and only reaches the verified Resend inbox. Before production, switch `EMAIL_FROM` to a verified domain sender.
 - Before production, register the live Paystack webhook URL as `https://<your-production-domain>/api/paystack/webhook`.
+- Before public launch, set `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` and `RECAPTCHA_SECRET_KEY` so the invisible reCAPTCHA checks move from dev-bypass mode to enforced mode.
 - The delayed email processor expects `EMAIL_SEQUENCE_CRON_SECRET` and is designed to be invoked by the `supabase/functions/process-email-sequences` wrapper on an hourly cron.

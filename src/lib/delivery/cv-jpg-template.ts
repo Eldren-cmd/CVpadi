@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import { PREVIEW_CANVAS_WIDTH } from "@/lib/cv/constants";
 import type { CVFormData } from "@/lib/cv/types";
 
 const WIDTH = 1240;
@@ -74,9 +75,13 @@ function renderLineBlock(lines: string[], x: number, startY: number, lineHeight:
 export async function renderCvJpgBuffer({
   fingerprint,
   formData,
+  variant = "delivery",
+  width = WIDTH,
 }: {
   fingerprint: string;
   formData: CVFormData;
+  variant?: "delivery" | "preview";
+  width?: number;
 }) {
   const heroMeta = compact([
     formData.locationCity,
@@ -128,11 +133,20 @@ export async function renderCvJpgBuffer({
       formData.refereeTwo.company,
     ]) || "Referee 2 pending",
   ];
+  const watermarkValues = [
+    formData.fullName || "CVPadi Preview",
+    formData.phone || "Phone hidden until unlock",
+    formData.email || "Email hidden until unlock",
+  ];
+  const watermarkTiles = variant === "preview"
+    ? createPreviewWatermarks(watermarkValues)
+    : "";
 
   const svg = `
     <svg width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
       <rect width="${WIDTH}" height="${HEIGHT}" fill="#F5F0E8"/>
       <rect x="56" y="56" width="${WIDTH - 112}" height="${HEIGHT - 112}" rx="28" fill="#FDFAF4"/>
+      ${watermarkTiles}
       <rect x="56" y="56" width="${WIDTH - 112}" height="238" rx="28" fill="#1A1410"/>
       <text x="104" y="126" fill="#F4E4D8" font-size="24" font-family="Arial, sans-serif" letter-spacing="8">CVPadi</text>
       <text x="104" y="190" fill="#FFFFFF" font-size="64" font-family="Georgia, serif" font-weight="700">${escapeXml(formData.fullName || "Your CV")}</text>
@@ -159,6 +173,33 @@ export async function renderCvJpgBuffer({
   `;
 
   return sharp(Buffer.from(svg))
-    .jpeg({ quality: 92 })
+    .resize({ width: variant === "preview" ? PREVIEW_CANVAS_WIDTH : width })
+    .jpeg({ quality: variant === "preview" ? 70 : 92 })
     .toBuffer();
+}
+
+function createPreviewWatermarks(values: string[]) {
+  return Array.from({ length: 5 }, (_, rowIndex) =>
+    Array.from({ length: 2 }, (_, columnIndex) => {
+      const x = columnIndex === 0 ? 160 : 700;
+      const y = 420 + (rowIndex * 240);
+
+      return `
+        <g transform="translate(${x} ${y}) rotate(-28)">
+          <rect x="-22" y="-72" width="450" height="138" rx="22" fill="#FFFFFF" fill-opacity="0.18" />
+          ${values.map((value, valueIndex) => `
+            <text
+              x="0"
+              y="${valueIndex * 38}"
+              fill="#B5442A"
+              fill-opacity="0.42"
+              font-size="${valueIndex === 0 ? 28 : 24}"
+              font-family="Arial, sans-serif"
+              font-weight="700"
+            >${escapeXml(value)}</text>
+          `).join("")}
+        </g>
+      `;
+    }).join("")
+  ).join("");
 }

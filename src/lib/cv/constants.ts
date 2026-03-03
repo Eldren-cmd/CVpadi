@@ -123,6 +123,9 @@ export const DISPOSABLE_DOMAINS = [
   "dispostable.com",
 ];
 
+export const FREE_PREVIEW_LIMIT = 3;
+export const PREVIEW_CANVAS_WIDTH = 600;
+
 export const EXPERIENCE_LEVEL_OPTIONS = [
   { value: "entry", label: "Entry level" },
   { value: "mid", label: "Mid level" },
