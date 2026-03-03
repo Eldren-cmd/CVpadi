@@ -2,9 +2,9 @@ import { createHash } from "node:crypto";
 import { renderToBuffer } from "@react-pdf/renderer";
 import * as Sentry from "@sentry/nextjs";
 import { Resend } from "resend";
-import sharp from "sharp";
 import type { CVFormData } from "@/lib/cv/types";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { renderCvJpgBuffer } from "./cv-jpg-template";
 import { CVPdfDocument } from "./cv-pdf-document";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -123,10 +123,10 @@ export async function generateAndDeliverCvAssets({
     const pdfBuffer = await renderToBuffer(
       <CVPdfDocument fingerprint={rawFingerprint} formData={formData} />,
     );
-    const jpgBuffer = await sharp(pdfBuffer, { density: 144, page: 0 })
-      .resize({ width: 1240 })
-      .jpeg({ quality: 92 })
-      .toBuffer();
+    const jpgBuffer = await renderCvJpgBuffer({
+      fingerprint: rawFingerprint,
+      formData,
+    });
 
     const { jpgPath, pdfPath } = getAssetPaths(userId, cvId);
 
