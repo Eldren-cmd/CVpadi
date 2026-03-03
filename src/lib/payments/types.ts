@@ -24,6 +24,11 @@ export interface PaymentStatusResponse {
   webhookVerified: boolean;
 }
 
+export interface DeliveryLinksResponse {
+  jpgUrl: string;
+  pdfUrl: string;
+}
+
 export interface PaystackInitializeApiResponse {
   data: {
     access_code: string;

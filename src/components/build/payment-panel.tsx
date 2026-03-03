@@ -1,7 +1,11 @@
 "use client";
 
 import { DEFAULT_PAYMENT_TYPE, PAYMENT_PRICES_KOBO, formatKoboToNaira } from "@/lib/payments/constants";
-import type { InitializePaymentResponse, PaymentStatusResponse } from "@/lib/payments/types";
+import type {
+  DeliveryLinksResponse,
+  InitializePaymentResponse,
+  PaymentStatusResponse,
+} from "@/lib/payments/types";
 import Script from "next/script";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -35,6 +39,7 @@ export function PaymentPanel({
   const [authorizationUrl, setAuthorizationUrl] = useState<string | null>(null);
   const [gatewayStatus, setGatewayStatus] = useState<string | null>(null);
   const [isScriptReady, setIsScriptReady] = useState(false);
+  const [deliveryLinks, setDeliveryLinks] = useState<DeliveryLinksResponse | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const statusCheckRef = useRef<(() => Promise<void>) | null>(null);
   const amountLabel = useMemo(
@@ -50,6 +55,10 @@ export function PaymentPanel({
     setCheckoutState("paid");
     setStatusMessage("Payment confirmed. This CV is unlocked.");
     stopPolling();
+    if (!deliveryLinks) {
+      void fetchDeliveryLinks();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPaid]);
 
   useEffect(() => {
@@ -100,6 +109,7 @@ export function PaymentPanel({
       setCheckoutState("paid");
       setStatusMessage("Payment confirmed by the server. Your CV is unlocked.");
       stopPolling();
+      void fetchDeliveryLinks();
       return;
     }
 
@@ -125,6 +135,19 @@ export function PaymentPanel({
   }
 
   statusCheckRef.current = checkPaymentStatus;
+
+  async function fetchDeliveryLinks() {
+    const response = await fetch(`/api/cv-assets/${cvId}`, {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    const payload = (await response.json()) as DeliveryLinksResponse;
+    setDeliveryLinks(payload);
+  }
 
   function startPolling(referenceToCheck: string) {
     stopPolling();
@@ -232,9 +255,41 @@ export function PaymentPanel({
       ) : null}
 
       {checkoutState === "paid" ? (
-        <div className="mt-5 rounded-[var(--radius-input)] border border-[var(--green)] bg-[var(--green-light)] px-4 py-3 text-sm text-[var(--green)]">
-          Payment verified. The CV is unlocked. PDF and email delivery remain paused until
-          the Resend checkpoint is completed.
+        <div className="mt-5 grid gap-3">
+          <div className="rounded-[var(--radius-input)] border border-[var(--green)] bg-[var(--green-light)] px-4 py-3 text-sm text-[var(--green)]">
+            Payment verified. Your PDF and WhatsApp JPG were prepared on the server.
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <button
+              className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-4 text-sm font-medium text-foreground"
+              onClick={() => {
+                void fetchDeliveryLinks();
+              }}
+              type="button"
+            >
+              Refresh download links
+            </button>
+            {deliveryLinks ? (
+              <>
+                <a
+                  className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] bg-[var(--accent)] px-4 text-sm font-medium text-white"
+                  href={deliveryLinks.pdfUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Download PDF
+                </a>
+                <a
+                  className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-4 text-sm font-medium text-foreground"
+                  href={deliveryLinks.jpgUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Open JPG
+                </a>
+              </>
+            ) : null}
+          </div>
         </div>
       ) : (
         <div className="mt-5 flex flex-col gap-3">

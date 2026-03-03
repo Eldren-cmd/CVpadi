@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
+import { generateAndDeliverCvAssets } from "@/lib/delivery/cv-delivery";
 import { getPaymentAmount, parsePaymentMetadata, verifyPaystackSignature } from "@/lib/payments/paystack";
 import type { PaymentType, PaystackChargeSuccessEvent } from "@/lib/payments/types";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -60,7 +61,19 @@ export async function POST(request: Request) {
       .eq("paystack_reference", reference)
       .maybeSingle();
 
-    if (existingPayment?.status === "success" && existingPayment.webhook_verified) {
+    const { data: existingCv } = await supabase
+      .from("cvs")
+      .select("is_paid, pdf_fingerprint")
+      .eq("id", cvId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (
+      existingPayment?.status === "success"
+      && existingPayment.webhook_verified
+      && existingCv?.is_paid
+      && existingCv.pdf_fingerprint
+    ) {
       return NextResponse.json({ received: true });
     }
 
@@ -94,6 +107,8 @@ export async function POST(request: Request) {
     if (cvError) {
       throw cvError;
     }
+
+    await generateAndDeliverCvAssets({ cvId, userId });
 
     return NextResponse.json({ received: true });
   } catch (error) {

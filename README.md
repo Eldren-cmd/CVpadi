@@ -1,6 +1,6 @@
 # CVPadi
 
-Current milestone: Phase 1 foundation through auth, the conversational CV builder, and the Paystack payment flow. The repo now includes Supabase runtime integration, Sentry wiring, auth flows, the draft-saving build wizard, and server-verified Paystack routes. PDF and email delivery are intentionally paused at Setup Checkpoint 3.
+Current milestone: Phase 1 foundation through auth, the conversational CV builder, the Paystack payment flow, and server-side CV delivery. The repo now includes Supabase runtime integration, Sentry wiring, auth flows, the draft-saving build wizard, verified Paystack routes, PDF/JPG asset generation, and Resend-based delivery.
 
 ## Included
 
@@ -14,6 +14,9 @@ Current milestone: Phase 1 foundation through auth, the conversational CV builde
 - `/build` conversational CV wizard with local backup, restore banner, sync indicator, and score suggestions
 - `/api/paystack/initialize`, `/api/paystack/status/[reference]`, and `/api/paystack/webhook`
 - Builder-side Paystack panel that waits for server confirmation before showing the CV as unlocked
+- Server-generated PDF and WhatsApp JPG uploads to the private `cv-assets` bucket
+- Signed asset delivery route at `/api/cv-assets/[cvId]`
+- Resend email delivery with 2-hour signed links
 
 ## Local Development
 
@@ -41,22 +44,13 @@ Completed:
 1. Setup Checkpoint 0: Sentry
 2. Setup Checkpoint 1: Supabase
 3. Setup Checkpoint 2: Paystack
-
-## Setup Checkpoint 3
-
-Stop here before writing any email delivery code. Complete these first:
-
-1. Go to `https://resend.com` and create an account.
-2. Verify your email.
-3. Open `API Keys` and create a key named `cvpadi`.
-4. Copy the key into `.env.local` as `RESEND_API_KEY=`.
-5. Set `EMAIL_FROM=` in `.env.local`.
-6. Add and verify your sending domain, or use Resend's test sender for early development.
-7. Do not write email-sending code until those values are ready.
+4. Setup Checkpoint 3: Resend
 
 ## Notes
 
 - The schema migration includes RLS, core policies, timestamp triggers, the atomic free-generation counter function, and the AI enhancement queue table.
 - The build wizard writes to `localStorage` only as a crash-recovery backup. Supabase remains the primary store.
 - The Paystack webhook verifies HMAC SHA-512 signatures and checks the amount against a server-side price constant before unlocking a CV.
-- PDF delivery and email sending are not started yet because those are gated behind the Resend checkpoint.
+- Delivery assets are generated on the server, stored in the private `cv-assets` bucket, and exposed through 2-hour signed URLs only after verified payment.
+- Development email delivery should use Resend's test sender and only reaches the verified Resend inbox. Before production, switch `EMAIL_FROM` to a verified domain sender.
+- Before production, register the live Paystack webhook URL as `https://<your-production-domain>/api/paystack/webhook`.
