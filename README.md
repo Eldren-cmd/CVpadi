@@ -85,7 +85,8 @@ Completed:
 - Run `supabase/migrations/202603030005_referral_system.sql` before testing referral checkout crediting.
 - Run `supabase/migrations/202603030006_job_scraper_source_index.sql` before testing job imports.
 - Run `supabase/migrations/202603030007_job_sources_table.sql` and then `supabase/seed.sql` to align the database with the v4 job-source model.
+- Run `supabase/migrations/202603030008_schedule_scrape_jobs.sql` if you want the daily scraper schedule managed from the repo via `pg_cron`.
 - Set `JOB_SCRAPER_SOURCES_JSON` and `SENTRY_DSN` as Supabase Edge Function secrets, then verify them with `supabase secrets list`.
 - The scraper now loads stable sources from `job_sources` and corporate sources from `JOB_SCRAPER_SOURCES_JSON`.
 - Stable sources track `last_scrape_status`, `consecutive_failures`, and auto-disable after three failed runs.
-- Schedule the deployed `scrape-jobs` Edge Function daily at `6:00 AM WAT` (`0 5 * * *` UTC).
+- The automated scraper schedule is `6:00 AM WAT` (`0 5 * * *` UTC).
