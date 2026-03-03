@@ -8,6 +8,7 @@ import {
   AbandonmentSequenceEmail,
   AiEnhancedCvReadyEmail,
   CvReadyEmail,
+  JobsDailyDigestEmail,
   JobsDigestScaffoldEmail,
   PostDownloadReminderEmail,
   ResumeSavedEmail,
@@ -515,6 +516,37 @@ export async function sendAiEnhancedCvEmail({
       />
     ),
     subject: "Your AI-enhanced CV is ready",
+  });
+}
+
+export async function sendJobsDigestEmail({
+  buildUrl,
+  email,
+  fullName,
+  jobs,
+}: {
+  buildUrl: string;
+  email: string;
+  fullName: string;
+  jobs: Array<{
+    company: string;
+    locationLabel: string;
+    matchScore: number;
+    salaryLabel: string;
+    sourceUrl: string | null;
+    title: string;
+  }>;
+}) {
+  return sendEmail({
+    email,
+    react: (
+      <JobsDailyDigestEmail
+        buildUrl={buildUrl}
+        fullName={fullName}
+        jobs={jobs}
+      />
+    ),
+    subject: "Your top 3 CVPadi job matches for today",
   });
 }
 

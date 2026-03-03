@@ -1,6 +1,6 @@
 # CVPadi
 
-Current milestone: Phase 1 foundation through auth, the conversational CV builder, the Paystack payment flow, server-side CV delivery, and the queued Claude enhancement worker. The repo now includes Supabase runtime integration, Sentry wiring, auth flows, the draft-saving build wizard, verified Paystack routes, PDF/JPG asset generation, Resend-based delivery, and the v4 off-path AI refresh flow.
+Current milestone: Phase 1 foundation through auth, the conversational CV builder, the Paystack payment flow, server-side CV delivery, the queued Claude enhancement worker, and the first live Phase 2 backend slice. The repo now includes Supabase runtime integration, Sentry wiring, auth flows, the draft-saving build wizard, verified Paystack routes, PDF/JPG asset generation, Resend-based delivery, the v4 off-path AI refresh flow, and the weighted job-matching processor.
 
 ## Included
 
@@ -32,6 +32,7 @@ Current milestone: Phase 1 foundation through auth, the conversational CV builde
 - Referral landing at `/ref/[code]` with first-view sharing and auto-applied account credits
 - Supabase Edge Function scraper at `supabase/functions/scrape-jobs` for legal job sources only, using v4's two-tier source model
 - Background Claude enhancement queue with the protected processor route at `/api/ai-enhancement/process` and the Supabase wrapper at `supabase/functions/process-ai-queue`
+- Weighted job-match processor at `/api/job-matches/process` with the Supabase wrapper at `supabase/functions/process-job-matches`
 
 ## Local Development
 
@@ -84,6 +85,7 @@ Completed:
 - Before public launch, set `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` and `RECAPTCHA_SECRET_KEY` so the invisible reCAPTCHA checks move from dev-bypass mode to enforced mode.
 - The delayed email processor expects `EMAIL_SEQUENCE_CRON_SECRET` and is designed to be invoked by the `supabase/functions/process-email-sequences` wrapper on an hourly cron.
 - The queued Claude enhancement worker also reuses `EMAIL_SEQUENCE_CRON_SECRET` and is designed to be invoked by the `supabase/functions/process-ai-queue` wrapper every 15 minutes.
+- The daily job-matching digest processor also reuses `EMAIL_SEQUENCE_CRON_SECRET` and is designed to be invoked by the `supabase/functions/process-job-matches` wrapper at `8:00 AM WAT`.
 - Run `supabase/migrations/202603030004_cv_versioning.sql` before testing the version timeline and fork flow.
 - Run `supabase/migrations/202603030005_referral_system.sql` before testing referral checkout crediting.
 - Run `supabase/migrations/202603030006_job_scraper_source_index.sql` before testing job imports.
@@ -91,8 +93,10 @@ Completed:
 - Run `supabase/migrations/202603030008_schedule_scrape_jobs.sql` if you want the daily scraper schedule managed from the repo via `pg_cron`.
 - Run `supabase/migrations/202603030009_ai_enhancement_queue_uniqueness.sql` before testing the AI queue against Supabase.
 - Run `supabase/migrations/202603030010_schedule_process_ai_queue.sql` if you want the 15-minute AI processor schedule managed from the repo via `pg_cron`.
+- Run `supabase/migrations/202603030011_schedule_process_job_matches.sql` if you want the `8:00 AM WAT` job-matching schedule managed from the repo via `pg_cron`.
 - Set `JOB_SCRAPER_SOURCES_JSON` and `SENTRY_DSN` as Supabase Edge Function secrets, then verify them with `supabase secrets list`.
 - The scraper now loads stable sources from `job_sources` and corporate sources from `JOB_SCRAPER_SOURCES_JSON`.
 - Stable sources track `last_scrape_status`, `consecutive_failures`, and auto-disable after three failed runs.
 - The automated scraper schedule is `6:00 AM WAT` (`0 5 * * *` UTC).
 - Verified payments now enqueue a separate Claude Haiku enhancement pass that rewrites the objective, suggests missing skills, regenerates delivery assets, and emails the refreshed files without blocking the payment webhook.
+- Daily job matches now use the v4 weighted formula: industry 30, location 25, experience 25, skills overlap up to 20. Only matches scoring `>= 40` are persisted in `job_matches`.

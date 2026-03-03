@@ -21,6 +21,7 @@ const foundationChecklist = [
   "Free feature F8 is live: the first completed CV view now combines share and referral prompts, and verified referred payments credit the referrer automatically.",
   "Phase 2.1 is now aligned to v4: the scraper loads stable sources from job_sources, corporate sources from JOB_SCRAPER_SOURCES_JSON, checks robots.txt, and auto-disables failing stable sources.",
   "Checkpoint 5 is now wired: verified payments enqueue a Claude Haiku enhancement pass that regenerates updated assets and emails the refreshed files off the payment critical path.",
+  "Phase 2.2 is live on the backend: daily weighted job matching now persists only scores >= 40 and sends one top-3 digest at 8am WAT.",
 ];
 
 const deploymentReminders = [
@@ -29,6 +30,7 @@ const deploymentReminders = [
   "Do not keep test Paystack keys in production.",
   "Set NEXT_PUBLIC_RECAPTCHA_SITE_KEY and RECAPTCHA_SECRET_KEY before public launch.",
   "Monitor Anthropic credits and move up only after the queued enhancement worker proves stable in production.",
+  "Before switching Paystack live, replace the test keys while keeping the same webhook path on cvpadi.vercel.app.",
 ];
 
 const envVars = [
@@ -61,14 +63,14 @@ export default function Home() {
             CVPadi
           </p>
           <h1 className="mt-3 max-w-2xl font-heading text-4xl leading-tight text-foreground sm:text-5xl">
-            Auth, the CV builder, delivery, the queued Claude worker, and the v4 Checkpoint 4 scraper baseline are now wired.
+            Auth, the CV builder, delivery, the queued Claude worker, and the first v4 Phase 2 matching slice are now wired.
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--ink-light)] sm:text-lg">
             The app now has Sentry, Supabase auth, a protected conversational builder,
             local recovery logic, CV scoring, public free-feature surfaces, a hardened
             Paystack payment flow, private delivery assets, a queued Claude enhancement
-            path that stays off the webhook critical path, and the two-tier legal-source
-            job scraper required by the updated v4 docs.
+            path that stays off the webhook critical path, the two-tier legal-source
+            job scraper, and the weighted daily top-3 matching digest required by v4.
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <a

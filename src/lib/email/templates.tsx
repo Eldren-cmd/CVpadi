@@ -79,6 +79,21 @@ const footerStyle: CSSProperties = {
   paddingTop: "18px",
 };
 
+const digestCardStyle: CSSProperties = {
+  backgroundColor: "#FFFFFF",
+  border: "1px solid #EDE8DC",
+  borderRadius: "8px",
+  marginBottom: "14px",
+  padding: "18px",
+};
+
+const digestMetaStyle: CSSProperties = {
+  color: "#5C4F3D",
+  fontSize: "13px",
+  lineHeight: 1.6,
+  margin: "4px 0 10px",
+};
+
 function EmailLayout({
   children,
   title,
@@ -268,6 +283,51 @@ export function JobsDigestScaffoldEmail({
       </ul>
       <a href={buildUrl} style={ctaStyle}>
         Keep your CV updated
+      </a>
+    </EmailLayout>
+  );
+}
+
+export function JobsDailyDigestEmail({
+  buildUrl,
+  fullName,
+  jobs,
+}: {
+  buildUrl: string;
+  fullName: string;
+  jobs: Array<{
+    company: string;
+    locationLabel: string;
+    matchScore: number;
+    salaryLabel: string;
+    sourceUrl: string | null;
+    title: string;
+  }>;
+}) {
+  return (
+    <EmailLayout title={`Your top job matches for today, ${fullName || "there"}.`}>
+      <p style={bodyStyle}>
+        CVPadi recomputed your strongest matches this morning. These are the top roles
+        that fit your industry, location, experience level, and skills right now.
+      </p>
+
+      {jobs.map((job) => (
+        <div key={`${job.company}_${job.title}`} style={digestCardStyle}>
+          <p style={{ ...eyebrowStyle, marginBottom: "6px" }}>{job.company}</p>
+          <p style={{ ...bodyStyle, color: "#1A1410", marginBottom: "6px" }}>{job.title}</p>
+          <p style={digestMetaStyle}>
+            {job.locationLabel} | Match {job.matchScore}% | {job.salaryLabel}
+          </p>
+          {job.sourceUrl ? (
+            <a href={job.sourceUrl} style={ctaStyle}>
+              View job
+            </a>
+          ) : null}
+        </div>
+      ))}
+
+      <a href={buildUrl} style={secondaryCtaStyle}>
+        Improve your CV match score
       </a>
     </EmailLayout>
   );
