@@ -11,7 +11,13 @@ import { z } from "zod";
 type PasswordValues = z.infer<typeof loginSchema>;
 type MagicLinkValues = z.infer<typeof magicLinkSchema>;
 
-export function LoginForm({ nextPath }: { nextPath: string }) {
+export function LoginForm({
+  initialEmail,
+  nextPath,
+}: {
+  initialEmail?: string;
+  nextPath: string;
+}) {
   const router = useRouter();
   const [mode, setMode] = useState<"password" | "magic">("password");
   const [statusMessage, setStatusMessage] = useState<string>("");
@@ -21,7 +27,7 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
   const passwordForm = useForm<PasswordValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      email: initialEmail ?? "",
       password: "",
     },
   });
@@ -29,7 +35,7 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
   const magicLinkForm = useForm<MagicLinkValues>({
     resolver: zodResolver(magicLinkSchema),
     defaultValues: {
-      email: "",
+      email: initialEmail ?? "",
     },
   });
 

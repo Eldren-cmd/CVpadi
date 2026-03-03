@@ -12,6 +12,7 @@ const foundationChecklist = [
   "A preference centre and hourly email-sequence processor route are scaffolded for the next cron step.",
   "Phase 1 loophole fixes now include a server-rendered free preview canvas, FingerprintJS soft-signal tracking, and atomic free-preview limits.",
   "Free feature F1 is live: CV score share cards now render through a server OG route and trigger after the first completed preview.",
+  "Free feature F2 is live: a public CV checker now scores pasted text or uploaded PDFs and hands captured email into the free build flow.",
 ];
 
 const deploymentReminders = [
@@ -52,8 +53,9 @@ export default function Home() {
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--ink-light)] sm:text-lg">
             The app now has Sentry, Supabase auth, a protected conversational builder,
-            local recovery logic, CV scoring, server-verified Paystack payment flow,
-            private delivery assets, and Resend-based email delivery.
+            local recovery logic, CV scoring, a public checker, server-verified
+            Paystack payment flow, private delivery assets, and Resend-based email
+            delivery.
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <a
@@ -61,6 +63,12 @@ export default function Home() {
               href="/login"
             >
               Open login
+            </a>
+            <a
+              className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"
+              href="/check"
+            >
+              Check a CV
             </a>
             <a
               className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"

@@ -23,6 +23,7 @@ Current milestone: Phase 1 foundation through auth, the conversational CV builde
 - Free preview route at `/api/cv/preview/[cvId]` rendered server-side into a watermarked 600px canvas preview
 - FingerprintJS soft-signal tracking, disposable-email blocking, edge preview rate limiting, and the atomic free-preview counter
 - CV score share card route at `/api/og/cv-score?score=87&name=Adaeze`, triggered after the first completed preview
+- Public CV score checker at `/check` with `/api/check/score`, supporting pasted text and PDF uploads through `pdf-parse`
 
 ## Local Development
 
@@ -40,6 +41,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 - `/` status page for the current milestone
 - `/login` authentication entry
+- `/check` public CV score checker
 - `/build` protected CV builder
 - `/auth/callback` Supabase auth exchange route
 - `/email-preferences` user email cadence controls

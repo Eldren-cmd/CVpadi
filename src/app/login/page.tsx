@@ -3,9 +3,10 @@ import { LoginForm } from "@/components/auth/login-form";
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams?: { next?: string };
+  searchParams?: { email?: string; next?: string };
 }) {
   const nextPath = searchParams?.next ?? "/build";
+  const initialEmail = searchParams?.email ?? "";
 
   return (
     <main className="min-h-screen px-4 py-8 sm:px-6">
@@ -22,7 +23,7 @@ export default function LoginPage({
             Returning users should not be forced into a single auth path.
           </p>
         </section>
-        <LoginForm nextPath={nextPath} />
+        <LoginForm initialEmail={initialEmail} nextPath={nextPath} />
       </div>
     </main>
   );
