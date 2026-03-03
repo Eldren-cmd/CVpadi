@@ -195,6 +195,37 @@ export function CvReadyEmail({
   );
 }
 
+export function AiEnhancedCvReadyEmail({
+  fullName,
+  jpgUrl,
+  pdfUrl,
+}: {
+  fullName: string;
+  jpgUrl: string;
+  pdfUrl: string;
+}) {
+  return (
+    <EmailLayout title={`Your AI-enhanced CV is ready, ${fullName || "there"}.`}>
+      <p style={bodyStyle}>
+        CVPadi has refreshed your career objective and suggested stronger role-fit skills.
+        Your updated PDF and WhatsApp-ready JPG are live now and expire in 2 hours.
+      </p>
+      <div>
+        <a href={pdfUrl} style={ctaStyle}>
+          Download updated PDF
+        </a>
+        <a href={jpgUrl} style={secondaryCtaStyle}>
+          Open updated JPG
+        </a>
+      </div>
+      <p style={{ ...bodyStyle, marginTop: "20px" }}>
+        Keep your original draft details accurate. The AI pass only improves the objective
+        wording and surfaces missing skills; it does not replace your experience history.
+      </p>
+    </EmailLayout>
+  );
+}
+
 export function PostDownloadReminderEmail({
   buildUrl,
   fullName,

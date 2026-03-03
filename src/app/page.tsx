@@ -20,6 +20,7 @@ const foundationChecklist = [
   "Free feature F7 is live: every builder save now writes a timeline snapshot and older versions can be forked into new CV branches.",
   "Free feature F8 is live: the first completed CV view now combines share and referral prompts, and verified referred payments credit the referrer automatically.",
   "Phase 2.1 is now aligned to v4: the scraper loads stable sources from job_sources, corporate sources from JOB_SCRAPER_SOURCES_JSON, checks robots.txt, and auto-disables failing stable sources.",
+  "Checkpoint 5 is now wired: verified payments enqueue a Claude Haiku enhancement pass that regenerates updated assets and emails the refreshed files off the payment critical path.",
 ];
 
 const deploymentReminders = [
@@ -27,6 +28,7 @@ const deploymentReminders = [
   "If you migrate Paystack to the v4 Edge Function webhook path, update the dashboard webhook URL before taking live payments.",
   "Do not keep test Paystack keys in production.",
   "Set NEXT_PUBLIC_RECAPTCHA_SITE_KEY and RECAPTCHA_SECRET_KEY before public launch.",
+  "Monitor Anthropic credits and move up only after the queued enhancement worker proves stable in production.",
 ];
 
 const envVars = [
@@ -41,6 +43,7 @@ const envVars = [
   "EMAIL_SEQUENCE_CRON_SECRET",
   "NEXT_PUBLIC_RECAPTCHA_SITE_KEY",
   "RECAPTCHA_SECRET_KEY",
+  "ANTHROPIC_API_KEY",
   "SENTRY_DSN",
   "JOB_SCRAPER_SOURCES_JSON",
   "NEXT_PUBLIC_APP_URL",
@@ -58,12 +61,13 @@ export default function Home() {
             CVPadi
           </p>
           <h1 className="mt-3 max-w-2xl font-heading text-4xl leading-tight text-foreground sm:text-5xl">
-            Auth, the CV builder, delivery, and the v4 Checkpoint 4 scraper baseline are now wired.
+            Auth, the CV builder, delivery, the queued Claude worker, and the v4 Checkpoint 4 scraper baseline are now wired.
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--ink-light)] sm:text-lg">
             The app now has Sentry, Supabase auth, a protected conversational builder,
             local recovery logic, CV scoring, public free-feature surfaces, a hardened
-            Paystack payment flow, private delivery assets, and the two-tier legal-source
+            Paystack payment flow, private delivery assets, a queued Claude enhancement
+            path that stays off the webhook critical path, and the two-tier legal-source
             job scraper required by the updated v4 docs.
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">

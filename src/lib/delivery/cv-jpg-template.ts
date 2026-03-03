@@ -18,6 +18,26 @@ function compact(values: Array<string | null | undefined>) {
   return values.filter(Boolean).join(" | ");
 }
 
+function getDisplayObjective(formData: CVFormData) {
+  return formData.aiEnhancedObjective || formData.careerObjective || "Career objective not provided yet.";
+}
+
+function getDisplaySkills(formData: CVFormData) {
+  const seen = new Set<string>();
+
+  return [...(formData.aiSuggestedSkills || []), ...formData.skills].filter((skill) => {
+    const normalized = skill.trim();
+    const key = normalized.toLowerCase();
+
+    if (!normalized || seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
+}
+
 function wrapText(text: string, maxChars: number, maxLines: number) {
   const words = text.replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
   const lines: string[] = [];
@@ -83,6 +103,8 @@ export async function renderCvJpgBuffer({
   variant?: "delivery" | "preview";
   width?: number;
 }) {
+  const displayObjective = getDisplayObjective(formData);
+  const displaySkills = getDisplaySkills(formData);
   const heroMeta = compact([
     formData.locationCity,
     formData.locationState,
@@ -94,11 +116,7 @@ export async function renderCvJpgBuffer({
     formData.experienceLevel,
     formData.nyscStatus ? `NYSC: ${formData.nyscStatus}` : "",
   ]);
-  const objectiveLines = wrapText(
-    formData.careerObjective || "Career objective not provided yet.",
-    62,
-    4,
-  );
+  const objectiveLines = wrapText(displayObjective, 62, 4);
   const experienceLines = formData.noExperienceYet
     ? ["Entry-level candidate. Experience section intentionally empty."]
     : formData.workExperience.slice(0, 2).flatMap((entry) => {
@@ -116,11 +134,7 @@ export async function renderCvJpgBuffer({
     entry.institution || "Institution pending",
     compact([entry.course, entry.degreeClass, entry.year]) || "Education details pending",
   ]);
-  const skillLines = wrapText(
-    [...formData.skills, ...formData.languages].join(" • ") || "Skills pending",
-    62,
-    3,
-  );
+  const skillLines = wrapText([...displaySkills, ...formData.languages].join(" | ") || "Skills pending", 62, 3);
   const refereeLines = [
     compact([
       formData.refereeOne.name,

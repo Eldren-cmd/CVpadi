@@ -126,6 +126,26 @@ function renderResponsibilityLines(text: string) {
     .map((line) => `- ${line}`);
 }
 
+function getDisplayObjective(formData: CVFormData) {
+  return formData.aiEnhancedObjective || formData.careerObjective || "Career objective not provided yet.";
+}
+
+function getDisplaySkills(formData: CVFormData) {
+  const seen = new Set<string>();
+
+  return [...(formData.aiSuggestedSkills || []), ...formData.skills].filter((skill) => {
+    const normalized = skill.trim();
+    const key = normalized.toLowerCase();
+
+    if (!normalized || seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
+}
+
 function renderRefereeBlock(label: string, data: CVFormData["refereeOne"]) {
   return (
     <View style={styles.refereeColumn}>
@@ -144,6 +164,9 @@ export function CVPdfDocument({
   fingerprint: string;
   formData: CVFormData;
 }) {
+  const displayObjective = getDisplayObjective(formData);
+  const displaySkills = getDisplaySkills(formData);
+
   return (
     <Document author="CVPadi" title={`${formData.fullName || "CVPadi User"} CV`}>
       <Page size="A4" style={styles.page}>
@@ -165,7 +188,7 @@ export function CVPdfDocument({
             ])}
           </Text>
           <View style={styles.badgeRow}>
-            {formData.skills.slice(0, 6).map((skill) => (
+            {displaySkills.slice(0, 6).map((skill) => (
               <Text key={skill} style={styles.badge}>
                 {skill}
               </Text>
@@ -175,9 +198,7 @@ export function CVPdfDocument({
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Career Objective</Text>
-          <Text style={styles.paragraph}>
-            {formData.careerObjective || "Career objective not provided yet."}
-          </Text>
+          <Text style={styles.paragraph}>{displayObjective}</Text>
         </View>
 
         <View style={styles.section}>
@@ -214,7 +235,7 @@ export function CVPdfDocument({
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Skills & Languages</Text>
           <View style={styles.skillWrap}>
-            {formData.skills.map((skill) => (
+            {displaySkills.map((skill) => (
               <Text key={skill} style={styles.skillChip}>
                 {skill}
               </Text>

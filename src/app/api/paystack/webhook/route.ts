@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
+import { enqueueAiEnhancement } from "@/lib/ai/queue";
 import { generateAndDeliverCvAssets } from "@/lib/delivery/cv-delivery";
 import { parsePaymentMetadata, verifyPaystackSignature } from "@/lib/payments/paystack";
 import type { PaymentType, PaystackChargeSuccessEvent } from "@/lib/payments/types";
@@ -226,6 +227,18 @@ export async function POST(request: Request) {
     }
 
     await generateAndDeliverCvAssets({ cvId, userId });
+
+    try {
+      await enqueueAiEnhancement({ cvId, userId });
+    } catch (queueError) {
+      Sentry.withScope((scope) => {
+        scope.setTag("paystack_reference", reference);
+        scope.setTag("cv_id", cvId);
+        scope.setTag("user_id", userId);
+        scope.setTag("ai_queue", "enqueue_failed");
+        Sentry.captureException(queueError);
+      });
+    }
 
     return NextResponse.json({ received: true });
   } catch (error) {

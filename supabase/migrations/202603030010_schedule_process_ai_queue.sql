@@ -1,0 +1,33 @@
+begin;
+
+create extension if not exists pg_cron with schema extensions;
+create extension if not exists pg_net with schema extensions;
+
+do $$
+declare
+  existing_job_id bigint;
+begin
+  select jobid
+  into existing_job_id
+  from cron.job
+  where jobname = 'process-ai-queue-quarter-hourly';
+
+  if existing_job_id is not null then
+    perform cron.unschedule(existing_job_id);
+  end if;
+end
+$$;
+
+select cron.schedule(
+  'process-ai-queue-quarter-hourly',
+  '*/15 * * * *',
+  $$
+  select net.http_post(
+    url := 'https://xqlstweiuaepslknwobm.supabase.co/functions/v1/process-ai-queue',
+    headers := '{"Content-Type":"application/json","apikey":"sb_publishable_RBs2Uwj5-ypHo94UBLeyzg_9mILlMwW"}'::jsonb,
+    body := '{}'::jsonb
+  ) as request_id;
+  $$
+);
+
+commit;

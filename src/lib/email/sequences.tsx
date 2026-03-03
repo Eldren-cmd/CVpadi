@@ -6,6 +6,7 @@ import type { ReactElement } from "react";
 import { extractEmailPreferences } from "./preferences";
 import {
   AbandonmentSequenceEmail,
+  AiEnhancedCvReadyEmail,
   CvReadyEmail,
   JobsDigestScaffoldEmail,
   PostDownloadReminderEmail,
@@ -481,6 +482,30 @@ async function sendCvReadySequenceEmail({
       />
     ),
     subject: "Your CV is ready - PDF and WhatsApp image included",
+  });
+}
+
+export async function sendAiEnhancedCvEmail({
+  email,
+  fullName,
+  jpgUrl,
+  pdfUrl,
+}: {
+  email: string;
+  fullName: string;
+  jpgUrl: string;
+  pdfUrl: string;
+}) {
+  return sendEmail({
+    email,
+    react: (
+      <AiEnhancedCvReadyEmail
+        fullName={fullName}
+        jpgUrl={jpgUrl}
+        pdfUrl={pdfUrl}
+      />
+    ),
+    subject: "Your AI-enhanced CV is ready",
   });
 }
 

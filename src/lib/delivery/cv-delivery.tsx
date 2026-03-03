@@ -2,7 +2,10 @@ import { createHash } from "node:crypto";
 import { renderToBuffer } from "@react-pdf/renderer";
 import * as Sentry from "@sentry/nextjs";
 import type { CVFormData } from "@/lib/cv/types";
-import { schedulePostPaymentEmailSequences } from "@/lib/email/sequences";
+import {
+  schedulePostPaymentEmailSequences,
+  sendAiEnhancedCvEmail,
+} from "@/lib/email/sequences";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCvAssetPaths, getSignedCvAssetLinks } from "./cv-assets";
 import { renderCvJpgBuffer } from "./cv-jpg-template";
@@ -19,9 +22,11 @@ function createFingerprint(email: string, cvId: string) {
 
 export async function generateAndDeliverCvAssets({
   cvId,
+  isEnhancement = false,
   userId,
 }: {
   cvId: string;
+  isEnhancement?: boolean;
   userId: string;
 }) {
   const supabase = createAdminClient();
@@ -96,19 +101,28 @@ export async function generateAndDeliverCvAssets({
     const links = await getSignedCvAssetLinks({ cvId, userId });
 
     try {
-      await schedulePostPaymentEmailSequences({
-        email: profile.email,
-        fullName: profile.full_name || formData.fullName,
-        jpgUrl: links.jpgUrl,
-        pdfUrl: links.pdfUrl,
-        sendImmediate: true,
-        userId,
-      });
+      if (isEnhancement) {
+        await sendAiEnhancedCvEmail({
+          email: profile.email,
+          fullName: profile.full_name || formData.fullName,
+          jpgUrl: links.jpgUrl,
+          pdfUrl: links.pdfUrl,
+        });
+      } else {
+        await schedulePostPaymentEmailSequences({
+          email: profile.email,
+          fullName: profile.full_name || formData.fullName,
+          jpgUrl: links.jpgUrl,
+          pdfUrl: links.pdfUrl,
+          sendImmediate: true,
+          userId,
+        });
+      }
     } catch (error) {
       Sentry.withScope((scope) => {
         scope.setTag("cv_id", cvId);
         scope.setTag("user_id", userId);
-        scope.setTag("delivery_channel", "resend");
+        scope.setTag("delivery_channel", isEnhancement ? "resend_ai" : "resend");
         Sentry.captureException(error);
       });
     }
