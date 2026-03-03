@@ -26,6 +26,7 @@ Current milestone: Phase 1 foundation through auth, the conversational CV builde
 - Public CV score checker at `/check` with `/api/check/score`, supporting pasted text and PDF uploads through `pdf-parse`
 - Public salary database at `/salary` with a five-submission aggregate threshold and magic-link email verification before submission
 - Protected application tracker at `/dashboard/tracker` with Applied, Interview, Rejected, and Offer columns
+- Static industry CV tips pages at `/cv-tips/[industry]` with build-time generation and industry-prefilled build links
 
 ## Local Development
 
@@ -46,6 +47,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - `/check` public CV score checker
 - `/salary` public salary database
 - `/dashboard/tracker` protected application tracker
+- `/cv-tips/[industry]` static industry CV tips pages
 - `/build` protected CV builder
 - `/auth/callback` Supabase auth exchange route
 - `/email-preferences` user email cadence controls

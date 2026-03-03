@@ -98,13 +98,21 @@ export const NIGERIAN_CITIES: Record<string, string[]> = {
 };
 
 export const INDUSTRIES = [
+  "Banking",
+  "Engineering",
   "Technology",
   "Finance",
   "Consulting",
   "Education",
   "Healthcare",
+  "Law",
   "Manufacturing",
   "Energy",
+  "Oil and Gas",
+  "Accounting",
+  "Marketing",
+  "NGO",
+  "Teaching",
   "Telecommunications",
   "Public Sector",
   "Nonprofit",

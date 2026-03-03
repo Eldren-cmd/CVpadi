@@ -15,6 +15,7 @@ const foundationChecklist = [
   "Free feature F2 is live: a public CV checker now scores pasted text or uploaded PDFs and hands captured email into the free build flow.",
   "Free feature F3 is live: the public salary page now enforces the five-submission rule and uses magic-link email verification for submissions.",
   "Free feature F4 is live: registered users now get a kanban application tracker with an interview-stage CV update prompt.",
+  "Free feature F5 is live: static industry CV tips pages now pre-select the build flow via URL params.",
 ];
 
 const deploymentReminders = [

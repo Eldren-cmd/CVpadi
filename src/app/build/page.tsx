@@ -1,6 +1,6 @@
 import { FormErrorBoundary } from "@/components/build/form-error-boundary";
 import { FormWizard } from "@/components/build/form-wizard";
-import { createDefaultCVFormData } from "@/lib/cv/constants";
+import { createDefaultCVFormData, INDUSTRIES } from "@/lib/cv/constants";
 import type { CVFormData } from "@/lib/cv/types";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 export default async function BuildPage({
   searchParams,
 }: {
-  searchParams?: { reference?: string };
+  searchParams?: { industry?: string; reference?: string };
 }) {
   const supabase = await createClient();
   const {
@@ -52,9 +52,14 @@ export default async function BuildPage({
     draft = createdDraft;
   }
 
+  const requestedIndustry = normalizeIndustryPrefill(searchParams?.industry);
   const initialDraft = {
     ...createDefaultCVFormData(user.email ?? ""),
     ...(draft.form_data as Partial<CVFormData>),
+    industry:
+      (requestedIndustry
+        || (draft.form_data as Partial<CVFormData>)?.industry
+        || "") as CVFormData["industry"],
   };
 
   return (
@@ -75,4 +80,14 @@ export default async function BuildPage({
       </div>
     </main>
   );
+}
+
+function normalizeIndustryPrefill(value?: string) {
+  if (!value) {
+    return "";
+  }
+
+  return INDUSTRIES.find(
+    (industry) => industry.toLowerCase() === value.trim().toLowerCase(),
+  ) ?? "";
 }
