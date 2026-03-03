@@ -3,6 +3,7 @@
 import { computeCVScore } from "@/lib/cv/score";
 import type { CVFormData, DraftSaveResult } from "@/lib/cv/types";
 import { isDisposableEmail } from "@/lib/cv/validation";
+import { scheduleBuildEmailSequences } from "@/lib/email/sequences";
 import { createClient } from "@/lib/supabase/server";
 
 interface SaveDraftInput {
@@ -57,6 +58,17 @@ export async function saveCvDraftAction({
       nysc_status: formData.nyscStatus,
     })
     .eq("id", user.id);
+
+  try {
+    await scheduleBuildEmailSequences({
+      email: formData.email || user.email || "",
+      fullName: formData.fullName,
+      furthestStepIndex: formData.furthestStepIndex,
+      userId: user.id,
+    });
+  } catch {
+    // Email sequence scheduling should not block draft saves.
+  }
 
   return {
     id: data.id,

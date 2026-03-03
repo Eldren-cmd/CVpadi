@@ -1,20 +1,12 @@
 import { createHash } from "node:crypto";
 import { renderToBuffer } from "@react-pdf/renderer";
 import * as Sentry from "@sentry/nextjs";
-import { Resend } from "resend";
 import type { CVFormData } from "@/lib/cv/types";
+import { schedulePostPaymentEmailSequences } from "@/lib/email/sequences";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getCvAssetPaths, getSignedCvAssetLinks } from "./cv-assets";
 import { renderCvJpgBuffer } from "./cv-jpg-template";
 import { CVPdfDocument } from "./cv-pdf-document";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-function getAssetPaths(userId: string, cvId: string) {
-  return {
-    jpgPath: `jpgs/${userId}/${cvId}.jpg`,
-    pdfPath: `pdfs/${userId}/${cvId}.pdf`,
-  };
-}
 
 function createFingerprint(email: string, cvId: string) {
   const rawFingerprint = `${email}|${cvId}|${Date.now()}`;
@@ -22,67 +14,6 @@ function createFingerprint(email: string, cvId: string) {
   return {
     fingerprintHash: createHash("sha256").update(rawFingerprint).digest("hex"),
     rawFingerprint,
-  };
-}
-
-function createDeliveryEmailHtml({
-  jpgUrl,
-  name,
-  pdfUrl,
-}: {
-  jpgUrl: string;
-  name: string;
-  pdfUrl: string;
-}) {
-  return `
-    <div style="background:#F5F0E8;padding:32px;font-family:Arial,sans-serif;color:#1A1410;">
-      <div style="max-width:640px;margin:0 auto;background:#FDFAF4;border:1px solid #DDD5C4;border-radius:8px;padding:32px;">
-        <p style="font-size:12px;letter-spacing:0.24em;text-transform:uppercase;color:#5C4F3D;margin:0 0 12px;">CVPadi</p>
-        <h1 style="font-size:28px;line-height:1.2;margin:0 0 16px;">Your CV is ready, ${name || "there"}.</h1>
-        <p style="font-size:15px;line-height:1.7;color:#5C4F3D;margin:0 0 24px;">
-          Your PDF and WhatsApp-ready JPG are attached as secure download links. These signed links expire in 2 hours.
-        </p>
-        <div style="display:flex;flex-direction:column;gap:12px;">
-          <a href="${pdfUrl}" style="display:inline-block;background:#D4501A;color:#fff;text-decoration:none;padding:14px 18px;border-radius:6px;font-weight:600;">Download PDF</a>
-          <a href="${jpgUrl}" style="display:inline-block;border:1px solid #DDD5C4;color:#1A1410;text-decoration:none;padding:14px 18px;border-radius:6px;font-weight:600;">Open WhatsApp JPG</a>
-        </div>
-        <p style="font-size:13px;line-height:1.7;color:#5C4F3D;margin:24px 0 0;">
-          Development note: if you are still using Resend's test sender, delivery will only work for the verified Resend account inbox.
-        </p>
-      </div>
-    </div>
-  `;
-}
-
-export async function getSignedCvAssetLinks({
-  cvId,
-  userId,
-}: {
-  cvId: string;
-  userId: string;
-}) {
-  const supabase = createAdminClient();
-  const { jpgPath, pdfPath } = getAssetPaths(userId, cvId);
-
-  const [
-    { data: pdfData, error: pdfError },
-    { data: jpgData, error: jpgError },
-  ] = await Promise.all([
-    supabase.storage.from("cv-assets").createSignedUrl(pdfPath, 7200),
-    supabase.storage.from("cv-assets").createSignedUrl(jpgPath, 7200),
-  ]);
-
-  if (pdfError) {
-    throw pdfError;
-  }
-
-  if (jpgError) {
-    throw jpgError;
-  }
-
-  return {
-    jpgUrl: jpgData.signedUrl,
-    pdfUrl: pdfData.signedUrl,
   };
 }
 
@@ -128,7 +59,7 @@ export async function generateAndDeliverCvAssets({
       formData,
     });
 
-    const { jpgPath, pdfPath } = getAssetPaths(userId, cvId);
+    const { jpgPath, pdfPath } = getCvAssetPaths(userId, cvId);
 
     const [
       { error: pdfUploadError },
@@ -165,15 +96,13 @@ export async function generateAndDeliverCvAssets({
     const links = await getSignedCvAssetLinks({ cvId, userId });
 
     try {
-      await resend.emails.send({
-        from: process.env.EMAIL_FROM!,
-        html: createDeliveryEmailHtml({
-          jpgUrl: links.jpgUrl,
-          name: profile.full_name || formData.fullName,
-          pdfUrl: links.pdfUrl,
-        }),
-        subject: "Your CV is ready - PDF and WhatsApp image included",
-        to: profile.email,
+      await schedulePostPaymentEmailSequences({
+        email: profile.email,
+        fullName: profile.full_name || formData.fullName,
+        jpgUrl: links.jpgUrl,
+        pdfUrl: links.pdfUrl,
+        sendImmediate: true,
+        userId,
       });
     } catch (error) {
       Sentry.withScope((scope) => {

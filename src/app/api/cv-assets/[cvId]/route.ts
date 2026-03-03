@@ -1,4 +1,4 @@
-import { getSignedCvAssetLinks } from "@/lib/delivery/cv-delivery";
+import { getSignedCvAssetLinks } from "@/lib/delivery/cv-assets";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 

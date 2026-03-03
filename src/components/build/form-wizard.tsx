@@ -150,6 +150,10 @@ export function FormWizard({
     const nextDraft = {
       ...draft,
       email: draft.email || userEmail,
+      furthestStepIndex: Math.max(
+        draft.furthestStepIndex ?? 0,
+        Math.min(step + 1, STEP_TITLES.length - 1),
+      ),
       lastSavedAt: Date.now(),
     };
 
@@ -161,6 +165,7 @@ export function FormWizard({
   const handleBack = () => {
     const nextDraft = {
       ...draft,
+      furthestStepIndex: draft.furthestStepIndex ?? step,
       lastSavedAt: Date.now(),
     };
 

@@ -8,6 +8,8 @@ const foundationChecklist = [
   "The builder waits for verified webhook confirmation before treating a payment as unlocked.",
   "Verified payments now trigger server-side PDF and WhatsApp JPG generation into the private cv-assets bucket.",
   "Paid users receive 2-hour signed delivery links in the builder and by email through Resend.",
+  "Phase 1 email sequences now schedule abandoned-draft follow-ups and post-download reminders.",
+  "A preference centre and hourly email-sequence processor route are scaffolded for the next cron step.",
 ];
 
 const deploymentReminders = [
@@ -25,6 +27,7 @@ const envVars = [
   "PAYSTACK_SECRET_KEY",
   "RESEND_API_KEY",
   "EMAIL_FROM",
+  "EMAIL_SEQUENCE_CRON_SECRET",
   "NEXT_PUBLIC_APP_URL",
 ];
 

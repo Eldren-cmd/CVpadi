@@ -17,6 +17,9 @@ Current milestone: Phase 1 foundation through auth, the conversational CV builde
 - Server-generated PDF and WhatsApp JPG uploads to the private `cv-assets` bucket
 - Signed asset delivery route at `/api/cv-assets/[cvId]`
 - Resend email delivery with 2-hour signed links
+- Email sequence scheduling for abandoned drafts and post-download follow-ups
+- Preference centre at `/email-preferences`
+- Scheduled sequence processor at `/api/email-sequences/process`
 
 ## Local Development
 
@@ -36,6 +39,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - `/login` authentication entry
 - `/build` protected CV builder
 - `/auth/callback` Supabase auth exchange route
+- `/email-preferences` user email cadence controls
 
 ## Checkpoint Status
 
@@ -54,3 +58,4 @@ Completed:
 - Delivery assets are generated on the server, stored in the private `cv-assets` bucket, and exposed through 2-hour signed URLs only after verified payment.
 - Development email delivery should use Resend's test sender and only reaches the verified Resend inbox. Before production, switch `EMAIL_FROM` to a verified domain sender.
 - Before production, register the live Paystack webhook URL as `https://<your-production-domain>/api/paystack/webhook`.
+- The delayed email processor expects `EMAIL_SEQUENCE_CRON_SECRET` and is designed to be invoked by the `supabase/functions/process-email-sequences` wrapper on an hourly cron.

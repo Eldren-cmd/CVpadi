@@ -209,6 +209,7 @@ export function createDefaultCVFormData(email = ""): CVFormData {
     languages: [],
     refereeOne: createRefereeEntry(),
     refereeTwo: createRefereeEntry(),
+    furthestStepIndex: 0,
     lastSavedAt: null,
   };
 }

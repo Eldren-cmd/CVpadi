@@ -64,6 +64,7 @@ export interface CVFormData {
   languages: string[];
   refereeOne: RefereeEntry;
   refereeTwo: RefereeEntry;
+  furthestStepIndex: number;
   lastSavedAt: number | null;
 }
 
