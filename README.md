@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CVPadi
 
-## Getting Started
+Checkpoint 1 baseline for CVPadi. This milestone includes only the Next.js project setup and the Supabase schema artifacts. No live Supabase client code, auth flows, storage logic, or product features have been added yet.
 
-First, run the development server:
+## Included
+
+- Next.js 14 App Router scaffold with TypeScript, Tailwind CSS, and ESLint
+- CVPadi base metadata, fonts, and design tokens in the app shell
+- Checkpoint 1 environment template in `.env.example`
+- Supabase migration in `supabase/migrations/202603030001_checkpoint1_schema.sql`
+
+## Local Development
+
+Install dependencies and run the app:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run lint
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Setup Checkpoint 1
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Complete these before writing any Supabase runtime code:
 
-## Learn More
+1. Create the Supabase project.
+2. Add `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to `.env.local`.
+3. Run `supabase/migrations/202603030001_checkpoint1_schema.sql` in the Supabase SQL Editor.
+4. Enable Email auth, magic links, and Google OAuth in Supabase Auth settings.
+5. Create the private `cv-assets` storage bucket.
+6. Verify RLS before proceeding.
 
-To learn more about Next.js, take a look at the following resources:
+Stop here after Checkpoint 1. Resume feature work only after these steps are complete.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- The SQL migration includes RLS, core policies, timestamp triggers, the atomic free-generation counter function, and the AI enhancement queue table.
+- The schema is intentionally ahead of feature implementation so the data model is fixed before product code starts.
