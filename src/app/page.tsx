@@ -16,6 +16,7 @@ const foundationChecklist = [
   "Free feature F3 is live: the public salary page now enforces the five-submission rule and uses magic-link email verification for submissions.",
   "Free feature F4 is live: registered users now get a kanban application tracker with an interview-stage CV update prompt.",
   "Free feature F5 is live: static industry CV tips pages now pre-select the build flow via URL params.",
+  "Free feature F6 is live: the NYSC hub now covers CV guidance, PPA company research, and after-service career planning.",
 ];
 
 const deploymentReminders = [
@@ -84,6 +85,12 @@ export default function Home() {
               href="/dashboard/tracker"
             >
               Application tracker
+            </a>
+            <a
+              className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"
+              href="/nysc"
+            >
+              NYSC hub
             </a>
             <a
               className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"

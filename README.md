@@ -27,6 +27,7 @@ Current milestone: Phase 1 foundation through auth, the conversational CV builde
 - Public salary database at `/salary` with a five-submission aggregate threshold and magic-link email verification before submission
 - Protected application tracker at `/dashboard/tracker` with Applied, Interview, Rejected, and Offer columns
 - Static industry CV tips pages at `/cv-tips/[industry]` with build-time generation and industry-prefilled build links
+- NYSC guide hub at `/nysc` with evergreen pages and email-verified PPA company submissions
 
 ## Local Development
 
@@ -48,6 +49,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - `/salary` public salary database
 - `/dashboard/tracker` protected application tracker
 - `/cv-tips/[industry]` static industry CV tips pages
+- `/nysc` hub with `/nysc/cv-guide`, `/nysc/ppa-companies`, and `/nysc/after-nysc`
 - `/build` protected CV builder
 - `/auth/callback` Supabase auth exchange route
 - `/email-preferences` user email cadence controls
