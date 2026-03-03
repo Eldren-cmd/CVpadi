@@ -18,6 +18,7 @@ const foundationChecklist = [
   "Free feature F5 is live: static industry CV tips pages now pre-select the build flow via URL params.",
   "Free feature F6 is live: the NYSC hub now covers CV guidance, PPA company research, and after-service career planning.",
   "Free feature F7 is live: every builder save now writes a timeline snapshot and older versions can be forked into new CV branches.",
+  "Free feature F8 is live: the first completed CV view now combines share and referral prompts, and verified referred payments credit the referrer automatically.",
 ];
 
 const deploymentReminders = [

@@ -56,18 +56,22 @@ declare global {
 
 export function FormWizard({
   initialCvId,
+  initialAccountCreditKobo,
   initialDraft,
   initialFreePreviewsUsed,
   initialPaymentReference,
+  initialReferralCode,
   initialUpdatedAt,
   isPaid,
   userId,
   userEmail,
 }: {
   initialCvId: string;
+  initialAccountCreditKobo: number;
   initialDraft: CVFormData;
   initialFreePreviewsUsed: number;
   initialPaymentReference?: string | null;
+  initialReferralCode: string;
   initialUpdatedAt: string;
   isPaid: boolean;
   userId: string;
@@ -354,14 +358,17 @@ export function FormWizard({
         <ScoreDial onJump={setStep} score={scoreResult.score} suggestions={scoreResult.suggestions} />
         <PreviewPanel
           cvId={cvId}
+          accountCreditKobo={initialAccountCreditKobo}
           deviceFingerprint={deviceFingerprint}
           draft={draft}
           honeypot={honeypot}
           initialFreePreviewsUsed={initialFreePreviewsUsed}
+          referralCode={initialReferralCode}
           isComplete={scoreResult.suggestions.length === 0}
           score={scoreResult.score}
         />
         <PaymentPanel
+          availableCreditKobo={initialAccountCreditKobo}
           cvId={cvId}
           initialPaymentReference={initialPaymentReference}
           isPaid={isPaid}

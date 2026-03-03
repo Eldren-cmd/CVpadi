@@ -19,7 +19,9 @@ export async function GET(
 
   const { data: payment, error: paymentError } = await supabase
     .from("payments")
-    .select("amount_kobo, currency, cv_id, payment_type, status, webhook_verified")
+    .select(
+      "amount_kobo, base_amount_kobo, credit_applied_kobo, currency, cv_id, payment_type, status, webhook_verified",
+    )
     .eq("paystack_reference", params.reference)
     .eq("user_id", user.id)
     .single();
@@ -48,6 +50,8 @@ export async function GET(
 
   return NextResponse.json({
     amountKobo: payment.amount_kobo,
+    baseAmountKobo: payment.base_amount_kobo,
+    creditAppliedKobo: payment.credit_applied_kobo,
     currency: payment.currency,
     cvUnlocked: Boolean(cv?.is_paid),
     gatewayStatus,

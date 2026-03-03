@@ -7,6 +7,8 @@ export type PaymentRowStatus = "pending" | "success" | "failed";
 export interface InitializePaymentResponse {
   accessCode: string;
   amountKobo: number;
+  baseAmountKobo: number;
+  creditAppliedKobo: number;
   authorizationUrl: string;
   currency: string;
   paymentType: PaymentType;
@@ -15,6 +17,8 @@ export interface InitializePaymentResponse {
 
 export interface PaymentStatusResponse {
   amountKobo: number;
+  baseAmountKobo: number;
+  creditAppliedKobo: number;
   cvUnlocked: boolean;
   currency: string;
   gatewayStatus: string | null;

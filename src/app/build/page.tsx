@@ -2,6 +2,7 @@ import { FormErrorBoundary } from "@/components/build/form-error-boundary";
 import { FormWizard } from "@/components/build/form-wizard";
 import { createDefaultCVFormData, INDUSTRIES } from "@/lib/cv/constants";
 import type { CVFormData } from "@/lib/cv/types";
+import { applyPendingReferralAttribution } from "@/lib/referrals/referrals";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -22,9 +23,11 @@ export default async function BuildPage({
     redirect(`/login?next=${encodeURIComponent(nextPath)}`);
   }
 
+  await applyPendingReferralAttribution({ userId: user.id });
+
   const { data: profile } = await supabase
     .from("profiles")
-    .select("free_generations_used")
+    .select("account_credit_kobo, free_generations_used, referral_code")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -68,8 +71,10 @@ export default async function BuildPage({
           <FormWizard
             initialCvId={draft.id}
             initialDraft={initialDraft}
+            initialAccountCreditKobo={profile?.account_credit_kobo ?? 0}
             initialPaymentReference={searchParams?.reference ?? null}
             initialFreePreviewsUsed={profile?.free_generations_used ?? 0}
+            initialReferralCode={profile?.referral_code ?? ""}
             initialUpdatedAt={draft.updated_at}
             isPaid={draft.is_paid}
             userEmail={user.email ?? ""}

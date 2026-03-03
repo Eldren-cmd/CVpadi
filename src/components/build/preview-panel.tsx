@@ -15,19 +15,23 @@ declare global {
 }
 
 export function PreviewPanel({
+  accountCreditKobo,
   cvId,
   deviceFingerprint,
   draft,
   honeypot,
   initialFreePreviewsUsed,
+  referralCode,
   isComplete,
   score,
 }: {
+  accountCreditKobo: number;
   cvId: string;
   deviceFingerprint: string | null;
   draft: CVFormData;
   honeypot: string;
   initialFreePreviewsUsed: number;
+  referralCode: string;
   isComplete: boolean;
   score: number;
 }) {
@@ -122,8 +126,10 @@ export function PreviewPanel({
       {showSharePrompt ? (
         <div className="mt-4">
           <ScoreSharePrompt
+            accountCreditKobo={accountCreditKobo}
             name={draft.fullName || "Nigerian Candidate"}
             onDismiss={() => setShowSharePrompt(false)}
+            referralCode={referralCode}
             score={score}
           />
         </div>

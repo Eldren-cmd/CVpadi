@@ -20,10 +20,12 @@ declare global {
 type CheckoutState = "idle" | "preparing" | "pending" | "paid" | "failed";
 
 export function PaymentPanel({
+  availableCreditKobo,
   cvId,
   initialPaymentReference,
   isPaid,
 }: {
+  availableCreditKobo: number;
   cvId: string;
   initialPaymentReference?: string | null;
   isPaid: boolean;
@@ -40,11 +42,23 @@ export function PaymentPanel({
   const [gatewayStatus, setGatewayStatus] = useState<string | null>(null);
   const [isScriptReady, setIsScriptReady] = useState(false);
   const [deliveryLinks, setDeliveryLinks] = useState<DeliveryLinksResponse | null>(null);
+  const [creditAppliedKobo, setCreditAppliedKobo] = useState(
+    Math.min(availableCreditKobo, PAYMENT_PRICES_KOBO[DEFAULT_PAYMENT_TYPE]),
+  );
+  const [payableAmountKobo, setPayableAmountKobo] = useState(
+    PAYMENT_PRICES_KOBO[DEFAULT_PAYMENT_TYPE]
+      - Math.min(availableCreditKobo, PAYMENT_PRICES_KOBO[DEFAULT_PAYMENT_TYPE]),
+  );
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const statusCheckRef = useRef<(() => Promise<void>) | null>(null);
-  const amountLabel = useMemo(
+  const baseAmountLabel = useMemo(
     () => formatKoboToNaira(PAYMENT_PRICES_KOBO[DEFAULT_PAYMENT_TYPE]),
     [],
+  );
+  const amountLabel = useMemo(() => formatKoboToNaira(payableAmountKobo), [payableAmountKobo]);
+  const creditAppliedLabel = useMemo(
+    () => formatKoboToNaira(creditAppliedKobo),
+    [creditAppliedKobo],
   );
 
   useEffect(() => {
@@ -103,7 +117,9 @@ export function PaymentPanel({
     }
 
     const payload = (await response.json()) as PaymentStatusResponse;
+    setCreditAppliedKobo(payload.creditAppliedKobo);
     setGatewayStatus(payload.gatewayStatus);
+    setPayableAmountKobo(payload.amountKobo);
 
     if (payload.cvUnlocked || (payload.paymentStatus === "success" && payload.webhookVerified)) {
       setCheckoutState("paid");
@@ -183,8 +199,17 @@ export function PaymentPanel({
 
     const payload = (await response.json()) as InitializePaymentResponse;
     setAccessCode(payload.accessCode);
+    setCreditAppliedKobo(payload.creditAppliedKobo);
     setAuthorizationUrl(payload.authorizationUrl);
+    setPayableAmountKobo(payload.amountKobo);
     setReference(payload.reference);
+    if (payload.amountKobo === 0) {
+      setCheckoutState("paid");
+      setStatusMessage("Your account credit covered this purchase. The CV is unlocked.");
+      void fetchDeliveryLinks();
+      return;
+    }
+
     setCheckoutState("pending");
     setStatusMessage(
       "Checkout opened. Complete the payment and keep this page open for the webhook confirmation.",
@@ -237,6 +262,13 @@ export function PaymentPanel({
         Cards, bank transfer, and USSD are enabled in the Paystack modal. The frontend
         does not trust its own success callback. Unlocking waits for the verified webhook.
       </p>
+
+      {creditAppliedKobo > 0 ? (
+        <p className="mt-3 text-sm leading-6 text-[var(--ink-light)]">
+          Account credit auto-applies before checkout. Base price {baseAmountLabel}, credit
+          used {creditAppliedLabel}, payable now {amountLabel}.
+        </p>
+      ) : null}
 
       <div className="mt-5 rounded-[var(--radius-input)] border border-[var(--border-light)] bg-white/70 px-4 py-3 text-sm leading-6 text-[var(--ink-light)]">
         {statusMessage}

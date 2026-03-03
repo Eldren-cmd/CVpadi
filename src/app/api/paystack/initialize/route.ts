@@ -1,5 +1,9 @@
+import { generateAndDeliverCvAssets } from "@/lib/delivery/cv-delivery";
+import { getAppliedCreditKobo } from "@/lib/payments/constants";
 import { createPaymentReference, getPaymentAmount, initializePaystackTransaction } from "@/lib/payments/paystack";
 import type { PaymentType } from "@/lib/payments/types";
+import { REFERRAL_CREDIT_KOBO } from "@/lib/referrals/constants";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -45,19 +49,104 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "This CV is already unlocked." }, { status: 409 });
   }
 
-  const amountKobo = getPaymentAmount(body.paymentType);
-  const reference = createPaymentReference();
+  const adminSupabase = createAdminClient();
+  const { data: profile, error: profileError } = await adminSupabase
+    .from("profiles")
+    .select("account_credit_kobo, referred_by")
+    .eq("id", user.id)
+    .single();
 
-  const { error: paymentError } = await supabase.from("payments").insert({
+  if (profileError || !profile) {
+    return NextResponse.json({ error: profileError?.message ?? "Profile not found." }, { status: 404 });
+  }
+
+  const baseAmountKobo = getPaymentAmount(body.paymentType);
+  const creditAppliedKobo = getAppliedCreditKobo({
+    accountCreditKobo: profile.account_credit_kobo,
+    amountKobo: baseAmountKobo,
+  });
+  const amountKobo = baseAmountKobo - creditAppliedKobo;
+  const reference = createPaymentReference();
+  let referrerUserId = profile.referred_by;
+  let referralCodeUsed: string | null = null;
+
+  if (referrerUserId) {
+    const { data: referrer } = await adminSupabase
+      .from("profiles")
+      .select("id, referral_code")
+      .eq("id", referrerUserId)
+      .maybeSingle();
+
+    if (!referrer) {
+      referrerUserId = null;
+    } else {
+      referralCodeUsed = referrer.referral_code;
+    }
+  }
+
+  const paymentRecord = {
     amount_kobo: amountKobo,
+    base_amount_kobo: baseAmountKobo,
+    credit_applied_kobo: creditAppliedKobo,
     currency: "NGN",
     cv_id: cv.id,
     paystack_reference: reference,
     payment_type: body.paymentType,
+    referral_code_used: referralCodeUsed,
+    referral_credit_kobo: referrerUserId ? REFERRAL_CREDIT_KOBO : 0,
+    referrer_user_id: referrerUserId,
     status: "pending",
     user_id: user.id,
     webhook_verified: false,
-  });
+  };
+
+  if (amountKobo === 0) {
+    const { error: paymentError } = await adminSupabase.from("payments").insert({
+      ...paymentRecord,
+      status: "success",
+      webhook_verified: true,
+    });
+
+    if (paymentError) {
+      return NextResponse.json({ error: paymentError.message }, { status: 500 });
+    }
+
+    if (creditAppliedKobo > 0) {
+      const { error: creditError } = await adminSupabase
+        .from("profiles")
+        .update({ account_credit_kobo: Math.max(0, profile.account_credit_kobo - creditAppliedKobo) })
+        .eq("id", user.id);
+
+      if (creditError) {
+        return NextResponse.json({ error: creditError.message }, { status: 500 });
+      }
+    }
+
+    const { error: cvUnlockError } = await adminSupabase
+      .from("cvs")
+      .update({ is_paid: true })
+      .eq("id", cv.id)
+      .eq("user_id", user.id);
+
+    if (cvUnlockError) {
+      return NextResponse.json({ error: cvUnlockError.message }, { status: 500 });
+    }
+
+    await generateAndDeliverCvAssets({ cvId: cv.id, userId: user.id });
+
+    return NextResponse.json({
+      accessCode: "",
+      amountKobo,
+      authorizationUrl: "",
+      baseAmountKobo,
+      creditAppliedKobo,
+      currency: "NGN",
+      paymentType: body.paymentType,
+      reference,
+    });
+  }
+
+  const { error: paymentError } = await adminSupabase.from("payments").insert(paymentRecord);
 
   if (paymentError) {
     return NextResponse.json({ error: paymentError.message }, { status: 500 });
@@ -69,8 +158,10 @@ export async function POST(request: Request) {
       callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/build`,
       email: user.email ?? "",
       metadata: {
+        creditAppliedKobo,
         cvId: cv.id,
         paymentType: body.paymentType,
+        referralCodeUsed,
         userId: user.id,
       },
       reference,
@@ -80,6 +171,8 @@ export async function POST(request: Request) {
       accessCode: transaction.access_code,
       amountKobo,
       authorizationUrl: transaction.authorization_url,
+      baseAmountKobo,
+      creditAppliedKobo,
       currency: "NGN",
       paymentType: body.paymentType,
       reference: transaction.reference,

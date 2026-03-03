@@ -24,3 +24,13 @@ export function formatKoboToNaira(amountKobo: number) {
     minimumFractionDigits: 0,
   }).format(amountKobo / 100);
 }
+
+export function getAppliedCreditKobo({
+  accountCreditKobo,
+  amountKobo,
+}: {
+  accountCreditKobo: number;
+  amountKobo: number;
+}) {
+  return Math.max(0, Math.min(accountCreditKobo, amountKobo));
+}

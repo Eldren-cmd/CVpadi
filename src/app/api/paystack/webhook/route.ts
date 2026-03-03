@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { generateAndDeliverCvAssets } from "@/lib/delivery/cv-delivery";
-import { getPaymentAmount, parsePaymentMetadata, verifyPaystackSignature } from "@/lib/payments/paystack";
+import { parsePaymentMetadata, verifyPaystackSignature } from "@/lib/payments/paystack";
 import type { PaymentType, PaystackChargeSuccessEvent } from "@/lib/payments/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
@@ -39,9 +39,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true });
   }
 
-  const expectedAmount = getPaymentAmount(paymentType);
+  const supabase = createAdminClient();
+  const { data: existingPayment } = await supabase
+    .from("payments")
+    .select(
+      "amount_kobo, credit_applied_kobo, referral_credit_kobo, referrer_user_id, status, webhook_verified",
+    )
+    .eq("paystack_reference", reference)
+    .maybeSingle();
 
-  if (event.data.amount !== expectedAmount) {
+  if (!existingPayment) {
+    Sentry.captureMessage("Paystack webhook arrived without a matching payment row.", "warning");
+    return NextResponse.json({ received: true });
+  }
+
+  if (event.data.amount !== existingPayment.amount_kobo) {
     Sentry.withScope((scope) => {
       scope.setTag("paystack_reference", reference);
       scope.setTag("cv_id", cvId);
@@ -52,60 +64,101 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true });
   }
 
-  const supabase = createAdminClient();
-
   try {
-    const { data: existingPayment } = await supabase
-      .from("payments")
-      .select("status, webhook_verified")
-      .eq("paystack_reference", reference)
-      .maybeSingle();
-
     const { data: existingCv } = await supabase
       .from("cvs")
       .select("is_paid, pdf_fingerprint")
       .eq("id", cvId)
       .eq("user_id", userId)
       .maybeSingle();
+    const paymentAlreadyVerified =
+      existingPayment.status === "success" && existingPayment.webhook_verified;
 
     if (
-      existingPayment?.status === "success"
-      && existingPayment.webhook_verified
+      paymentAlreadyVerified
       && existingCv?.is_paid
       && existingCv.pdf_fingerprint
     ) {
       return NextResponse.json({ received: true });
     }
 
-    const { error: paymentError } = await supabase.from("payments").upsert(
-      {
-        amount_kobo: event.data.amount,
-        currency: event.data.currency ?? "NGN",
-        cv_id: cvId,
-        paystack_reference: reference,
-        payment_type: paymentType,
-        status: "success",
-        user_id: userId,
-        webhook_verified: true,
-      },
-      {
-        ignoreDuplicates: false,
-        onConflict: "paystack_reference",
-      },
-    );
+    if (!paymentAlreadyVerified) {
+      const { error: paymentError } = await supabase
+        .from("payments")
+        .update({
+          currency: event.data.currency ?? "NGN",
+          status: "success",
+          webhook_verified: true,
+        })
+        .eq("paystack_reference", reference);
 
-    if (paymentError) {
-      throw paymentError;
-    }
+      if (paymentError) {
+        throw paymentError;
+      }
 
-    const { error: cvError } = await supabase
-      .from("cvs")
-      .update({ is_paid: true })
-      .eq("id", cvId)
-      .eq("user_id", userId);
+      const { error: cvError } = await supabase
+        .from("cvs")
+        .update({ is_paid: true })
+        .eq("id", cvId)
+        .eq("user_id", userId);
 
-    if (cvError) {
-      throw cvError;
+      if (cvError) {
+        throw cvError;
+      }
+
+      if (existingPayment.credit_applied_kobo > 0) {
+        const { data: payerProfile, error: payerProfileError } = await supabase
+          .from("profiles")
+          .select("account_credit_kobo")
+          .eq("id", userId)
+          .single();
+
+        if (payerProfileError || !payerProfile) {
+          throw new Error(payerProfileError?.message ?? "Payer profile not found.");
+        }
+
+        const { error: payerCreditError } = await supabase
+          .from("profiles")
+          .update({
+            account_credit_kobo: Math.max(
+              0,
+              payerProfile.account_credit_kobo - existingPayment.credit_applied_kobo,
+            ),
+          })
+          .eq("id", userId);
+
+        if (payerCreditError) {
+          throw payerCreditError;
+        }
+      }
+
+      if (
+        existingPayment.referrer_user_id
+        && existingPayment.referral_credit_kobo > 0
+        && existingPayment.referrer_user_id !== userId
+      ) {
+        const { data: referrerProfile, error: referrerProfileError } = await supabase
+          .from("profiles")
+          .select("account_credit_kobo")
+          .eq("id", existingPayment.referrer_user_id)
+          .single();
+
+        if (referrerProfileError || !referrerProfile) {
+          throw new Error(referrerProfileError?.message ?? "Referrer profile not found.");
+        }
+
+        const { error: referralCreditError } = await supabase
+          .from("profiles")
+          .update({
+            account_credit_kobo:
+              referrerProfile.account_credit_kobo + existingPayment.referral_credit_kobo,
+          })
+          .eq("id", existingPayment.referrer_user_id);
+
+        if (referralCreditError) {
+          throw referralCreditError;
+        }
+      }
     }
 
     await generateAndDeliverCvAssets({ cvId, userId });

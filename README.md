@@ -29,6 +29,7 @@ Current milestone: Phase 1 foundation through auth, the conversational CV builde
 - Static industry CV tips pages at `/cv-tips/[industry]` with build-time generation and industry-prefilled build links
 - NYSC guide hub at `/nysc` with evergreen pages and email-verified PPA company submissions
 - CV version timeline and forking dashboard at `/dashboard/versions`
+- Referral landing at `/ref/[code]` with first-view sharing and auto-applied account credits
 
 ## Local Development
 
@@ -50,6 +51,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - `/salary` public salary database
 - `/dashboard/tracker` protected application tracker
 - `/dashboard/versions` protected CV version timeline and forking
+- `/ref/[code]` referral landing route that stores attribution before auth/build
 - `/cv-tips/[industry]` static industry CV tips pages
 - `/nysc` hub with `/nysc/cv-guide`, `/nysc/ppa-companies`, and `/nysc/after-nysc`
 - `/build` protected CV builder
@@ -78,3 +80,4 @@ Completed:
 - Before public launch, set `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` and `RECAPTCHA_SECRET_KEY` so the invisible reCAPTCHA checks move from dev-bypass mode to enforced mode.
 - The delayed email processor expects `EMAIL_SEQUENCE_CRON_SECRET` and is designed to be invoked by the `supabase/functions/process-email-sequences` wrapper on an hourly cron.
 - Run `supabase/migrations/202603030004_cv_versioning.sql` before testing the version timeline and fork flow.
+- Run `supabase/migrations/202603030005_referral_system.sql` before testing referral checkout crediting.
