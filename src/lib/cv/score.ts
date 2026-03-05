@@ -28,11 +28,11 @@ export function computeCVScore(formData: CVFormData) {
   if (formData.experienceLevel.trim()) score += 5;
   if (formData.nyscStatus.trim()) score += 5;
 
-  if (formData.careerObjective.trim().length >= 40) score += 10;
+  if (countWords(formData.careerObjective) >= 30) score += 10;
   else {
     suggestions.push({
       id: "objective",
-      message: "Write a clearer career objective of at least 40 characters.",
+      message: "Write a clearer career objective of at least 30 words.",
       step: 9,
     });
   }
@@ -83,6 +83,13 @@ export function computeCVScore(formData: CVFormData) {
     score: Math.min(score, 100),
     suggestions,
   };
+}
+
+function countWords(value: string) {
+  return value
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
 }
 
 function isRefereeComplete(referee: CVFormData["refereeOne"]) {

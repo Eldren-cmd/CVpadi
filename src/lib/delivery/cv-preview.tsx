@@ -9,7 +9,6 @@ import type { CVFormData } from "@/lib/cv/types";
 
 const DELIVERY_WIDTH = 1240;
 const CV_WIDTH = 794;
-const CV_HEIGHT = 1123;
 
 const NYSC_STATUS_LABELS: Record<CVFormData["nyscStatus"], string> = {
   discharged: "Discharged",
@@ -24,6 +23,37 @@ type SatoriFont = {
   style: "normal";
   weight: 400 | 700;
 };
+
+type LooseRecord = Record<string, unknown>;
+
+interface PreviewExperience {
+  company: string;
+  endDate: string;
+  role: string;
+  startDate: string;
+  responsibilities: string;
+}
+
+interface PreviewCertification {
+  issuer: string;
+  name: string;
+  year: string;
+}
+
+interface PreviewReferee {
+  company: string;
+  email: string;
+  name: string;
+  phone: string;
+  title: string;
+}
+
+interface RenderCvJpgOptions {
+  fingerprint: string;
+  formData: CVFormData;
+  variant?: "delivery" | "preview";
+  width?: number;
+}
 
 let satoriFonts: SatoriFont[] | null = null;
 
@@ -60,6 +90,39 @@ function getSatoriFonts() {
   return satoriFonts;
 }
 
+function getRecord(value: unknown): LooseRecord {
+  if (value && typeof value === "object") {
+    return value as LooseRecord;
+  }
+
+  return {};
+}
+
+function getString(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function getOptionalString(record: LooseRecord, keys: string[]) {
+  for (const key of keys) {
+    const value = getString(record[key]);
+    if (value) {
+      return value;
+    }
+  }
+
+  return "";
+}
+
+function normalizeStringArray(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [] as string[];
+  }
+
+  return value
+    .map((item) => getString(item))
+    .filter(Boolean);
+}
+
 function joinValues(values: Array<string | null | undefined>) {
   return values
     .map((value) => value?.trim())
@@ -67,12 +130,93 @@ function joinValues(values: Array<string | null | undefined>) {
     .join(" | ");
 }
 
-function firstLines(text: string, limit = 3) {
-  return text
-    .split(/\r?\n/g)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .slice(0, limit);
+function hasRefereeContent(referee: PreviewReferee) {
+  return Boolean(
+    referee.name || referee.title || referee.company || referee.phone || referee.email,
+  );
+}
+
+function getWorkExperience(formData: CVFormData, source: LooseRecord) {
+  const rawEntries = Array.isArray(source.work_experience)
+    ? source.work_experience
+    : formData.workExperience;
+
+  if (!Array.isArray(rawEntries)) {
+    return [] as PreviewExperience[];
+  }
+
+  return rawEntries
+    .map((entry) => {
+      const item = getRecord(entry);
+
+      return {
+        company: getOptionalString(item, ["company"]),
+        endDate: getOptionalString(item, ["endDate", "end_date"]),
+        responsibilities: getOptionalString(item, [
+          "responsibilities",
+          "description",
+          "achievements",
+        ]),
+        role: getOptionalString(item, ["role", "position"]),
+        startDate: getOptionalString(item, ["startDate", "start_date"]),
+      };
+    })
+    .filter((entry) =>
+      Boolean(
+        entry.company ||
+          entry.role ||
+          entry.startDate ||
+          entry.endDate ||
+          entry.responsibilities,
+      ),
+    );
+}
+
+function getCertifications(formData: CVFormData, source: LooseRecord) {
+  const rawEntries = Array.isArray(source.certifications)
+    ? source.certifications
+    : formData.certifications;
+
+  if (!Array.isArray(rawEntries)) {
+    return [] as PreviewCertification[];
+  }
+
+  return rawEntries
+    .map((entry) => {
+      const item = getRecord(entry);
+
+      return {
+        issuer: getOptionalString(item, ["issuer", "issuing_body", "issuingBody"]),
+        name: getOptionalString(item, ["name"]),
+        year: getOptionalString(item, ["year"]),
+      };
+    })
+    .filter((entry) => Boolean(entry.name || entry.issuer || entry.year));
+}
+
+function getReferees(formData: CVFormData, source: LooseRecord) {
+  const arraySource = Array.isArray(source.referees) ? source.referees : null;
+  const fallback = [formData.refereeOne, formData.refereeTwo];
+  const rawEntries = arraySource ?? fallback;
+
+  if (!Array.isArray(rawEntries)) {
+    return [] as PreviewReferee[];
+  }
+
+  return rawEntries
+    .map((entry) => {
+      const item = getRecord(entry);
+
+      return {
+        company: getOptionalString(item, ["company"]),
+        email: getOptionalString(item, ["email"]),
+        name: getOptionalString(item, ["name"]),
+        phone: getOptionalString(item, ["phone"]),
+        title: getOptionalString(item, ["title"]),
+      };
+    })
+    .filter(hasRefereeContent)
+    .slice(0, 2);
 }
 
 function uniqueSkills(formData: CVFormData) {
@@ -90,10 +234,10 @@ function uniqueSkills(formData: CVFormData) {
       if (seen.has(key)) {
         return false;
       }
+
       seen.add(key);
       return true;
-    })
-    .slice(0, 12);
+    });
 }
 
 function Section({
@@ -135,16 +279,24 @@ function CvPreviewLayout({
   formData: CVFormData;
   watermarked: boolean;
 }) {
+  const source = getRecord(formData as unknown);
   const displayObjective =
     formData.aiEnhancedObjective?.trim() ||
     formData.careerObjective.trim() ||
     "Career objective not provided yet.";
-  const skills = uniqueSkills(formData);
   const location = joinValues([formData.locationCity, formData.locationState]);
   const contactLine = joinValues([formData.email, formData.phone, location]);
   const nyscStatus = NYSC_STATUS_LABELS[formData.nyscStatus];
-  const experiences = formData.noExperienceYet ? [] : formData.workExperience.slice(0, 3);
-  const education = formData.education.slice(0, 2);
+  const skills = uniqueSkills(formData);
+  const education = formData.education.filter((entry) =>
+    Boolean(entry.institution.trim() || entry.course.trim() || entry.year.trim()),
+  );
+  const workExperience = getWorkExperience(formData, source);
+  const certifications = getCertifications(formData, source);
+  const referees = getReferees(formData, source);
+  const languages = normalizeStringArray(source.languages ?? formData.languages);
+  const dateOfBirth = getOptionalString(source, ["dateOfBirth", "date_of_birth"]);
+  const stateOfOrigin = getOptionalString(source, ["stateOfOrigin", "state_of_origin"]);
 
   return (
     <div
@@ -154,7 +306,6 @@ function CvPreviewLayout({
         display: "flex",
         flexDirection: "column",
         fontFamily: "DM Sans",
-        height: CV_HEIGHT,
         position: "relative",
         width: CV_WIDTH,
       }}
@@ -201,7 +352,7 @@ function CvPreviewLayout({
         style={{
           display: "flex",
           flexDirection: "column",
-          padding: "22px 36px 28px",
+          padding: "22px 36px 30px",
           width: "100%",
         }}
       >
@@ -213,6 +364,7 @@ function CvPreviewLayout({
                 display: "flex",
                 fontSize: 10,
                 lineHeight: 1.55,
+                whiteSpace: "pre-wrap",
               }}
             >
               {displayObjective}
@@ -255,16 +407,10 @@ function CvPreviewLayout({
           </div>
         </div>
 
-        {skills.length ? (
+        {Array.isArray(skills) && skills.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
             <Section title="Skills">
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  width: "100%",
-                }}
-              >
+              <div style={{ display: "flex", flexWrap: "wrap", width: "100%" }}>
                 {skills.map((skill) => (
                   <div
                     key={skill}
@@ -288,14 +434,137 @@ function CvPreviewLayout({
           </div>
         ) : null}
 
-        {experiences.length ? (
+        {Array.isArray(education) && education.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
+            <Section title="Education">
+              <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+                {education.map((entry) => (
+                  <div
+                    key={entry.id}
+                    style={{ display: "flex", flexDirection: "column", marginBottom: 8 }}
+                  >
+                    <div
+                      style={{
+                        color: "#1A1410",
+                        display: "flex",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        marginBottom: 1,
+                      }}
+                    >
+                      {entry.institution || "Institution pending"}
+                    </div>
+                    <div style={{ color: "#5A4D3E", display: "flex", fontSize: 9 }}>
+                      {joinValues([entry.course, entry.degreeClass, entry.year])}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          </div>
+        ) : null}
+
+        {Array.isArray(workExperience) && workExperience.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
             <Section title="Work Experience">
               <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-                {experiences.map((experience) => (
+                {workExperience.map((entry, index) => (
                   <div
-                    key={experience.id}
-                    style={{ display: "flex", flexDirection: "column", marginBottom: 8 }}
+                    key={`exp_${index}`}
+                    style={{ display: "flex", flexDirection: "column", marginBottom: 12 }}
+                  >
+                    <div
+                      style={{
+                        color: "#1A1410",
+                        display: "flex",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        marginBottom: 2,
+                      }}
+                    >
+                      {entry.company || "Company"}
+                    </div>
+                    <div
+                      style={{
+                        color: "#D4501A",
+                        display: "flex",
+                        fontSize: 10,
+                        marginBottom: 2,
+                      }}
+                    >
+                      {entry.role || "Role"}
+                    </div>
+                    <div
+                      style={{
+                        color: "#6E6255",
+                        display: "flex",
+                        fontSize: 10,
+                        marginBottom: 3,
+                      }}
+                    >
+                      {joinValues([entry.startDate, entry.endDate]) || "Date not specified"}
+                    </div>
+                    <div
+                      style={{
+                        color: "#3D3530",
+                        display: "flex",
+                        fontSize: 10,
+                        lineHeight: 1.5,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {entry.responsibilities || "Description not provided."}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          </div>
+        ) : null}
+
+        {Array.isArray(certifications) && certifications.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
+            <Section title="Certifications">
+              <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+                {certifications.map((entry, index) => (
+                  <div
+                    key={`cert_${index}`}
+                    style={{ display: "flex", flexDirection: "column", marginBottom: 7 }}
+                  >
+                    <div
+                      style={{
+                        color: "#1A1410",
+                        display: "flex",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        marginBottom: 1,
+                      }}
+                    >
+                      {entry.name}
+                    </div>
+                    <div style={{ color: "#5A4D3E", display: "flex", fontSize: 9 }}>
+                      {joinValues([entry.issuer, entry.year])}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          </div>
+        ) : null}
+
+        {Array.isArray(referees) && referees.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
+            <Section title="Referees">
+              <div style={{ display: "flex", width: "100%" }}>
+                {referees.map((entry, index) => (
+                  <div
+                    key={`ref_${index}`}
+                    style={{
+                      display: "flex",
+                      flex: 1,
+                      flexDirection: "column",
+                      marginRight: index === 0 ? 14 : 0,
+                    }}
                   >
                     <div
                       style={{
@@ -306,32 +575,14 @@ function CvPreviewLayout({
                         marginBottom: 2,
                       }}
                     >
-                      {joinValues([experience.role, experience.company])}
+                      {entry.name || `Referee ${index + 1}`}
                     </div>
-                    <div
-                      style={{
-                        color: "#5A4D3E",
-                        display: "flex",
-                        fontSize: 9,
-                        marginBottom: 3,
-                      }}
-                    >
-                      {joinValues([experience.startDate, experience.endDate])}
+                    <div style={{ color: "#5A4D3E", display: "flex", fontSize: 9, marginBottom: 1 }}>
+                      {joinValues([entry.title, entry.company])}
                     </div>
-                    {firstLines(experience.responsibilities).map((line, index) => (
-                      <div
-                        key={`${experience.id}_line_${index}`}
-                        style={{
-                          color: "#5A4D3E",
-                          display: "flex",
-                          fontSize: 9,
-                          lineHeight: 1.4,
-                          marginBottom: 1,
-                        }}
-                      >
-                        - {line}
-                      </div>
-                    ))}
+                    <div style={{ color: "#5A4D3E", display: "flex", fontSize: 9 }}>
+                      {joinValues([entry.phone, entry.email])}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -339,40 +590,41 @@ function CvPreviewLayout({
           </div>
         ) : null}
 
-        <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
-          <Section title="Education">
-            <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-              {education.map((entry) => (
-                <div key={entry.id} style={{ display: "flex", flexDirection: "column", marginBottom: 6 }}>
-                  <div
-                    style={{
-                      color: "#1A1410",
-                      display: "flex",
-                      fontSize: 10,
-                      fontWeight: 700,
-                      marginBottom: 1,
-                    }}
-                  >
-                    {entry.institution || "Institution pending"}
-                  </div>
-                  <div style={{ color: "#5A4D3E", display: "flex", fontSize: 9 }}>
-                    {joinValues([entry.course, entry.degreeClass, entry.year])}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Section>
-        </div>
+        {dateOfBirth ? (
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
+            <Section title="Date of Birth">
+              <div style={{ color: "#3D3530", display: "flex", fontSize: 10 }}>{dateOfBirth}</div>
+            </Section>
+          </div>
+        ) : null}
+
+        {stateOfOrigin ? (
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
+            <Section title="State of Origin">
+              <div style={{ color: "#3D3530", display: "flex", fontSize: 10 }}>{stateOfOrigin}</div>
+            </Section>
+          </div>
+        ) : null}
+
+        {Array.isArray(languages) && languages.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
+            <Section title="Languages">
+              <div style={{ color: "#3D3530", display: "flex", fontSize: 10 }}>
+                {languages.join(", ")}
+              </div>
+            </Section>
+          </div>
+        ) : null}
       </div>
 
       <div
         style={{
-          bottom: 10,
+          bottom: 8,
           color: "#FFFFFF",
           display: "flex",
           fontFamily: "DM Sans",
           fontSize: 1,
-          left: 20,
+          left: 16,
           position: "absolute",
         }}
       >
@@ -391,48 +643,37 @@ function CvPreviewLayout({
             top: 0,
           }}
         >
-          {Array.from({ length: 8 }).map((_, rowIndex) => (
+          {Array.from({ length: 4 }).map((_, rowIndex) => (
             <div
               key={`watermark_row_${rowIndex}`}
               style={{
                 alignItems: "center",
                 display: "flex",
-                flexDirection: "row",
-                justifyContent: "space-around",
-                marginTop: rowIndex === 0 ? 120 : 18,
+                justifyContent: "center",
+                marginTop: rowIndex === 0 ? 140 : 120,
                 width: "100%",
               }}
             >
-              {Array.from({ length: 3 }).map((__, columnIndex) => (
-                <div
-                  key={`watermark_${rowIndex}_${columnIndex}`}
-                  style={{
-                    color: "rgba(212,80,26,0.13)",
-                    display: "flex",
-                    fontFamily: "DM Sans",
-                    fontSize: 24,
-                    fontWeight: 700,
-                    letterSpacing: 3.5,
-                    transform: "rotate(-33deg)",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  CVPadi Preview
-                </div>
-              ))}
+              <div
+                style={{
+                  color: "rgba(212,80,26,0.08)",
+                  display: "flex",
+                  fontFamily: "DM Sans",
+                  fontSize: 20,
+                  fontWeight: 700,
+                  letterSpacing: 4,
+                  transform: "rotate(-35deg)",
+                  textTransform: "uppercase",
+                }}
+              >
+                CVPadi Preview
+              </div>
             </div>
           ))}
         </div>
       ) : null}
     </div>
   );
-}
-
-interface RenderCvJpgOptions {
-  fingerprint: string;
-  formData: CVFormData;
-  variant?: "delivery" | "preview";
-  width?: number;
 }
 
 async function renderCvPngBuffer({
@@ -452,7 +693,6 @@ async function renderCvPngBuffer({
     />,
     {
       fonts: getSatoriFonts(),
-      height: CV_HEIGHT,
       width: CV_WIDTH,
     },
   );

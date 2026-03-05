@@ -812,9 +812,9 @@ function validateStep(step: number, draft: CVFormData): Errors {
     case 6:
       return draft.industry ? {} : { industry: "Select an industry." };
     case 9:
-      return draft.careerObjective.trim().length >= 40
+      return countWords(draft.careerObjective) >= 30
         ? {}
-        : { careerObjective: "Write at least 40 characters." };
+        : { careerObjective: "Write at least 30 words for a stronger objective." };
     case 10:
       return draft.education.some((entry) => entry.institution.trim() && entry.course.trim() && entry.year.trim())
         ? {}
@@ -834,6 +834,13 @@ function validateStep(step: number, draft: CVFormData): Errors {
     default:
       return {};
   }
+}
+
+function countWords(value: string) {
+  return value
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
 }
 
 function refereeComplete(referee: CVFormData["refereeOne"]) {
