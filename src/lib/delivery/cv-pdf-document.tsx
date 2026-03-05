@@ -6,8 +6,42 @@ import {
   Text,
   View,
 } from "@react-pdf/renderer";
-import type { CVFormData, DegreeClass, ExperienceLevel, NyscStatus, RefereeEntry } from "@/lib/cv/types";
+import type { CVFormData, DegreeClass, ExperienceLevel, NyscStatus } from "@/lib/cv/types";
 import { fontData } from "./font-data";
+
+type LooseRecord = Record<string, unknown>;
+
+interface NormalizedEducationEntry {
+  course: string;
+  degreeClass: string;
+  id: string;
+  institution: string;
+  year: string;
+}
+
+interface NormalizedExperienceEntry {
+  company: string;
+  endDate: string;
+  id: string;
+  responsibilities: string[];
+  role: string;
+  startDate: string;
+}
+
+interface NormalizedCertificationEntry {
+  id: string;
+  issuer: string;
+  name: string;
+  year: string;
+}
+
+interface NormalizedRefereeEntry {
+  company: string;
+  email: string;
+  name: string;
+  phone: string;
+  title: string;
+}
 
 let fontsRegistered = false;
 
@@ -30,7 +64,7 @@ const NYSC_STATUS_LABELS: Record<NyscStatus, string> = {
   ongoing: "Currently serving",
 };
 
-const EXPERIENCE_LABELS: Record<ExperienceLevel, string> = {
+const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
   entry: "Entry level",
   executive: "Executive",
   mid: "Mid level",
@@ -84,20 +118,17 @@ const styles = StyleSheet.create({
     padding: 40,
   },
   header: {
-    backgroundColor: "#D4501A",
     marginBottom: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
   },
   name: {
-    color: "#FFFFFF",
+    color: "#1A1410",
     fontFamily: "Playfair",
     fontSize: 26,
     fontWeight: 700,
     marginBottom: 4,
   },
   headerLine: {
-    color: "rgba(255,255,255,0.92)",
+    color: "#5C4F3D",
     fontFamily: "DM Sans",
     fontSize: 10,
     lineHeight: 1.35,
@@ -152,12 +183,11 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 1.5,
   },
-  skillWrap: {
+  chipRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
   },
-  skillChip: {
+  chip: {
     backgroundColor: "#F6F2EB",
     borderColor: "#DED6C8",
     borderWidth: 1,
@@ -165,12 +195,13 @@ const styles = StyleSheet.create({
     color: "#3D3530",
     fontFamily: "DM Sans",
     fontSize: 9,
+    marginBottom: 6,
+    marginRight: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
   refereeGrid: {
     flexDirection: "row",
-    gap: 14,
   },
   refereeColumn: {
     flexGrow: 1,
@@ -208,13 +239,32 @@ const styles = StyleSheet.create({
   },
 });
 
+function getRecord(value: unknown): LooseRecord {
+  if (value && typeof value === "object") {
+    return value as LooseRecord;
+  }
+
+  return {};
+}
+
 function getString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function getOptionalString(record: LooseRecord, keys: string[]) {
+  for (const key of keys) {
+    const value = getString(record[key]);
+    if (value) {
+      return value;
+    }
+  }
+
+  return "";
+}
+
 function joinValues(
   values: Array<string | null | undefined>,
-  separator = " · ",
+  separator = " \u00B7 ",
 ) {
   return values
     .map((value) => value?.trim())
@@ -222,17 +272,40 @@ function joinValues(
     .join(separator);
 }
 
-function formatGrade(value: string) {
-  return GRADE_LABELS[value as DegreeClass] || value.replace(/_/g, " ");
-}
+const formatGrade = (g: string) => {
+  const grades: Record<string, string> = {
+    credit: "Credit",
+    distinction: "Distinction",
+    first_class: "First Class",
+    merit: "Merit",
+    other: "Other",
+    pass: "Pass",
+    second_class_lower: "Second Class Lower",
+    second_class_upper: "Second Class Upper",
+    third_class: "Third Class",
+  };
+  return grades[g] ?? GRADE_LABELS[g as DegreeClass] ?? g.replace(/_/g, " ");
+};
 
-function formatNysc(value: string) {
-  return NYSC_STATUS_LABELS[value as NyscStatus] || value.replace(/_/g, " ");
-}
+const formatNysc = (s: string) => {
+  const statuses: Record<string, string> = {
+    discharged: "Discharged",
+    exempted: "Exempted",
+    not_yet: "Not yet served",
+    ongoing: "Currently serving",
+  };
+  return statuses[s] ?? NYSC_STATUS_LABELS[s as NyscStatus] ?? s.replace(/_/g, " ");
+};
 
-function formatExperience(value: string) {
-  return EXPERIENCE_LABELS[value as ExperienceLevel] || value.replace(/_/g, " ");
-}
+const formatLevel = (l: string) => {
+  const levels: Record<string, string> = {
+    entry: "Entry level",
+    executive: "Executive",
+    mid: "Mid level",
+    senior: "Senior level",
+  };
+  return levels[l] ?? EXPERIENCE_LEVEL_LABELS[l as ExperienceLevel] ?? l.replace(/_/g, " ");
+};
 
 function normalizeObjective(formData: CVFormData) {
   return formData.aiEnhancedObjective?.trim() || formData.careerObjective.trim();
@@ -266,40 +339,52 @@ function normalizeLanguages(formData: CVFormData) {
 }
 
 function normalizeEducation(formData: CVFormData) {
-  return formData.education.filter((entry) =>
-    Boolean(
-      entry.institution.trim() ||
-      entry.course.trim() ||
-      entry.degreeClass ||
-      entry.year.trim(),
-    ),
-  );
+  return formData.education
+    .map((entry, index): NormalizedEducationEntry => {
+      const record = getRecord(entry);
+      return {
+        course:
+          getOptionalString(record, ["course_of_study", "course", "courseOfStudy"])
+          || entry.course.trim(),
+        degreeClass:
+          getOptionalString(record, ["grade", "degreeClass", "degree_class"])
+          || entry.degreeClass,
+        id: getOptionalString(record, ["id"]) || entry.id || `edu_${index}`,
+        institution: getOptionalString(record, ["institution", "school"]) || entry.institution.trim(),
+        year:
+          getOptionalString(record, ["graduation_year", "graduationYear", "year"])
+          || entry.year.trim(),
+      };
+    })
+    .filter((entry) =>
+      Boolean(entry.institution || entry.course || entry.degreeClass || entry.year),
+    );
 }
 
 function normalizeWorkExperience(formData: CVFormData) {
   if (formData.noExperienceYet) {
-    return [] as Array<{
-      company: string;
-      endDate: string;
-      id: string;
-      responsibilities: string[];
-      role: string;
-      startDate: string;
-    }>;
+    return [] as NormalizedExperienceEntry[];
   }
 
   return formData.workExperience
-    .map((entry) => ({
-      company: entry.company.trim(),
-      endDate: entry.endDate.trim(),
-      id: entry.id,
-      responsibilities: entry.responsibilities
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter(Boolean),
-      role: entry.role.trim(),
-      startDate: entry.startDate.trim(),
-    }))
+    .map((entry, index): NormalizedExperienceEntry => {
+      const record = getRecord(entry);
+      const responsibilitiesRaw =
+        getOptionalString(record, ["responsibilities", "description", "achievements"])
+        || entry.responsibilities;
+
+      return {
+        company: getOptionalString(record, ["company"]) || entry.company.trim(),
+        endDate: getOptionalString(record, ["end_date", "endDate"]) || entry.endDate.trim(),
+        id: getOptionalString(record, ["id"]) || entry.id || `exp_${index}`,
+        responsibilities: responsibilitiesRaw
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter(Boolean),
+        role: getOptionalString(record, ["role", "position"]) || entry.role.trim(),
+        startDate: getOptionalString(record, ["start_date", "startDate"]) || entry.startDate.trim(),
+      };
+    })
     .filter((entry) =>
       Boolean(
         entry.company ||
@@ -313,44 +398,40 @@ function normalizeWorkExperience(formData: CVFormData) {
 
 function normalizeCertifications(formData: CVFormData) {
   return formData.certifications
-    .map((entry) => ({
-      id: entry.id,
-      issuer: entry.issuer.trim(),
-      name: entry.name.trim(),
-      year: entry.year.trim(),
-    }))
+    .map((entry, index): NormalizedCertificationEntry => {
+      const record = getRecord(entry);
+      return {
+        id: getOptionalString(record, ["id"]) || entry.id || `cert_${index}`,
+        issuer:
+          getOptionalString(record, ["issuer", "issuing_body", "issuingBody"])
+          || entry.issuer.trim(),
+        name: getOptionalString(record, ["name"]) || entry.name.trim(),
+        year: getOptionalString(record, ["year"]) || entry.year.trim(),
+      };
+    })
     .filter((entry) => Boolean(entry.name || entry.issuer || entry.year));
 }
 
-function hasRefereeContent(referee: RefereeEntry) {
-  return Boolean(
-    referee.name.trim() ||
-    referee.title.trim() ||
-    referee.company.trim() ||
-    referee.phone.trim() ||
-    referee.email.trim(),
-  );
-}
+function normalizeReferees(formData: CVFormData, source: LooseRecord) {
+  const sourceReferees = Array.isArray(source.referees) ? source.referees : null;
+  const fallbackReferees = [formData.refereeOne, formData.refereeTwo];
+  const rawReferees = sourceReferees ?? fallbackReferees;
 
-function normalizeReferees(formData: CVFormData) {
-  return [formData.refereeOne, formData.refereeTwo]
-    .map((referee) => ({
-      company: referee.company.trim(),
-      email: referee.email.trim(),
-      name: referee.name.trim(),
-      phone: referee.phone.trim(),
-      title: referee.title.trim(),
-    }))
-    .filter((referee) =>
-      hasRefereeContent({
-        ...referee,
-      }),
+  return rawReferees
+    .map((entry) => {
+      const record = getRecord(entry);
+
+      return {
+        company: getOptionalString(record, ["company"]),
+        email: getOptionalString(record, ["email"]),
+        name: getOptionalString(record, ["name"]),
+        phone: getOptionalString(record, ["phone"]),
+        title: getOptionalString(record, ["title"]),
+      } satisfies NormalizedRefereeEntry;
+    })
+    .filter((entry) =>
+      Boolean(entry.name || entry.title || entry.company || entry.phone || entry.email),
     );
-}
-
-function getStateOfOrigin(formData: CVFormData) {
-  const source = formData as unknown as Record<string, unknown>;
-  return getString(source.stateOfOrigin) || getString(source.state_of_origin);
 }
 
 export function CVPdfDocument({
@@ -364,49 +445,56 @@ export function CVPdfDocument({
 }) {
   registerPdfFonts();
 
+  const source = getRecord(formData as unknown);
+  const fullName = getOptionalString(source, ["full_name", "fullName"]) || formData.fullName.trim();
+  const locationCity = getOptionalString(source, ["location_city", "locationCity"]) || formData.locationCity.trim();
+  const locationState = getOptionalString(source, ["location_state", "locationState"]) || formData.locationState.trim();
+  const phone = getOptionalString(source, ["phone"]) || formData.phone.trim();
+  const email = getOptionalString(source, ["email"]) || formData.email.trim();
+  const nyscStatus = getOptionalString(source, ["nysc_status", "nyscStatus"]) || formData.nyscStatus;
+  const industry = getOptionalString(source, ["industry"]) || formData.industry.trim();
+  const experienceLevel = getOptionalString(source, ["experience_level", "experienceLevel"]) || formData.experienceLevel;
+
   const objective = normalizeObjective(formData);
   const skills = normalizeSkills(formData);
   const languages = normalizeLanguages(formData);
   const education = normalizeEducation(formData);
   const workExperience = normalizeWorkExperience(formData);
   const certifications = normalizeCertifications(formData);
-  const referees = normalizeReferees(formData);
-  const location = joinValues([formData.locationCity, formData.locationState], ", ");
-  const headerContactLine = joinValues([formData.email, formData.phone, location], " · ");
-  const dateOfBirth = formData.dateOfBirth.trim();
-  const stateOfOrigin = getStateOfOrigin(formData);
-  const headerMetaLine = joinValues(
-    [
-      dateOfBirth ? `Date of birth: ${dateOfBirth}` : "",
-      stateOfOrigin ? `State of origin: ${stateOfOrigin}` : "",
-    ],
-    " | ",
+  const referees = normalizeReferees(formData, source);
+
+  const contactLine = joinValues(
+    [locationCity, locationState, phone, email],
+    " \u00B7 ",
   );
-  const profileSummary = joinValues(
+
+  const professionalDetails = joinValues(
     [
-      `Experience level: ${formatExperience(formData.experienceLevel)}`,
-      `NYSC: ${formatNysc(formData.nyscStatus)}`,
+      industry ? `Industry: ${industry}` : "",
+      experienceLevel ? `Experience level: ${formatLevel(experienceLevel)}` : "",
     ],
-    " · ",
+    " \u00B7 ",
   );
 
   return (
-    <Document author="CVPadi" title={`${formData.fullName || "CVPadi User"} CV`}>
+    <Document author="CVPadi" title={`${fullName || "CVPadi User"} CV`}>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <Text style={styles.name}>{formData.fullName.trim()}</Text>
-          {headerContactLine ? (
-            <Text style={styles.headerLine}>{headerContactLine}</Text>
+          <Text style={styles.name}>{fullName}</Text>
+
+          {contactLine ? (
+            <Text style={styles.headerLine}>{contactLine}</Text>
           ) : null}
-          {headerMetaLine ? (
-            <Text style={styles.headerLine}>{headerMetaLine}</Text>
+
+          {nyscStatus ? (
+            <Text style={styles.headerLine}>NYSC: {formatNysc(nyscStatus)}</Text>
           ) : null}
         </View>
 
-        {profileSummary ? (
+        {professionalDetails ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Professional Details</Text>
-            <Text style={styles.bodyText}>{profileSummary}</Text>
+            <Text style={styles.bodyText}>{professionalDetails}</Text>
           </View>
         ) : null}
 
@@ -425,14 +513,15 @@ export function CVPdfDocument({
                 {entry.company ? (
                   <Text style={styles.itemTitle}>{entry.company}</Text>
                 ) : null}
+
                 {entry.role ? (
                   <Text style={styles.itemRole}>{entry.role}</Text>
                 ) : null}
-                {joinValues([entry.startDate, entry.endDate], " – ") ? (
-                  <Text style={styles.itemMeta}>
-                    {joinValues([entry.startDate, entry.endDate], " – ")}
-                  </Text>
+
+                {joinValues([entry.startDate, entry.endDate], " - ") ? (
+                  <Text style={styles.itemMeta}>{joinValues([entry.startDate, entry.endDate], " - ")}</Text>
                 ) : null}
+
                 {entry.responsibilities.map((line, lineIndex) => (
                   <Text key={`${entry.id}_${lineIndex}`} style={styles.itemDescription}>
                     {line}
@@ -446,36 +535,42 @@ export function CVPdfDocument({
         {education.length > 0 ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Education</Text>
-            {education.map((entry) => {
-              const details = joinValues(
-                [
-                  entry.course.trim(),
-                  entry.degreeClass ? formatGrade(entry.degreeClass) : "",
-                  entry.year.trim(),
-                ],
-                " | ",
-              );
+            {education.map((edu) => (
+              <View key={edu.id} style={styles.item}>
+                {edu.institution ? (
+                  <Text style={styles.itemTitle}>{edu.institution}</Text>
+                ) : null}
 
-              return (
-                <View key={entry.id} style={styles.item}>
-                  {entry.institution.trim() ? (
-                    <Text style={styles.itemTitle}>{entry.institution.trim()}</Text>
-                  ) : null}
-                  {details ? (
-                    <Text style={styles.itemMeta}>{details}</Text>
-                  ) : null}
-                </View>
-              );
-            })}
+                {joinValues(
+                  [
+                    edu.course,
+                    edu.degreeClass ? formatGrade(edu.degreeClass) : "",
+                    edu.year,
+                  ],
+                  " \u00B7 ",
+                ) ? (
+                  <Text style={styles.itemMeta}>
+                    {joinValues(
+                      [
+                        edu.course,
+                        edu.degreeClass ? formatGrade(edu.degreeClass) : "",
+                        edu.year,
+                      ],
+                      " \u00B7 ",
+                    )}
+                  </Text>
+                ) : null}
+              </View>
+            ))}
           </View>
         ) : null}
 
         {skills.length > 0 ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Skills</Text>
-            <View style={styles.skillWrap}>
+            <View style={styles.chipRow}>
               {skills.map((skill) => (
-                <Text key={skill} style={styles.skillChip}>
+                <Text key={skill} style={styles.chip}>
                   {skill}
                 </Text>
               ))}
