@@ -1,5 +1,7 @@
-"use client";
+﻿"use client";
 
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { FREE_PREVIEW_LIMIT } from "@/lib/cv/constants";
 import type { CVFormData } from "@/lib/cv/types";
 import { useRef, useState } from "react";
@@ -41,14 +43,15 @@ export function PreviewPanel({
     Math.max(0, FREE_PREVIEW_LIMIT - initialFreePreviewsUsed),
   );
   const [showSharePrompt, setShowSharePrompt] = useState(false);
+  const [hasPreview, setHasPreview] = useState(false);
   const [statusMessage, setStatusMessage] = useState(
-    "Free preview is watermarked over your name, phone, and email. It is capped at 600px and prints badly by design.",
+    "Generate your watermarked preview. Pay to remove watermark and unlock clean downloads.",
   );
   const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
   async function handleGeneratePreview() {
     setIsGenerating(true);
-    setStatusMessage("Generating a watermarked preview on the server...");
+    setStatusMessage("Generating watermarked preview...");
 
     try {
       const recaptchaToken = await getRecaptchaToken({
@@ -88,15 +91,14 @@ export function PreviewPanel({
         blob: previewBlob,
         canvas: canvasRef.current,
       });
+      setHasPreview(true);
       maybeShowSharePrompt({
         cvId,
         isComplete,
         onShow: () => setShowSharePrompt(true),
       });
 
-      setStatusMessage(
-        "Watermarked preview ready. It sits on a canvas, not an image tag, and stays intentionally low-resolution.",
-      );
+      setStatusMessage("Preview ready. This version stays watermarked until payment is confirmed.");
     } catch (error) {
       setStatusMessage(
         error instanceof Error ? error.message : "Unable to generate the preview right now.",
@@ -107,22 +109,52 @@ export function PreviewPanel({
   }
 
   return (
-    <section className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)]">
-      <div className="flex items-start justify-between gap-4">
+    <Card className="!rounded-[16px] !border-[var(--border)] !bg-[var(--off-black)] !p-5 sm:!p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.24em] text-[var(--ink-light)]">
-            Free preview
-          </p>
-          <h2 className="mt-2 font-heading text-2xl text-foreground">
-            Watermarked canvas preview
-          </h2>
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--mid)]">Watermarked preview</p>
+          <h2 className="mt-2 font-display text-2xl text-[var(--cream)]">Preview your CV before payment</h2>
         </div>
-        <span className="rounded-full bg-[var(--gold-light)] px-3 py-2 font-mono text-sm text-[var(--gold)]">
-          {remainingPreviews} left
+        <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--cream-dim)]">
+          {remainingPreviews} free left
         </span>
       </div>
 
-      <p className="mt-4 text-sm leading-6 text-[var(--ink-light)]">{statusMessage}</p>
+      <p className="mt-4 text-sm leading-6 text-[var(--cream-dim)]">{statusMessage}</p>
+
+      <div className="mt-4 rounded-[12px] border border-[var(--border)] bg-[var(--card)] p-4">
+        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--mid)]">This is your watermarked preview. Pay to remove.</p>
+        <div
+          className={`mt-3 overflow-hidden rounded-[10px] border border-[var(--border)] bg-[var(--surface)] p-3 transition-opacity duration-300 ${hasPreview ? "opacity-100" : "opacity-80"}`.trim()}
+        >
+          <canvas
+            className="h-auto w-full rounded-[8px] bg-white"
+            ref={canvasRef}
+            style={hasPreview ? { animation: "fade-up 0.35s ease" } : undefined}
+          />
+          {!hasPreview && !isGenerating ? (
+            <div className="mt-3 rounded-[8px] border border-dashed border-[var(--border)] px-3 py-2 text-sm text-[var(--mid)]">
+              Preview canvas will appear here.
+            </div>
+          ) : null}
+          {isGenerating ? <div className="mt-3 h-10 skeleton" /> : null}
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:flex sm:flex-wrap">
+        <Button
+          className="w-full sm:w-auto"
+          disabled={isGenerating || remainingPreviews <= 0}
+          loading={isGenerating}
+          onClick={() => {
+            void handleGeneratePreview();
+          }}
+          variant="ghost"
+        >
+          {remainingPreviews <= 0 ? "Free preview limit reached" : "Generate free preview"}
+        </Button>
+      </div>
+
       {showSharePrompt ? (
         <div className="mt-4">
           <ScoreSharePrompt
@@ -134,31 +166,7 @@ export function PreviewPanel({
           />
         </div>
       ) : null}
-
-      <div className="mt-5 flex flex-col gap-3">
-        <button
-          className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-4 text-sm font-medium text-foreground disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={isGenerating || remainingPreviews <= 0}
-          onClick={() => {
-            void handleGeneratePreview();
-          }}
-          type="button"
-        >
-          {remainingPreviews <= 0
-            ? "Free preview limit reached"
-            : isGenerating
-              ? "Generating preview..."
-              : "Generate free preview"}
-        </button>
-
-        <div className="overflow-hidden rounded-[var(--radius-input)] border border-[var(--border-light)] bg-[var(--bg)] p-3">
-          <canvas
-            className="h-auto w-full rounded-[calc(var(--radius-input)-6px)] bg-white"
-            ref={canvasRef}
-          />
-        </div>
-      </div>
-    </section>
+    </Card>
   );
 }
 

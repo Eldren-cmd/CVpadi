@@ -1,7 +1,10 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { DashboardDownloadButton } from "@/components/dashboard/dashboard-download-button";
 import { JobMatchLink } from "@/components/dashboard/job-match-link";
+import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
+import { ScoreDial as SharedScoreDial } from "@/components/ui/ScoreDial";
 import { computeCVScore } from "@/lib/cv/score";
 import type { CVFormData } from "@/lib/cv/types";
 import { extractEmailPreferences } from "@/lib/email/preferences";
@@ -52,6 +55,12 @@ interface JobMatchRowFromQuery {
   notified: boolean;
 }
 
+interface CvBranchRow {
+  id: string;
+  updated_at: string;
+  version_number: number;
+}
+
 interface ApplicationRow {
   company: string;
   id: string;
@@ -97,9 +106,10 @@ export default async function DashboardPage() {
       .maybeSingle(),
     supabase
       .from("cvs")
-      .select("id")
+      .select("id, updated_at, version_number")
       .eq("user_id", user.id)
-      .eq("is_snapshot", false),
+      .eq("is_snapshot", false)
+      .order("updated_at", { ascending: false }),
     supabase
       .from("job_matches")
       .select(
@@ -147,51 +157,43 @@ export default async function DashboardPage() {
 
   return (
     <div className="grid gap-6">
-      <section className="rounded-[var(--radius-card)] border border-border bg-surface p-6 shadow-[var(--shadow-elevated)] sm:p-8">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+      <section className="page-enter rounded-[16px] border border-[var(--border)] bg-[var(--off-black)] px-5 py-6 sm:px-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="font-mono text-sm uppercase tracking-[0.28em] text-[var(--ink-light)]">
-              Phase 2.3 - User Dashboard
-            </p>
-            <h1 className="mt-3 max-w-3xl font-heading text-4xl leading-tight text-foreground sm:text-5xl">
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--mid)]">Dashboard home</p>
+            <h1 className="mt-2 font-heading text-5xl leading-[1] text-[var(--cream)]">
               Welcome back, {profile?.full_name || cvFormData?.fullName || "there"}.
             </h1>
-            <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--ink-light)] sm:text-lg">
-              This dashboard keeps your latest CV branch, top job matches, tracker board,
-              and profile nudges visible in one place so you can move faster.
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--cream-dim)]">
+              A single command centre for your CV quality, job matches, tracker momentum, and profile strength.
             </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <SummaryPill
-              label="Current score"
-              value={scoreResult ? `${scoreResult.score}%` : "0%"}
-            />
-            <SummaryPill label="Open matches" value={String(unreadMatches)} />
-            <SummaryPill label="Tracked roles" value={String(trackerTotal)} />
+            <SummaryChip label="Current score" value={scoreResult ? `${scoreResult.score}%` : "0%"} />
+            <SummaryChip label="Open matches" value={String(unreadMatches)} />
+            <SummaryChip label="Tracked roles" value={String(trackerTotal)} />
           </div>
         </div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.4fr_1fr]" id="cv">
-        <article className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
+      <section className="grid gap-6 xl:grid-cols-[1.35fr_0.95fr]" id="cv">
+        <Card className="fade-up !rounded-[16px] !border-[var(--border)] !bg-[var(--off-black)] !p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="font-mono text-xs uppercase tracking-[0.24em] text-[var(--ink-light)]">
-                My CV
-              </p>
-              <h2 className="mt-2 font-heading text-3xl text-foreground">
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--mid)]">My CV</p>
+              <h2 className="mt-2 font-display text-3xl text-[var(--cream)]">
                 {cvFormData?.fullName || "Untitled CV draft"}
               </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--ink-light)]">
-                {cvFormData?.industry || "General"} CV branch, version {currentCv?.version_number ?? 1}.
-                Last updated {formatDateTime(currentCv?.updated_at)}.
+              <p className="mt-2 text-sm leading-6 text-[var(--cream-dim)]">
+                {cvFormData?.industry || "General"} branch · version {currentCv?.version_number ?? 1} · last edited{" "}
+                {formatDateTime(currentCv?.updated_at)}
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               <Link
-                className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] bg-[var(--accent)] px-5 text-sm font-medium text-white"
+                className="inline-flex min-h-11 items-center justify-center rounded-[8px] border border-[var(--border)] px-4 font-display text-sm text-[var(--cream-dim)] transition-all duration-200 hover:border-[var(--border-mid)] hover:bg-[var(--card)] hover:text-[var(--cream)]"
                 href={currentCv ? `/build?cv=${currentCv.id}` : "/build"}
               >
                 Edit CV
@@ -199,274 +201,79 @@ export default async function DashboardPage() {
               {currentCv?.is_paid ? (
                 <DashboardDownloadButton cvId={currentCv.id} />
               ) : (
-                <div className="grid gap-2">
-                  <Link
-                    className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"
-                    href={currentCv ? `/build?cv=${currentCv.id}` : "/build"}
-                  >
-                    Pay {formatKoboToNaira(PAYMENT_PRICES_KOBO.cv_download)}
-                  </Link>
-                  <p className="text-xs leading-5 text-[var(--ink-light)]">
-                    Paid users can download directly from this dashboard.
-                  </p>
-                </div>
-              )}
-              <Link
-                className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"
-                href="/dashboard/versions"
-              >
-                Version history
-              </Link>
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            <MetricCard
-              label="Status"
-              value={currentCv?.is_paid ? "Paid branch" : "Draft branch"}
-            />
-            <MetricCard label="Branches" value={String((cvBranches ?? []).length || 0)} />
-            <MetricCard
-              label="Account credit"
-              value={formatKoboToNaira(profile?.account_credit_kobo ?? 0)}
-            />
-          </div>
-        </article>
-
-        <article className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
-          <p className="font-mono text-xs uppercase tracking-[0.24em] text-[var(--ink-light)]">
-            Score dial
-          </p>
-          <div className="mt-4 flex items-center gap-4">
-            <StaticScoreDial score={scoreResult?.score ?? 0} />
-            <div>
-              <h2 className="font-heading text-2xl text-foreground">Current CV score</h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--ink-light)]">
-                The dashboard mirrors the same scoring logic from the builder so you always
-                know whether your current branch is recruiter-ready.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-5 grid gap-3">
-            {(scoreResult?.suggestions ?? []).slice(0, 3).map((suggestion) => (
-              <div
-                className="rounded-[var(--radius-input)] border border-[var(--border-light)] bg-white/70 px-4 py-3"
-                key={suggestion.id}
-              >
-                <p className="text-sm leading-6 text-[var(--ink-light)]">{suggestion.message}</p>
-              </div>
-            ))}
-            {scoreResult && scoreResult.suggestions.length === 0 ? (
-              <div className="rounded-[var(--radius-input)] border border-[var(--green)] bg-[var(--green-light)] px-4 py-3 text-sm text-[var(--green)]">
-                All core CV sections are in place.
-              </div>
-            ) : null}
-          </div>
-        </article>
-      </section>
-
-      <section className="grid gap-6" id="jobs">
-        <article className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="font-mono text-xs uppercase tracking-[0.24em] text-[var(--ink-light)]">
-                Job matches
-              </p>
-              <h2 className="mt-2 font-heading text-3xl text-foreground">
-                Daily top matches for your current CV
-              </h2>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--ink-light)]">
-                Matching currently weights industry, location, experience level, and skills.
-                Only jobs scoring 40% and above are stored.
-              </p>
-            </div>
-
-            <div className="rounded-full bg-[var(--accent-light)] px-4 py-2 text-sm font-medium text-[var(--accent)]">
-              {topMatches.length} visible matches
-            </div>
-          </div>
-
-          {topMatches.length > 0 ? (
-            <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {topMatches.map((match) => (
-                <article
-                  className="rounded-[var(--radius-input)] border border-[var(--border-light)] bg-white/80 p-4"
-                  key={match.job_id}
+                <Link
+                  className="inline-flex min-h-11 items-center justify-center rounded-[8px] bg-[var(--green)] px-4 font-display text-sm text-[var(--black)] transition-all duration-200 hover:translate-y-[-2px] hover:bg-[#33EE8A]"
+                  href={currentCv ? `/build?cv=${currentCv.id}` : "/build"}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-heading text-2xl text-foreground">
-                        {match.jobs?.company}
-                      </h3>
-                      <p className="mt-1 text-sm leading-6 text-[var(--ink-light)]">
-                        {match.jobs?.title}
-                      </p>
-                    </div>
-                    <span className="inline-flex min-h-10 items-center rounded-full bg-[var(--blue-light)] px-3 text-sm font-medium text-[var(--blue)]">
-                      {match.match_score}%
-                    </span>
-                  </div>
-
-                  <dl className="mt-4 grid gap-2 text-sm leading-6 text-[var(--ink-light)]">
-                    <div>
-                      <dt className="font-medium text-foreground">Location</dt>
-                      <dd>{formatLocation(match.jobs?.location_city, match.jobs?.location_state)}</dd>
-                    </div>
-                    <div>
-                      <dt className="font-medium text-foreground">Salary</dt>
-                      <dd>{formatSalary(match.jobs?.salary_min ?? null, match.jobs?.salary_max ?? null, match.jobs?.currency ?? null)}</dd>
-                    </div>
-                  </dl>
-
-                  <div className="mt-4 flex items-center justify-between gap-3">
-                    <span className="text-xs uppercase tracking-[0.18em] text-[var(--ink-faint)]">
-                      {match.clicked ? "clicked" : match.notified ? "emailed" : "new"}
-                    </span>
-                    {match.jobs?.source_url ? (
-                      <JobMatchLink jobId={match.job_id} />
-                    ) : (
-                      <span className="text-xs text-[var(--ink-light)]">No source link yet</span>
-                    )}
-                  </div>
-                </article>
-              ))}
+                  Unlock ₦{(PAYMENT_PRICES_KOBO.cv_download / 100).toLocaleString("en-NG")}
+                </Link>
+              )}
             </div>
-          ) : (
-            <div className="mt-6 rounded-[var(--radius-input)] border border-dashed border-[var(--border-light)] bg-[var(--bg)] px-4 py-5 text-sm leading-6 text-[var(--ink-light)]">
-              No stored matches yet. Keep your CV profile complete and wait for the next daily
-              matcher run at 8:00 AM WAT.
-            </div>
-          )}
-        </article>
-      </section>
+          </div>
 
-      <section className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]" id="tracker">
-        <article className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="mt-6 grid gap-5 md:grid-cols-[auto_1fr]">
+            <SharedScoreDial animate colorMode="auto" label="CV score" score={scoreResult?.score ?? 0} size={96} />
             <div>
-              <p className="font-mono text-xs uppercase tracking-[0.24em] text-[var(--ink-light)]">
-                Application tracker
-              </p>
-              <h2 className="mt-2 font-heading text-3xl text-foreground">
-                Kanban view for active applications
-              </h2>
-            </div>
-            <Link
-              className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-input)] border border-border px-4 text-sm font-medium text-foreground"
-              href="/dashboard/tracker"
-            >
-              Open full tracker
-            </Link>
-          </div>
-
-          <div className="mt-6 grid gap-4 xl:grid-cols-4">
-            {TRACKER_STATUSES.map((status) => (
-              <div
-                className="rounded-[var(--radius-input)] border border-[var(--border-light)] bg-white/70 p-4"
-                key={status}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="font-heading text-xl text-foreground">
-                    {TRACKER_STATUS_META[status].label}
-                  </h3>
-                  <span
-                    className={`inline-flex min-h-9 items-center rounded-full px-3 text-xs font-medium ${TRACKER_STATUS_META[status].accentClassName}`}
-                  >
-                    {trackerGroups[status].length}
-                  </span>
-                </div>
-
-                <div className="mt-4 grid gap-3">
-                  {trackerGroups[status].slice(0, 2).map((application) => (
-                    <div
-                      className="rounded-[var(--radius-input)] border border-[var(--border-light)] bg-[var(--bg)] px-3 py-3"
-                      key={application.id}
-                    >
-                      <p className="font-medium text-foreground">{application.company}</p>
-                      <p className="mt-1 text-sm leading-6 text-[var(--ink-light)]">
-                        {application.role}
-                      </p>
-                    </div>
-                  ))}
-                  {trackerGroups[status].length === 0 ? (
-                    <div className="rounded-[var(--radius-input)] border border-dashed border-[var(--border-light)] bg-[var(--bg)] px-3 py-4 text-sm leading-6 text-[var(--ink-light)]">
-                      {TRACKER_STATUS_META[status].emptyState}
-                    </div>
-                  ) : null}
-                </div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--mid)]">Version history</p>
+              <div className="mt-3 space-y-3">
+                {((cvBranches ?? []) as CvBranchRow[]).slice(0, 4).map((branch, index) => (
+                  <div className="relative pl-6" key={branch.id}>
+                    <span
+                      className={`absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full border ${index === 0 ? "border-[var(--green)] bg-[var(--green)]" : "border-[var(--border-mid)]"}`}
+                    />
+                    {index < 3 ? (
+                      <span className="absolute left-[4px] top-4 h-6 w-px bg-[var(--border)]" />
+                    ) : null}
+                    <p className="font-display text-sm text-[var(--cream)]">Version {branch.version_number}</p>
+                    <p className="font-mono text-[11px] text-[var(--mid)]">{formatDateTime(branch.updated_at)}</p>
+                  </div>
+                ))}
+                {(cvBranches ?? []).length === 0 ? (
+                  <p className="text-sm text-[var(--mid)]">No version timeline yet.</p>
+                ) : null}
               </div>
-            ))}
+            </div>
           </div>
-        </article>
+        </Card>
 
-        <article className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
-          <p className="font-mono text-xs uppercase tracking-[0.24em] text-[var(--ink-light)]">
-            Interview nudge
-          </p>
-          <h2 className="mt-2 font-heading text-3xl text-foreground">
-            Keep the interview reminder visible
-          </h2>
-          <p className="mt-3 text-sm leading-6 text-[var(--ink-light)]">
-            When a tracker card moves into Interview, the dedicated tracker page already
-            prompts the user to refresh the CV before the conversation.
-          </p>
-          <div className="mt-5 rounded-[var(--radius-input)] border border-[var(--gold)] bg-[var(--gold-light)] px-4 py-4 text-sm leading-6 text-foreground">
-            Heading to an interview? Make sure your CV is updated.
-            <Link className="ml-2 font-medium text-[var(--accent)]" href="/build">
-              Edit CV
-            </Link>
-          </div>
-        </article>
-      </section>
+        <Card className="fade-up !rounded-[16px] !border-[var(--border)] !bg-[var(--off-black)] !p-6">
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--mid)]">Profile strength</p>
+          <h2 className="mt-2 font-display text-2xl text-[var(--cream)]">Keep your profile complete</h2>
 
-      <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]" id="profile">
-        <article className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
-          <p className="font-mono text-xs uppercase tracking-[0.24em] text-[var(--ink-light)]">
-            Profile strength
-          </p>
-          <h2 className="mt-2 font-heading text-3xl text-foreground">
-            Matching improves when the profile is complete
-          </h2>
-
-          <div className="mt-5 overflow-hidden rounded-full bg-[var(--bg)]">
-            <div
-              aria-label={`Profile strength ${profileStrength}%`}
-              className="min-h-4 rounded-full bg-[var(--accent)]"
-              style={{ width: `${profileStrength}%` }}
-            />
-          </div>
-
-          <p className="mt-3 text-sm leading-6 text-[var(--ink-light)]">
-            Current strength is {profileStrength}%. Stronger completion gives the matcher more
-            useful location, experience, and skills signals.
-          </p>
-
-          <div className="mt-5 grid gap-3">
-            {(scoreResult?.suggestions ?? []).slice(0, 3).map((suggestion) => (
+          <div className="mt-4 flex items-center gap-3">
+            <div className="h-3 flex-1 overflow-hidden rounded-full bg-[var(--faint)]">
               <div
-                className="rounded-[var(--radius-input)] border border-[var(--border-light)] bg-white/70 px-4 py-3"
+                className="h-full rounded-full"
+                style={{
+                  background: "linear-gradient(90deg, var(--green), var(--green-dim))",
+                  transition: "width 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
+                  width: `${profileStrength}%`,
+                }}
+              />
+            </div>
+            <span className="font-mono text-xs text-[var(--cream-dim)]">{profileStrength}%</span>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {(scoreResult?.suggestions ?? []).slice(0, 3).map((suggestion) => (
+              <Link
+                className="inline-flex min-h-9 items-center rounded-full border border-[var(--border)] px-3 font-display text-xs text-[var(--cream-dim)] transition-all duration-200 hover:border-[var(--green)] hover:bg-[var(--green-glow)] hover:text-[var(--green)]"
+                href={currentCv ? `/build?cv=${currentCv.id}` : "/build"}
                 key={suggestion.id}
               >
-                <p className="text-sm leading-6 text-[var(--ink-light)]">{suggestion.message}</p>
-              </div>
+                {suggestion.message} →
+              </Link>
             ))}
-            {missingSkillsNudge ? (
-              <div className="rounded-[var(--radius-input)] border border-[var(--blue)] bg-[var(--blue-light)] px-4 py-3 text-sm text-[var(--blue)]">
-                Add at least five skills to strengthen matching quality.
-              </div>
-            ) : null}
           </div>
-        </article>
 
-        <article className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
-          <p className="font-mono text-xs uppercase tracking-[0.24em] text-[var(--ink-light)]">
-            Notifications
-          </p>
-          <h2 className="mt-2 font-heading text-3xl text-foreground">Alerts and platform updates</h2>
+          {missingSkillsNudge ? (
+            <p className="mt-4 rounded-[10px] border border-[var(--green)] bg-[var(--green-glow)] px-3 py-2 text-sm text-[var(--green)]">
+              Add more skills to improve job matching quality.
+            </p>
+          ) : null}
 
           <div className="mt-5 grid gap-3">
-            <NotificationRow
+            <InfoRow
               label="Job alerts"
               value={
                 preferences.unsubscribeAll
@@ -476,42 +283,154 @@ export default async function DashboardPage() {
                     : "Daily digest"
               }
             />
-            <NotificationRow
+            <InfoRow
               label="Platform updates"
               value={
-                preferences.unsubscribeAll || preferences.frequency === "jobs_only"
-                  ? "Off"
-                  : "On"
+                preferences.unsubscribeAll || preferences.frequency === "jobs_only" ? "Off" : "On"
               }
             />
-            <NotificationRow
-              label="Builder follow-ups"
-              value={
-                preferences.unsubscribeAll || preferences.frequency === "jobs_only"
-                  ? "Off"
-                  : preferences.frequency === "less_often"
-                    ? "Reduced"
-                    : "On"
-              }
-            />
-            <NotificationRow
+            <InfoRow
               label="Email verification"
-              value={user.email_confirmed_at ? "Verified" : "Check your inbox"}
+              value={user.email_confirmed_at ? "Verified" : "Pending"}
             />
-            <NotificationRow
-              label="Phone on CV"
-              value={cvFormData?.phone ? "Added" : "Optional but recommended"}
-            />
+          </div>
+        </Card>
+      </section>
+
+      <section id="jobs">
+        <Card className="fade-up !rounded-[16px] !border-[var(--border)] !bg-[var(--off-black)] !p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--mid)]">Job matches</p>
+              <h2 className="mt-2 font-display text-3xl text-[var(--cream)]">Weighted daily matches</h2>
+            </div>
+            <Badge variant="blue">{topMatches.length} visible</Badge>
           </div>
 
-          <div className="mt-5 rounded-[var(--radius-input)] border border-[var(--border-light)] bg-[var(--bg)] px-4 py-4 text-sm leading-6 text-[var(--ink-light)]">
-            Want fewer nudges? The preference centre lets you keep job alerts while muting
-            abandoned-draft and post-download follow-ups.
-            <Link className="ml-1 font-medium text-[var(--accent)]" href="/email-preferences">
-              Open preferences
+          {topMatches.length > 0 ? (
+            <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {topMatches.map((match) => (
+                <article
+                  className="group relative overflow-hidden rounded-[12px] border border-[var(--border)] bg-[var(--card)] p-4 transition-all duration-200 hover:border-[var(--border-mid)] hover:bg-[var(--card-hover)]"
+                  key={match.job_id}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-display text-xl text-[var(--cream)]">{match.jobs?.company}</h3>
+                      <p className="mt-1 text-sm text-[var(--cream-dim)]">{match.jobs?.title}</p>
+                    </div>
+                    <Badge
+                      variant={match.match_score >= 70 ? "green" : match.match_score >= 50 ? "gold" : "blue"}
+                    >
+                      {match.match_score}%
+                    </Badge>
+                  </div>
+
+                  <p className="mt-3 text-sm text-[var(--mid)]">
+                    {formatLocation(match.jobs?.location_city, match.jobs?.location_state)}
+                  </p>
+                  <p className="text-sm text-[var(--cream-dim)]">
+                    {formatSalary(
+                      match.jobs?.salary_min ?? null,
+                      match.jobs?.salary_max ?? null,
+                      match.jobs?.currency ?? null,
+                    )}
+                  </p>
+
+                  <div className="mt-4 translate-y-2 opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
+                    {match.jobs?.source_url ? (
+                      <JobMatchLink jobId={match.job_id} />
+                    ) : (
+                      <span className="text-xs text-[var(--mid)]">No source link yet</span>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-5 rounded-[12px] border border-dashed border-[var(--border)] bg-[var(--surface)] px-5 py-8 text-center">
+              <div className="mx-auto h-10 w-10 rounded-full border border-[var(--green)] bg-[var(--green-glow)]" />
+              <p className="mt-4 font-display text-lg text-[var(--cream)]">No matches yet</p>
+              <p className="mt-1 text-sm text-[var(--mid)]">Complete your profile to see job matches.</p>
+              <Link
+                className="mt-4 inline-flex min-h-11 items-center justify-center rounded-[8px] bg-[var(--green)] px-4 font-display text-sm text-[var(--black)]"
+                href={currentCv ? `/build?cv=${currentCv.id}` : "/build"}
+              >
+                Complete profile
+              </Link>
+            </div>
+          )}
+        </Card>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]" id="tracker">
+        <Card className="fade-up !rounded-[16px] !border-[var(--border)] !bg-[var(--off-black)] !p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--mid)]">Application tracker</p>
+              <h2 className="mt-2 font-display text-3xl text-[var(--cream)]">Kanban snapshot</h2>
+            </div>
+            <Link
+              className="inline-flex min-h-11 items-center justify-center rounded-[8px] border border-[var(--border)] px-4 font-display text-sm text-[var(--cream-dim)] transition-all duration-200 hover:border-[var(--border-mid)] hover:bg-[var(--card)] hover:text-[var(--cream)]"
+              href="/dashboard/tracker"
+            >
+              Open full tracker
             </Link>
           </div>
-        </article>
+
+          <div className="mt-5 grid gap-3 xl:grid-cols-4">
+            {TRACKER_STATUSES.map((status) => (
+              <div className="rounded-[10px] border border-[var(--border)] bg-[var(--card)] p-3" key={status}>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-display text-sm text-[var(--cream)]">{TRACKER_STATUS_META[status].label}</p>
+                  <Badge
+                    variant={
+                      status === "offer"
+                        ? "green"
+                        : status === "interview"
+                          ? "gold"
+                          : status === "rejected"
+                            ? "red"
+                            : "blue"
+                    }
+                  >
+                    {trackerGroups[status].length}
+                  </Badge>
+                </div>
+                <div className="mt-3 grid gap-2">
+                  {trackerGroups[status].slice(0, 2).map((application) => (
+                    <div className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2" key={application.id}>
+                      <p className="text-sm text-[var(--cream)]">{application.company}</p>
+                      <p className="text-xs text-[var(--mid)]">{application.role}</p>
+                    </div>
+                  ))}
+                  {trackerGroups[status].length === 0 ? (
+                    <p className="text-xs text-[var(--mid)]">{TRACKER_STATUS_META[status].emptyState}</p>
+                  ) : null}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="fade-up !rounded-[16px] !border-[var(--border)] !bg-[var(--off-black)] !p-6">
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--mid)]">Interview reminder</p>
+          <h2 className="mt-2 font-display text-2xl text-[var(--cream)]">Stay ready for interviews</h2>
+          <p className="mt-3 text-sm leading-6 text-[var(--cream-dim)]">
+            When you move a card to Interview, update your CV before the call so your proof aligns with the role.
+          </p>
+
+          <div className="mt-4 rounded-[10px] border border-[var(--gold)] bg-[var(--gold-glow)] px-4 py-3 text-sm text-[var(--cream)]">
+            Heading to an interview? Refresh your CV first.
+            <Link className="ml-1 font-display text-[var(--gold)]" href="/build">
+              Edit CV →
+            </Link>
+          </div>
+
+          <div className="mt-4 rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm text-[var(--cream-dim)]">
+            Account credit: {formatKoboToNaira(profile?.account_credit_kobo ?? 0)}
+          </div>
+        </Card>
       </section>
     </div>
   );
@@ -579,67 +498,20 @@ function formatSalary(min: number | null, max: number | null, currency: string |
   return "Salary not listed";
 }
 
-function StaticScoreDial({ score }: { score: number }) {
-  const radius = 48;
-  const circumference = 2 * Math.PI * radius;
-  const progress = circumference - (score / 100) * circumference;
-
+function SummaryChip({ label, value }: { label: string; value: string }) {
   return (
-    <div className="relative h-28 w-28 shrink-0">
-      <svg className="h-28 w-28 -rotate-90" viewBox="0 0 120 120">
-        <circle
-          cx="60"
-          cy="60"
-          fill="none"
-          r={radius}
-          stroke="var(--border-light)"
-          strokeWidth="12"
-        />
-        <circle
-          cx="60"
-          cy="60"
-          fill="none"
-          r={radius}
-          stroke="var(--accent)"
-          strokeDasharray={circumference}
-          strokeDashoffset={progress}
-          strokeLinecap="round"
-          strokeWidth="12"
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-heading text-3xl text-foreground">{score}</span>
-        <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--ink-light)]">
-          score
-        </span>
-      </div>
+    <div className="rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-4 py-3">
+      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--mid)]">{label}</p>
+      <p className="mt-2 font-heading text-3xl leading-none text-[var(--cream)]">{value}</p>
     </div>
   );
 }
 
-function SummaryPill({ label, value }: { label: string; value: string }) {
+function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[var(--radius-input)] border border-[var(--border-light)] bg-white/70 px-4 py-3">
-      <p className="text-xs uppercase tracking-[0.18em] text-[var(--ink-faint)]">{label}</p>
-      <p className="mt-2 font-heading text-2xl text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[var(--radius-input)] border border-[var(--border-light)] bg-white/70 px-4 py-4">
-      <p className="text-xs uppercase tracking-[0.18em] text-[var(--ink-faint)]">{label}</p>
-      <p className="mt-2 text-base font-medium text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function NotificationRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-4 rounded-[var(--radius-input)] border border-[var(--border-light)] bg-white/70 px-4 py-3">
-      <p className="text-sm font-medium text-foreground">{label}</p>
-      <span className="text-sm text-[var(--ink-light)]">{value}</span>
+    <div className="flex items-center justify-between rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
+      <p className="text-sm text-[var(--cream)]">{label}</p>
+      <span className="font-mono text-xs text-[var(--cream-dim)]">{value}</span>
     </div>
   );
 }

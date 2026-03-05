@@ -21,7 +21,16 @@ import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { PaymentPanel } from "./payment-panel";
 import { PreviewPanel } from "./preview-panel";
 import { ScoreDial } from "./score-dial";
-import { Field, inputClassName, RepeaterStep, StepLabel, SyncIndicator, TagStep } from "./wizard-ui";
+import {
+  Field,
+  inputClassName,
+  RepeaterStep,
+  selectChevronStyle,
+  selectClassName,
+  StepLabel,
+  SyncIndicator,
+  TagStep,
+} from "./wizard-ui";
 
 const STEP_TITLES = [
   "Full name",
@@ -94,6 +103,8 @@ export function FormWizard({
   const storageKey = useMemo(() => `cvpadi_draft_${userId}`, [userId]);
   const progress = ((step + 1) / STEP_TITLES.length) * 100;
   const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+  const [shakeStep, setShakeStep] = useState(false);
+  const [progressFlash, setProgressFlash] = useState(false);
 
   useEffect(() => {
     const localDraft = localStorage.getItem(storageKey);
@@ -198,6 +209,8 @@ export function FormWizard({
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
+      setShakeStep(true);
+      window.setTimeout(() => setShakeStep(false), 320);
       return;
     }
 
@@ -234,6 +247,8 @@ export function FormWizard({
       recaptchaToken,
       requireRecaptcha: step === 0,
     });
+    setProgressFlash(true);
+    window.setTimeout(() => setProgressFlash(false), 280);
     setStep((current) => Math.min(current + 1, STEP_TITLES.length - 1));
   };
 
@@ -268,7 +283,7 @@ export function FormWizard({
   const currentCities = NIGERIAN_CITIES[draft.locationState] ?? [];
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+    <div className="relative pb-12">
       {recaptchaSiteKey ? (
         <Script
           src={`https://www.google.com/recaptcha/api.js?render=${recaptchaSiteKey}`}
@@ -276,103 +291,125 @@ export function FormWizard({
         />
       ) : null}
 
-      <section className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
-        <div aria-hidden="true" className="sr-only">
-          <label htmlFor="company-website">Leave this field empty</label>
-          <input
-            autoComplete="off"
-            id="company-website"
-            name="company-website"
-            onChange={(event) => setHoneypot(event.target.value)}
-            tabIndex={-1}
-            type="text"
-            value={honeypot}
-          />
-        </div>
+      <header className="fixed inset-x-0 top-0 z-30 border-b border-[var(--border)] bg-[var(--off-black)]/95 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-3 sm:px-6">
+          <p className="font-display text-xl tracking-[-0.02em] text-[var(--cream)]">
+            CV<span className="text-[var(--green)]">Padi</span>
+          </p>
 
-        <div className="flex flex-col gap-4 border-b border-[var(--border-light)] pb-5 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-[0.24em] text-[var(--ink-light)]">
-              Step {step + 1} of {STEP_TITLES.length}
-            </p>
-            <h1 className="mt-2 font-heading text-3xl text-foreground">
-              {STEP_TITLES[step]}
-            </h1>
-          </div>
-          <SyncIndicator syncStatus={syncStatus} />
-        </div>
-
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--border-light)]">
-          <div
-            className="h-full rounded-full bg-[var(--accent)] transition-all"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
-        {showRestoreBanner ? (
-          <div className="mt-5 rounded-[var(--radius-input)] border border-[var(--gold)] bg-[var(--gold-light)] px-4 py-3 text-sm leading-6 text-foreground">
-            <p>We found unsaved progress. Restore the newer local draft?</p>
-            <div className="mt-3 flex gap-3">
-              <button className="font-medium text-[var(--accent)]" onClick={handleRestore} type="button">
-                Restore it
-              </button>
-              <button
-                className="font-medium text-[var(--ink-light)]"
-                onClick={() => setShowRestoreBanner(false)}
-                type="button"
-              >
-                Keep server copy
-              </button>
+          <div className="flex-1">
+            <div className="h-[5px] overflow-hidden rounded-full bg-[var(--faint)]">
+              <div
+                className={`h-full rounded-full bg-[var(--green)] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${progressFlash ? "shadow-[0_0_18px_var(--green)]" : ""}`.trim()}
+                style={{ width: `${progress}%` }}
+              />
             </div>
           </div>
-        ) : null}
 
-        {statusMessage ? (
-          <p className="mt-5 rounded-[var(--radius-input)] border border-[var(--border-light)] bg-white/70 px-4 py-3 text-sm text-[var(--ink-light)]">
-            {statusMessage}
+          <div className="flex items-center gap-3">
+            <span className="hidden font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--cream-dim)] sm:inline-flex">
+              Step {step + 1} of {STEP_TITLES.length}
+            </span>
+            <SyncIndicator syncStatus={syncStatus} />
+          </div>
+        </div>
+      </header>
+
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pt-28 sm:px-6">
+        <section className="mx-auto w-full max-w-[560px] rounded-[16px] border border-[var(--border)] bg-[var(--off-black)] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.45)]">
+          <div aria-hidden="true" className="sr-only">
+            <label htmlFor="company-website">Leave this field empty</label>
+            <input
+              autoComplete="off"
+              id="company-website"
+              name="company-website"
+              onChange={(event) => setHoneypot(event.target.value)}
+              tabIndex={-1}
+              type="text"
+              value={honeypot}
+            />
+          </div>
+
+          {step > 0 ? (
+            <button
+              className="mb-4 inline-flex min-h-10 items-center gap-2 rounded-[8px] border border-[var(--border)] px-3 font-display text-sm text-[var(--cream-dim)] transition-all duration-200 hover:border-[var(--border-mid)] hover:bg-[var(--card)]"
+              onClick={handleBack}
+              type="button"
+            >
+              ← Back
+            </button>
+          ) : null}
+
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--green)]">
+            Step {step + 1} of {STEP_TITLES.length} · {STEP_TITLES[step].toUpperCase()}
           </p>
-        ) : null}
+          <h1 className="mt-3 font-heading text-[32px] leading-[1.1] text-[var(--cream)]">
+            {STEP_TITLES[step]}
+          </h1>
 
-        <div className="mt-6">{renderStep()}</div>
+          {showRestoreBanner ? (
+            <div className="mt-5 rounded-[10px] border border-[var(--gold)] bg-[var(--gold-glow)] px-4 py-3 text-sm leading-6 text-[var(--cream)]">
+              <p>We found newer local progress. Restore it?</p>
+              <div className="mt-2 flex gap-3">
+                <button
+                  className="font-display text-sm text-[var(--gold)]"
+                  onClick={handleRestore}
+                  type="button"
+                >
+                  Restore
+                </button>
+                <button
+                  className="font-display text-sm text-[var(--cream-dim)]"
+                  onClick={() => setShowRestoreBanner(false)}
+                  type="button"
+                >
+                  Keep server copy
+                </button>
+              </div>
+            </div>
+          ) : null}
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-between">
+          {statusMessage ? (
+            <p className="mt-4 rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm text-[var(--cream-dim)]">
+              {statusMessage}
+            </p>
+          ) : null}
+
+          <div className={`mt-6 ${shakeStep ? "[animation:shake_0.3s_ease]" : ""}`.trim()}>
+            <div className="step-in" key={step}>
+              {renderStep()}
+            </div>
+          </div>
+
           <button
-            className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={step === 0}
-            onClick={handleBack}
-            type="button"
-          >
-            Back
-          </button>
-          <button
-            className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] bg-[var(--accent)] px-5 text-sm font-medium text-white"
+            className="mt-8 inline-flex min-h-[52px] w-full items-center justify-center rounded-[10px] bg-[var(--green)] px-5 font-display text-base text-[var(--black)] transition-all duration-200 hover:translate-y-[-2px] hover:bg-[#33EE8A] hover:shadow-[0_18px_42px_var(--green-glow)]"
             onClick={handleNext}
             type="button"
           >
-            {step === STEP_TITLES.length - 1 ? "Save draft" : "Next"}
+            {step === STEP_TITLES.length - 1 ? "Save draft" : "Continue"}
           </button>
-        </div>
-      </section>
+        </section>
 
-      <div className="grid gap-6">
-        <ScoreDial onJump={setStep} score={scoreResult.score} suggestions={scoreResult.suggestions} />
-        <PreviewPanel
-          cvId={cvId}
-          accountCreditKobo={initialAccountCreditKobo}
-          deviceFingerprint={deviceFingerprint}
-          draft={draft}
-          honeypot={honeypot}
-          initialFreePreviewsUsed={initialFreePreviewsUsed}
-          referralCode={initialReferralCode}
-          isComplete={scoreResult.suggestions.length === 0}
-          score={scoreResult.score}
-        />
-        <PaymentPanel
-          availableCreditKobo={initialAccountCreditKobo}
-          cvId={cvId}
-          initialPaymentReference={initialPaymentReference}
-          isPaid={isPaid}
-        />
+        <div className="mx-auto grid w-full max-w-4xl gap-6">
+          <ScoreDial onJump={setStep} score={scoreResult.score} suggestions={scoreResult.suggestions} />
+          <PreviewPanel
+            accountCreditKobo={initialAccountCreditKobo}
+            cvId={cvId}
+            deviceFingerprint={deviceFingerprint}
+            draft={draft}
+            honeypot={honeypot}
+            initialFreePreviewsUsed={initialFreePreviewsUsed}
+            isComplete={scoreResult.suggestions.length === 0}
+            referralCode={initialReferralCode}
+            score={scoreResult.score}
+          />
+          <PaymentPanel
+            availableCreditKobo={initialAccountCreditKobo}
+            cvId={cvId}
+            initialPaymentReference={initialPaymentReference}
+            isPaid={isPaid}
+          />
+        </div>
       </div>
     </div>
   );
@@ -434,8 +471,9 @@ export function FormWizard({
             label="Location state"
             renderInput={
               <select
-                className={inputClassName}
+                className={selectClassName}
                 onChange={(event) => handleFieldChange("locationState", event.target.value)}
+                style={selectChevronStyle}
                 value={draft.locationState}
               >
                 <option value="">Select a state</option>
@@ -494,8 +532,9 @@ export function FormWizard({
             label="Industry"
             renderInput={
               <select
-                className={inputClassName}
+                className={selectClassName}
                 onChange={(event) => handleFieldChange("industry", event.target.value)}
+                style={selectChevronStyle}
                 value={draft.industry}
               >
                 <option value="">Select an industry</option>
@@ -574,25 +613,26 @@ export function FormWizard({
     error?: string,
   ) {
     return (
-      <Field
-        error={error}
-        label={label}
-        renderInput={
-          <select
-            className={inputClassName}
-            onChange={(event) =>
-              handleFieldChange(field, event.target.value as CVFormData[typeof field])
-            }
-            value={draft[field]}
-          >
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        }
-      />
+      <div className="grid gap-3">
+        <StepLabel error={error} label={label} />
+        <div className="grid gap-2">
+          {options.map((option) => {
+            const selected = draft[field] === option.value;
+
+            return (
+              <button
+                className={`flex min-h-[52px] items-center justify-between rounded-[10px] border px-4 text-left text-sm transition-all duration-200 ${selected ? "border-[var(--green)] bg-[var(--green-glow)] text-[var(--green)]" : "border-[var(--border)] bg-[var(--surface)] text-[var(--cream-dim)] hover:border-[var(--border-mid)] hover:bg-[var(--card)]"}`.trim()}
+                key={option.value}
+                onClick={() => handleFieldChange(field, option.value as CVFormData[typeof field])}
+                type="button"
+              >
+                <span className="font-body">{option.label}</span>
+                {selected ? <span className="text-xs">✓</span> : null}
+              </button>
+            );
+          })}
+        </div>
+      </div>
     );
   }
 
@@ -606,7 +646,12 @@ export function FormWizard({
           <div className="grid gap-3 sm:grid-cols-2" key={entry.id}>
             <input className={inputClassName} onChange={(event) => updateArrayItem("education", index, "institution", event.target.value)} placeholder="Institution" type="text" value={entry.institution} />
             <input className={inputClassName} onChange={(event) => updateArrayItem("education", index, "course", event.target.value)} placeholder="Course" type="text" value={entry.course} />
-            <select className={inputClassName} onChange={(event) => updateArrayItem("education", index, "degreeClass", event.target.value)} value={entry.degreeClass}>
+            <select
+              className={selectClassName}
+              onChange={(event) => updateArrayItem("education", index, "degreeClass", event.target.value)}
+              style={selectChevronStyle}
+              value={entry.degreeClass}
+            >
               {DEGREE_CLASS_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -625,8 +670,13 @@ export function FormWizard({
   function renderExperienceStep() {
     return (
       <div className="grid gap-4">
-        <label className="flex items-center gap-3 text-sm">
-          <input checked={draft.noExperienceYet} onChange={(event) => handleFieldChange("noExperienceYet", event.target.checked)} type="checkbox" />
+        <label className="inline-flex min-h-12 items-center gap-3 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-4 text-sm text-[var(--cream-dim)]">
+          <input
+            checked={draft.noExperienceYet}
+            className="h-4 w-4 rounded border-[var(--border-mid)] bg-[var(--off-black)] text-[var(--green)]"
+            onChange={(event) => handleFieldChange("noExperienceYet", event.target.checked)}
+            type="checkbox"
+          />
           No experience yet
         </label>
         {!draft.noExperienceYet ? (

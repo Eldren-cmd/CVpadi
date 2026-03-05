@@ -65,23 +65,21 @@ export default async function BuildPage({
   };
 
   return (
-    <main className="min-h-screen px-4 py-6 sm:px-6 sm:py-8">
-      <div className="mx-auto max-w-6xl">
-        <FormErrorBoundary>
-          <FormWizard
-            initialCvId={draft.id}
-            initialDraft={initialDraft}
-            initialAccountCreditKobo={profile?.account_credit_kobo ?? 0}
-            initialPaymentReference={searchParams?.reference ?? null}
-            initialFreePreviewsUsed={profile?.free_generations_used ?? 0}
-            initialReferralCode={profile?.referral_code ?? ""}
-            initialUpdatedAt={draft.updated_at}
-            isPaid={draft.is_paid}
-            userEmail={user.email ?? ""}
-            userId={user.id}
-          />
-        </FormErrorBoundary>
-      </div>
+    <main className="min-h-screen bg-[var(--black)]">
+      <FormErrorBoundary>
+        <FormWizard
+          initialCvId={draft.id}
+          initialDraft={initialDraft}
+          initialAccountCreditKobo={profile?.account_credit_kobo ?? 0}
+          initialPaymentReference={searchParams?.reference ?? null}
+          initialFreePreviewsUsed={profile?.free_generations_used ?? 0}
+          initialReferralCode={profile?.referral_code ?? ""}
+          initialUpdatedAt={draft.updated_at}
+          isPaid={draft.is_paid}
+          userEmail={user.email ?? ""}
+          userId={user.id}
+        />
+      </FormErrorBoundary>
     </main>
   );
 }

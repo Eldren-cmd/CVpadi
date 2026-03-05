@@ -1,5 +1,6 @@
-"use client";
+﻿"use client";
 
+import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import { magicLinkSchema } from "@/lib/cv/validation";
 import { useState } from "react";
@@ -14,7 +15,7 @@ export function SalaryMagicLink({
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || window.location.origin;
   const [email, setEmail] = useState(initialEmail);
   const [statusMessage, setStatusMessage] = useState(
-    "Verify your email with a magic link. That unlocks salary submission without a full password flow.",
+    "Verify your email with a magic link to unlock salary submission.",
   );
   const [isPending, setIsPending] = useState(false);
 
@@ -42,7 +43,7 @@ export function SalaryMagicLink({
         throw error;
       }
 
-      setStatusMessage("Magic link sent. Open it on this device, then come back here to submit.");
+      setStatusMessage("Magic link sent. Open it on this device, then return here.");
     } catch (error) {
       setStatusMessage(
         error instanceof Error ? error.message : "Unable to send the magic link right now.",
@@ -55,20 +56,16 @@ export function SalaryMagicLink({
   return (
     <form className="grid gap-3" onSubmit={handleSubmit}>
       <input
-        className="min-h-12 rounded-[var(--radius-input)] border border-border bg-white px-4"
+        className="min-h-11 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-4 text-[var(--cream)]"
         onChange={(event) => setEmail(event.target.value)}
         placeholder="name@example.com"
         type="email"
         value={email}
       />
-      <button
-        className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] bg-[var(--accent)] px-4 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
-        disabled={isPending}
-        type="submit"
-      >
-        {isPending ? "Sending link..." : "Verify email to submit"}
-      </button>
-      <p className="rounded-[var(--radius-input)] border border-[var(--border-light)] bg-white/70 px-4 py-3 text-sm leading-6 text-[var(--ink-light)]">
+      <Button className="w-full" loading={isPending} type="submit" variant="primary">
+        Verify email to submit
+      </Button>
+      <p className="rounded-[8px] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm leading-6 text-[var(--cream-dim)]">
         {statusMessage}
       </p>
     </form>

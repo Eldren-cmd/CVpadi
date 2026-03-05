@@ -1,5 +1,6 @@
-"use client";
+﻿"use client";
 
+import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 import type { DeliveryLinksResponse } from "@/lib/payments/types";
 
@@ -31,17 +32,10 @@ export function DashboardDownloadButton({ cvId }: { cvId: string }) {
 
   return (
     <div className="grid gap-2">
-      <button
-        className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground disabled:cursor-not-allowed disabled:opacity-60"
-        disabled={isLoading}
-        onClick={handleDownload}
-        type="button"
-      >
-        {isLoading ? "Preparing PDF..." : "Download paid CV"}
-      </button>
-      {errorMessage ? (
-        <p className="text-xs leading-5 text-[var(--red)]">{errorMessage}</p>
-      ) : null}
+      <Button loading={isLoading} onClick={handleDownload} variant="primary">
+        Download paid CV
+      </Button>
+      {errorMessage ? <p className="text-xs text-[var(--red)]">{errorMessage}</p> : null}
     </div>
   );
 }

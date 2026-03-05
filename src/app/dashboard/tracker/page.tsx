@@ -49,13 +49,7 @@ export default async function TrackerPage() {
     .map(normalizeApplication)
     .filter((application) => TRACKER_STATUSES.includes(application.status));
 
-  return (
-    <main className="min-h-screen px-4 py-6 sm:px-6 sm:py-8">
-      <div className="mx-auto max-w-7xl">
-        <ApplicationTracker initialApplications={applications} />
-      </div>
-    </main>
-  );
+  return <ApplicationTracker initialApplications={applications} />;
 }
 
 function normalizeApplication(row: ApplicationRow): TrackerApplication {

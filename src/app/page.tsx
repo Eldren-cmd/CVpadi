@@ -1,191 +1,617 @@
-const foundationChecklist = [
-  "Sentry instrumentation is wired for app, server, edge, and global form failures.",
-  "Supabase browser/server clients and auth-refresh middleware are in place.",
-  "Login supports email and password, magic link, and Google sign-in.",
-  "The /build wizard saves drafts to Supabase on step transitions and keeps a local recovery copy.",
-  "CV score suggestions, restore-banner logic, and visible sync-state feedback are active.",
-  "Paystack initialize, status, and webhook routes are wired with server-side amount checks and missing-row webhook upserts.",
-  "The builder waits for verified webhook confirmation before treating a payment as unlocked.",
-  "Verified payments now trigger server-side PDF and WhatsApp JPG generation into the private cv-assets bucket.",
-  "Paid users receive 2-hour signed delivery links in the builder and by email through Resend.",
-  "Phase 1 email sequences now schedule abandoned-draft follow-ups and post-download reminders.",
-  "A preference centre and hourly email-sequence processor route are scaffolded for the next cron step.",
-  "Phase 1 loophole fixes now include a server-rendered free preview canvas, FingerprintJS soft-signal tracking, and atomic free-preview limits.",
-  "Free feature F1 is live: CV score share cards now render through a server OG route and trigger after the first completed preview.",
-  "Free feature F2 is live: a public CV checker now scores pasted text or uploaded PDFs and hands captured email into the free build flow.",
-  "Free feature F3 is live: the public salary page now enforces the five-submission rule and uses magic-link email verification for submissions.",
-  "Free feature F4 is live: registered users now get a kanban application tracker with an interview-stage CV update prompt.",
-  "Free feature F5 is live: static industry CV tips pages now pre-select the build flow via URL params.",
-  "Free feature F6 is live: the NYSC hub now covers CV guidance, PPA company research, and after-service career planning.",
-  "Free feature F7 is live: every builder save now writes a timeline snapshot and older versions can be forked into new CV branches.",
-  "Free feature F8 is live: the first completed CV view now combines share and referral prompts, and verified referred payments credit the referrer automatically.",
-  "Phase 2.1 is now aligned to v4: the scraper loads stable sources from job_sources, corporate sources from JOB_SCRAPER_SOURCES_JSON, checks robots.txt, and auto-disables failing stable sources.",
-  "Checkpoint 5 is now wired: verified payments enqueue a Claude Haiku enhancement pass that regenerates updated assets and emails the refreshed files off the payment critical path.",
-  "Phase 2.2 is live on the backend: daily weighted job matching now persists only scores >= 40 and sends one top-3 digest at 8am WAT.",
-  "Phase 2.3 is live: the authenticated dashboard now unifies CV access, job matches, tracker state, profile nudges, and notification controls across desktop and mobile navigation.",
-  "Phase 2.4 guardrails are live: matched job details now require auth, are rate-limited, and support honeypot-account flagging while the preference centre handles less-often, jobs-only, and unsubscribe-all retention controls.",
-];
+﻿"use client";
 
-const deploymentReminders = [
-  "Replace the Resend test sender with a verified production sender before launch.",
-  "If you migrate Paystack to the v4 Edge Function webhook path, update the dashboard webhook URL before taking live payments.",
-  "Do not keep test Paystack keys in production.",
-  "Set NEXT_PUBLIC_RECAPTCHA_SITE_KEY and RECAPTCHA_SECRET_KEY before public launch.",
-  "Monitor Anthropic credits and move up only after the queued enhancement worker proves stable in production.",
-  "Before switching Paystack live, replace the test keys while keeping the same webhook path on cvpadi.vercel.app.",
-];
-
-const envVars = [
-  "NEXT_PUBLIC_SENTRY_DSN",
-  "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-  "SUPABASE_SERVICE_ROLE_KEY",
-  "NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY",
-  "PAYSTACK_SECRET_KEY",
-  "RESEND_API_KEY",
-  "EMAIL_FROM",
-  "EMAIL_SEQUENCE_CRON_SECRET",
-  "NEXT_PUBLIC_RECAPTCHA_SITE_KEY",
-  "RECAPTCHA_SECRET_KEY",
-  "ANTHROPIC_API_KEY",
-  "SENTRY_DSN",
-  "JOB_SCRAPER_SOURCES_JSON",
-  "NEXT_PUBLIC_APP_URL",
-];
+import Link from "next/link";
+import { useEffect } from "react";
+import "./landing.css";
 
 export default function Home() {
+  useEffect(() => {
+    const cursor = document.getElementById("cursor");
+    const ring = document.getElementById("cursorRing");
+
+    if (!cursor || !ring) {
+      return;
+    }
+
+    let mouseX = 0;
+    let mouseY = 0;
+    let ringX = 0;
+    let ringY = 0;
+    let rafId = 0;
+
+    const handleMouseMove = (event: MouseEvent) => {
+      mouseX = event.clientX;
+      mouseY = event.clientY;
+      cursor.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+
+    const animateRing = () => {
+      ringX += (mouseX - ringX) * 0.12;
+      ringY += (mouseY - ringY) * 0.12;
+      ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%)`;
+      rafId = requestAnimationFrame(animateRing);
+    };
+
+    animateRing();
+
+    const interactiveElements = document.querySelectorAll<HTMLElement>(
+      "a, button, .step, .feature, .testimonial, .price-card",
+    );
+
+    const interactiveHandlers: Array<{
+      element: HTMLElement;
+      mouseEnter: () => void;
+      mouseLeave: () => void;
+    }> = [];
+
+    interactiveElements.forEach((element) => {
+      const mouseEnter = () => {
+        cursor.style.transform += " scale(2.5)";
+        cursor.style.background = "var(--orange)";
+        ring.style.opacity = "0";
+      };
+
+      const mouseLeave = () => {
+        cursor.style.background = "var(--green)";
+        ring.style.opacity = "1";
+      };
+
+      element.addEventListener("mouseenter", mouseEnter);
+      element.addEventListener("mouseleave", mouseLeave);
+      interactiveHandlers.push({ element, mouseEnter, mouseLeave });
+    });
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      cancelAnimationFrame(rafId);
+
+      interactiveHandlers.forEach(({ element, mouseEnter, mouseLeave }) => {
+        element.removeEventListener("mouseenter", mouseEnter);
+        element.removeEventListener("mouseleave", mouseLeave);
+      });
+    };
+  }, []);
+
+  useEffect(() => {
+    const reveals = document.querySelectorAll<HTMLElement>(".reveal");
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" },
+    );
+
+    reveals.forEach((element) => observer.observe(element));
+
+    document
+      .querySelectorAll<HTMLElement>(".step, .feature, .testimonial, .nigeria-list li")
+      .forEach((element, index) => {
+        element.style.transitionDelay = `${(index % 3) * 0.1}s`;
+      });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   return (
-    <main className="min-h-screen px-4 py-6 sm:px-6 sm:py-8">
-      <div className="mx-auto flex max-w-5xl flex-col gap-4 sm:gap-6">
-        <section className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-elevated)] sm:p-8">
-          <div className="mb-4 inline-flex min-h-11 items-center rounded-full border border-border bg-[var(--accent-light)] px-4 text-sm font-medium text-foreground">
-            Phase 1 delivery slice complete
-          </div>
-          <p className="font-mono text-sm uppercase tracking-[0.28em] text-[var(--ink-light)]">
-            CVPadi
-          </p>
-          <h1 className="mt-3 max-w-2xl font-heading text-4xl leading-tight text-foreground sm:text-5xl">
-            Auth, the CV builder, delivery, the queued Claude worker, and the current v4 Phase 2 dashboard and guardrail slices are now wired.
-          </h1>
-          <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--ink-light)] sm:text-lg">
-            The app now has Sentry, Supabase auth, a protected conversational builder,
-            local recovery logic, CV scoring, public free-feature surfaces, a hardened
-            Paystack payment flow, private delivery assets, a queued Claude enhancement
-            path that stays off the webhook critical path, the two-tier legal-source
-            job scraper, the weighted daily top-3 matching digest, the authenticated
-            dashboard, and the Phase 2 loophole fixes required by v4.
-          </p>
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-            <a
-              className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] bg-[var(--accent)] px-5 text-sm font-medium text-white"
-              href="/login"
-            >
-              Open login
-            </a>
-            <a
-              className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"
-              href="/check"
-            >
-              Check a CV
-            </a>
-            <a
-              className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"
-              href="/salary"
-            >
-              Salary database
-            </a>
-            <a
-              className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"
-              href="/dashboard"
-            >
-              Dashboard
-            </a>
-            <a
-              className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"
-              href="/dashboard/tracker"
-            >
-              Application tracker
-            </a>
-            <a
-              className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"
-              href="/nysc"
-            >
-              NYSC hub
-            </a>
-            <a
-              className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"
-              href="/dashboard/versions"
-            >
-              CV versions
-            </a>
-            <a
-              className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"
-              href="/build"
-            >
-              Open builder
-            </a>
-          </div>
-        </section>
+    <>
+      <div className="cursor" id="cursor" />
+      <div className="cursor-ring" id="cursorRing" />
 
-        <div className="grid gap-4 lg:grid-cols-[1.25fr_0.95fr]">
-          <section className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
-            <h2 className="font-heading text-2xl text-foreground">Included in this milestone</h2>
-            <ul className="mt-4 grid gap-3 text-sm leading-6 text-[var(--ink-light)] sm:text-base">
-              {foundationChecklist.map((item) => (
-                <li
-                  key={item}
-                  className="rounded-[var(--radius-input)] border border-[var(--border-light)] bg-white/70 px-4 py-3"
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
-            <h2 className="font-heading text-2xl text-foreground">Deployment reminders</h2>
-            <p className="mt-4 text-sm leading-6 text-[var(--ink-light)] sm:text-base">
-              Development is using the temporary Resend sender and Paystack test mode.
-              Switch these before the first production deployment.
-            </p>
-            <ol className="mt-4 grid gap-3 text-sm leading-6 text-[var(--ink-light)] sm:text-base">
-              {deploymentReminders.map((item, index) => (
-                <li
-                  key={item}
-                  className="rounded-[var(--radius-input)] border border-[var(--border-light)] bg-white/70 px-4 py-3"
-                >
-                  <span className="font-mono text-[var(--accent)]">0{index + 1}.</span> {item}
-                </li>
-              ))}
-            </ol>
-          </section>
+      <nav>
+        <div className="logo">
+          CV<span>Padi</span>
         </div>
+        <ul>
+          <li>
+            <a href="#how">How it works</a>
+          </li>
+          <li>
+            <a href="#features">Features</a>
+          </li>
+          <li>
+            <a href="#pricing">Pricing</a>
+          </li>
+          <li>
+            <Link href="/salary">Salary database</Link>
+          </li>
+          <li>
+            <Link href="/login" className="nav-cta">
+              Build my CV →
+            </Link>
+          </li>
+        </ul>
+      </nav>
 
-        <section className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h2 className="font-heading text-2xl text-foreground">Current env surface</h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--ink-light)] sm:text-base">
-                These variables and Supabase function secrets are expected by the current
-                implementation, including test-mode email delivery.
-              </p>
-            </div>
-            <span className="inline-flex min-h-11 items-center rounded-full bg-[var(--green-light)] px-4 text-sm font-medium text-[var(--green)]">
-              Delivery enabled
+      <section className="hero">
+        <div className="orb orb-1" />
+        <div className="orb orb-2" />
+        <div className="orb orb-3" />
+
+        <div className="hero-eyebrow">Nigeria&apos;s CV platform</div>
+
+        <h1 className="hero-headline">
+          <div className="line">
+            <span>Your CV,</span>
+          </div>
+          <div className="line">
+            <span>
+              Nigerian <em className="accent">standard.</em>
             </span>
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {envVars.map((envVar) => (
-              <div
-                key={envVar}
-                className="rounded-[var(--radius-input)] border border-[var(--border-light)] bg-[var(--bg)] px-4 py-3 font-mono text-sm text-foreground"
-              >
-                {envVar}
-              </div>
-            ))}
+          <div className="line">
+            <span>
+              <span className="orange">Done in 8 mins.</span>
+            </span>
           </div>
-        </section>
+        </h1>
+
+        <p className="hero-sub">
+          Built for Nigerian employers. NYSC status, 2 referees, correct date of birth format.
+          Not a generic template — a CV that actually gets you called.
+        </p>
+
+        <div className="hero-actions">
+          <Link href="/build" className="btn-primary">
+            Start building free <span className="arrow">↗</span>
+          </Link>
+          <Link href="/check" className="btn-ghost">
+            Check my existing CV
+          </Link>
+        </div>
+      </section>
+
+      <div className="stats-strip">
+        <div className="stats-inner">
+          <div className="stat">
+            <div className="stat-number">
+              8<span className="unit">min</span>
+            </div>
+            <div className="stat-label">Avg. build time</div>
+          </div>
+          <div className="stat">
+            <div className="stat-number">
+              100<span className="unit">%</span>
+            </div>
+            <div className="stat-label">Nigerian format</div>
+          </div>
+          <div className="stat">
+            <div className="stat-number">₦0</div>
+            <div className="stat-label">To start building</div>
+          </div>
+        </div>
       </div>
-    </main>
+
+      <div className="marquee-section">
+        <div className="marquee-track">
+          <div className="marquee-item">
+            <span className="dot" />NYSC status included
+          </div>
+          <div className="marquee-item">
+            <span className="dot" />2 Nigerian referees
+          </div>
+          <div className="marquee-item">
+            <span className="dot" />Bank transfer payment
+          </div>
+          <div className="marquee-item">
+            <span className="dot" />Date of birth formatted
+          </div>
+          <div className="marquee-item">
+            <span className="dot" />Works on any phone
+          </div>
+          <div className="marquee-item">
+            <span className="dot" />Auto-saves your progress
+          </div>
+          <div className="marquee-item">
+            <span className="dot" />WhatsApp-ready image
+          </div>
+          <div className="marquee-item">
+            <span className="dot" />CV score out of 100
+          </div>
+          <div className="marquee-item">
+            <span className="dot" />State of origin field
+          </div>
+          <div className="marquee-item">
+            <span className="dot" />NYSC status included
+          </div>
+          <div className="marquee-item">
+            <span className="dot" />2 Nigerian referees
+          </div>
+          <div className="marquee-item">
+            <span className="dot" />Bank transfer payment
+          </div>
+          <div className="marquee-item">
+            <span className="dot" />Date of birth formatted
+          </div>
+          <div className="marquee-item">
+            <span className="dot" />Works on any phone
+          </div>
+          <div className="marquee-item">
+            <span className="dot" />Auto-saves your progress
+          </div>
+          <div className="marquee-item">
+            <span className="dot" />WhatsApp-ready image
+          </div>
+          <div className="marquee-item">
+            <span className="dot" />CV score out of 100
+          </div>
+          <div className="marquee-item">
+            <span className="dot" />State of origin field
+          </div>
+        </div>
+      </div>
+
+      <section id="how">
+        <div className="section-label reveal">How it works</div>
+        <h2 className="section-headline reveal reveal-delay-1">
+          Three steps.
+          <br />
+          One job-ready CV.
+        </h2>
+        <div className="steps">
+          <div className="step reveal">
+            <div className="step-num">01</div>
+            <div className="step-title">Answer questions</div>
+            <div className="step-desc">
+              One question at a time. We guide you through every section Nigerian employers
+              actually check — NYSC status, referees, state of origin, everything.
+            </div>
+          </div>
+          <div className="step reveal reveal-delay-1">
+            <div className="step-num">02</div>
+            <div className="step-title">Preview your CV</div>
+            <div className="step-desc">
+              See a scored preview instantly. Get up to 5 specific tips that will improve your
+              score before you pay a kobo. Know exactly what you&apos;re getting.
+            </div>
+          </div>
+          <div className="step reveal reveal-delay-2">
+            <div className="step-num">03</div>
+            <div className="step-title">Pay & download</div>
+            <div className="step-desc">
+              Pay with card, bank transfer, or USSD — whatever works for you. Get your PDF and a
+              WhatsApp-ready image delivered instantly to your inbox.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="nigeria-section">
+        <div className="section-label reveal">Built for Nigeria</div>
+        <h2 className="section-headline reveal reveal-delay-1">
+          Every field a Nigerian
+          <br />
+          employer expects.
+        </h2>
+
+        <div className="nigeria-grid">
+          <ul className="nigeria-list">
+            <li className="reveal">
+              <span className="check">✓</span>
+              <span>
+                <strong>NYSC status</strong> — Discharged, Exempted, Ongoing, or Not yet. Formatted
+                correctly every time.
+              </span>
+            </li>
+            <li className="reveal reveal-delay-1">
+              <span className="check">✓</span>
+              <span>
+                <strong>2 referees</strong> — Standard Nigerian format. Name, title, company,
+                phone, and email.
+              </span>
+            </li>
+            <li className="reveal reveal-delay-2">
+              <span className="check">✓</span>
+              <span>
+                <strong>Date of birth</strong> — Always included. Nigerian CVs require it, unlike
+                Western formats.
+              </span>
+            </li>
+            <li className="reveal reveal-delay-3">
+              <span className="check">✓</span>
+              <span>
+                <strong>State of origin</strong> — A field that matters in Nigerian hiring. We
+                include it properly.
+              </span>
+            </li>
+            <li className="reveal">
+              <span className="check">✓</span>
+              <span>
+                <strong>Passport photo slot</strong> — The photo most Nigerian employers still
+                expect on a CV.
+              </span>
+            </li>
+            <li className="reveal reveal-delay-1">
+              <span className="check">✓</span>
+              <span>
+                <strong>Nigerian phone format</strong> — We validate 07X, 08X, 09X automatically.
+                No more embarrassing wrong numbers.
+              </span>
+            </li>
+          </ul>
+
+          <div style={{ position: "relative", paddingBottom: "40px" }}>
+            <div className="cv-mock reveal reveal-delay-2">
+              <div className="cv-mock-badge">✓ Nigerian format</div>
+              <div className="cv-mock-name">Adaeze Okafor</div>
+              <div className="cv-mock-role">Software Engineer • Lagos, Nigeria • 08012345678</div>
+              <div className="cv-mock-divider" />
+              <div className="cv-mock-section">
+                <div className="cv-mock-label">Career Objective</div>
+                <div className="cv-mock-line w100" />
+                <div className="cv-mock-line w80" />
+              </div>
+              <div className="cv-mock-section">
+                <div className="cv-mock-label">NYSC Status</div>
+                <span className="cv-mock-nysc">DISCHARGED — 2023</span>
+              </div>
+              <div className="cv-mock-section">
+                <div className="cv-mock-label">Education</div>
+                <div className="cv-mock-line w90" />
+                <div className="cv-mock-line w60" />
+              </div>
+              <div className="cv-mock-section">
+                <div className="cv-mock-label">Work Experience</div>
+                <div className="cv-mock-line w100" />
+                <div className="cv-mock-line w80" />
+                <div className="cv-mock-line w90" />
+              </div>
+              <div className="cv-mock-section">
+                <div className="cv-mock-label">Referees (2)</div>
+                <div className="cv-mock-line w80" />
+                <div className="cv-mock-line w70" style={{ width: "70%" }} />
+              </div>
+              <div className="cv-mock-score">
+                <div className="score-ring">94</div>
+                <div>
+                  <div style={{ fontSize: "13px", color: "#1A1410", fontWeight: 600 }}>
+                    CV Score
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#888" }}>Excellent — ready to send</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features">
+        <div className="section-label reveal">Platform features</div>
+        <h2 className="section-headline reveal reveal-delay-1">
+          More than just
+          <br />
+          a CV builder.
+        </h2>
+
+        <div className="features">
+          <div className="feature reveal">
+            <div className="feature-icon">📊</div>
+            <div className="feature-title">CV Score Engine</div>
+            <div className="feature-desc">
+              Get a score out of 100 before you pay. See exactly which sections are hurting you and
+              fix them in seconds. Five specific improvement tips, not vague advice.
+            </div>
+            <span className="feature-tag">Free to check</span>
+          </div>
+          <div className="feature reveal reveal-delay-1">
+            <div className="feature-icon">💬</div>
+            <div className="feature-title">WhatsApp-Ready Image</div>
+            <div className="feature-desc">
+              Nigerian recruiters often ask for CVs on WhatsApp. Get a high-resolution JPG of your
+              CV alongside the PDF — opens instantly on any phone, no PDF viewer needed.
+            </div>
+            <span className="feature-tag">Included with download</span>
+          </div>
+          <div className="feature reveal reveal-delay-2">
+            <div className="feature-icon">💰</div>
+            <div className="feature-title">Nigerian Salary Database</div>
+            <div className="feature-desc">
+              Anonymous salary ranges by company, role, and state. Community-submitted. GTBank,
+              Dangote, MTN, Access Bank, and growing. Know what to ask for before you interview.
+            </div>
+            <span className="feature-tag">Free, no account needed</span>
+          </div>
+          <div className="feature reveal reveal-delay-3">
+            <div className="feature-icon">📋</div>
+            <div className="feature-title">Application Tracker</div>
+            <div className="feature-desc">
+              Track every job you apply to in one place. Applied, Interview, Rejected, Offer. When
+              you move a card to Interview, we remind you to update your CV. Because every
+              interview is a chance.
+            </div>
+            <span className="feature-tag">Free for all users</span>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="pricing"
+        style={{ background: "var(--off-black)", borderTop: "1px solid var(--border)" }}
+      >
+        <div className="section-label reveal">Simple pricing</div>
+        <h2 className="section-headline reveal reveal-delay-1">
+          Pay once.
+          <br />
+          Own your CV.
+        </h2>
+
+        <div className="pricing-grid">
+          <div className="price-card reveal">
+            <div className="price-tier">Free</div>
+            <div className="price-amount">
+              <span className="currency">₦</span>0
+            </div>
+            <div className="price-desc">
+              Build your full CV and see your score. No payment until you&apos;re happy with what you
+              see.
+            </div>
+            <ul className="price-features">
+              <li>Full 17-step CV builder</li>
+              <li>CV score out of 100</li>
+              <li>5 improvement suggestions</li>
+              <li>Watermarked preview</li>
+              <li>Salary database access</li>
+              <li>Application tracker</li>
+            </ul>
+            <Link href="/build" className="price-btn">
+              Start building free
+            </Link>
+          </div>
+          <div className="price-card featured reveal reveal-delay-1">
+            <div className="price-tier">Paid download</div>
+            <div className="price-amount">
+              <span className="currency">₦</span>1,500
+            </div>
+            <div className="price-desc">
+              One-time payment. Remove watermark, get your PDF and WhatsApp image. Yours to keep
+              forever.
+            </div>
+            <ul className="price-features">
+              <li>Everything in free</li>
+              <li>Clean PDF download</li>
+              <li>WhatsApp-ready JPG</li>
+              <li>AI-polished objective</li>
+              <li>Delivered to your inbox</li>
+              <li>Edit free, re-download ₦500</li>
+            </ul>
+            <Link href="/build" className="price-btn">
+              Get my CV now
+            </Link>
+          </div>
+        </div>
+
+        <div className="payment-badges reveal" style={{ marginTop: "32px", justifyContent: "flex-start" }}>
+          <div className="badge">
+            <span className="dot" /> Card payment
+          </div>
+          <div className="badge">
+            <span className="dot" /> Bank transfer
+          </div>
+          <div className="badge">
+            <span className="dot" /> USSD (*737# etc)
+          </div>
+          <div className="badge">
+            <span className="dot" /> Secured by Paystack
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div className="section-label reveal">Early users</div>
+        <h2 className="section-headline reveal reveal-delay-1">What Nigerians say.</h2>
+
+        <div className="testimonials">
+          <div className="testimonial reveal">
+            <p className="testimonial-text">
+              Finally a CV tool that knows I need to include my NYSC status and two referees.
+              Every other tool I tried left those out and I had to fix it manually.
+            </p>
+            <div className="testimonial-author">
+              <div
+                className="author-avatar"
+                style={{ background: "rgba(0,230,118,0.15)", color: "var(--green)" }}
+              >
+                AO
+              </div>
+              <div>
+                <div className="author-name">Adaeze O.</div>
+                <div className="author-role">NYSC corper · Rivers State</div>
+              </div>
+            </div>
+          </div>
+          <div className="testimonial reveal reveal-delay-1">
+            <p className="testimonial-text">
+              I paid ₦1,500 and had my CV in my inbox in under 10 minutes. The WhatsApp image was
+              a genius addition — my recruiter actually asked me to send it that way.
+            </p>
+            <div className="testimonial-author">
+              <div
+                className="author-avatar"
+                style={{ background: "rgba(255,107,53,0.15)", color: "var(--orange)" }}
+              >
+                TK
+              </div>
+              <div>
+                <div className="author-name">Tunde K.</div>
+                <div className="author-role">Graduate trainee applicant · Lagos</div>
+              </div>
+            </div>
+          </div>
+          <div className="testimonial reveal reveal-delay-2">
+            <p className="testimonial-text">
+              My CV scored 61 the first time. The tips told me exactly what to fix — added my NYSC
+              year and two more skills. Scored 88 on the second check. Got called for an interview
+              that same week.
+            </p>
+            <div className="testimonial-author">
+              <div
+                className="author-avatar"
+                style={{ background: "rgba(124,77,255,0.15)", color: "#B39DDB" }}
+              >
+                CI
+              </div>
+              <div>
+                <div className="author-name">Chisom I.</div>
+                <div className="author-role">Entry-level accountant · Enugu</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="cta-section">
+        <h2 className="cta-headline reveal">
+          Your next job starts
+          <br />
+          with the right CV.
+        </h2>
+        <p className="cta-sub reveal reveal-delay-1">Build yours in 8 minutes. Free to start.</p>
+        <div className="reveal reveal-delay-2">
+          <Link href="/build" className="btn-primary" style={{ fontSize: "17px", padding: "20px 40px" }}>
+            Build my Nigerian CV — it&apos;s free <span className="arrow">↗</span>
+          </Link>
+        </div>
+        <div className="payment-badges reveal reveal-delay-3">
+          <div className="badge">
+            <span className="dot" /> No account needed to start
+          </div>
+          <div className="badge">
+            <span className="dot" /> Progress saved automatically
+          </div>
+          <div className="badge">
+            <span className="dot" /> Works on any Nigerian phone
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <div className="footer-logo">
+          CV<span>Padi</span>
+        </div>
+        <ul className="footer-links">
+          <li>
+            <Link href="/check">Check my CV</Link>
+          </li>
+          <li>
+            <Link href="/salary">Salary database</Link>
+          </li>
+          <li>
+            <Link href="/nysc">NYSC hub</Link>
+          </li>
+          <li>
+            <Link href="/dashboard">Dashboard</Link>
+          </li>
+        </ul>
+        <div className="footer-copy">© 2026 CVPadi · Made for Nigeria</div>
+      </footer>
+    </>
   );
 }

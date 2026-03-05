@@ -1,5 +1,7 @@
-"use client";
+﻿"use client";
 
+import { Button } from "@/components/ui/Button";
+import { ScoreDial as SharedScoreDial } from "@/components/ui/ScoreDial";
 import type { CVSuggestion } from "@/lib/cv/types";
 
 export function ScoreDial({
@@ -11,70 +13,39 @@ export function ScoreDial({
   suggestions: CVSuggestion[];
   onJump: (step: number) => void;
 }) {
-  const radius = 54;
-  const circumference = 2 * Math.PI * radius;
-  const progress = circumference - (score / 100) * circumference;
+  const scoreBand = score >= 75 ? "Excellent" : score >= 50 ? "Strong" : "Needs work";
 
   return (
-    <section className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)]">
-      <div className="flex items-center gap-4">
-        <div className="relative h-32 w-32">
-          <svg className="h-32 w-32 -rotate-90" viewBox="0 0 140 140">
-            <circle
-              cx="70"
-              cy="70"
-              fill="none"
-              r={radius}
-              stroke="var(--border-light)"
-              strokeWidth="12"
-            />
-            <circle
-              cx="70"
-              cy="70"
-              fill="none"
-              r={radius}
-              stroke="var(--accent)"
-              strokeDasharray={circumference}
-              strokeDashoffset={progress}
-              strokeLinecap="round"
-              strokeWidth="12"
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-heading text-4xl text-foreground">{score}</span>
-            <span className="text-xs uppercase tracking-[0.24em] text-[var(--ink-light)]">
-              CV score
-            </span>
-          </div>
-        </div>
+    <section className="rounded-[16px] border border-[var(--border)] bg-[var(--off-black)] p-5 shadow-[0_22px_62px_rgba(0,0,0,0.42)] sm:p-6">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+        <SharedScoreDial animate colorMode="auto" label="Your CV score" score={score} size={168} />
+
         <div>
-          <h2 className="font-heading text-2xl text-foreground">Nigerian CV Score</h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--ink-light)]">
-            Improve the missing sections and keep the score trending upward before
-            generating the free watermarked preview.
+          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--mid)]">Score status</p>
+          <h2 className="mt-2 font-display text-3xl text-[var(--cream)]">{scoreBand}</h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--cream-dim)]">
+            {suggestions.length === 0
+              ? "Everything important is in place. Generate your preview and move to payment when ready."
+              : `${suggestions.length} suggestion${suggestions.length === 1 ? "" : "s"} left before this looks recruiter-ready.`}
           </p>
         </div>
       </div>
 
       <div className="mt-5 grid gap-3">
         {suggestions.length === 0 ? (
-          <div className="rounded-[var(--radius-input)] border border-[var(--green)] bg-[var(--green-light)] px-4 py-3 text-sm text-[var(--green)]">
-            All core sections are in place. The draft is ready for the free watermarked preview.
+          <div className="rounded-[10px] border border-[var(--green)] bg-[var(--green-glow)] px-4 py-3 text-sm text-[var(--green)]">
+            All core sections are complete.
           </div>
         ) : (
-          suggestions.slice(0, 4).map((suggestion) => (
+          suggestions.slice(0, 5).map((suggestion) => (
             <div
-              className="flex items-start justify-between gap-3 rounded-[var(--radius-input)] border border-[var(--border-light)] bg-white/70 px-4 py-3"
+              className="rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-4 py-3"
               key={suggestion.id}
             >
-              <p className="text-sm leading-6 text-[var(--ink-light)]">{suggestion.message}</p>
-              <button
-                className="shrink-0 text-sm font-medium text-[var(--accent)]"
-                onClick={() => onJump(suggestion.step)}
-                type="button"
-              >
-                Fix this {"->"}
-              </button>
+              <p className="text-sm leading-6 text-[var(--cream-dim)]">{suggestion.message}</p>
+              <Button className="mt-3" onClick={() => onJump(suggestion.step)} variant="ghost">
+                Fix this →
+              </Button>
             </div>
           ))
         )}

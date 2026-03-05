@@ -1,6 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useFormState, useFormStatus } from "react-dom";
+import { Button } from "@/components/ui/Button";
 import { NIGERIAN_STATES } from "@/lib/cv/constants";
 import {
   submitSalaryAction,
@@ -15,19 +16,19 @@ export function SalarySubmissionForm() {
   return (
     <form action={formAction} className="grid gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm">
+        <label className="grid gap-2 text-sm text-[var(--cream-dim)]">
           <span>Company</span>
           <input
-            className="min-h-12 rounded-[var(--radius-input)] border border-border bg-white px-4"
+            className="min-h-11 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-4 text-[var(--cream)]"
             name="company"
             placeholder="e.g. GTBank"
             type="text"
           />
         </label>
-        <label className="grid gap-2 text-sm">
+        <label className="grid gap-2 text-sm text-[var(--cream-dim)]">
           <span>Role</span>
           <input
-            className="min-h-12 rounded-[var(--radius-input)] border border-border bg-white px-4"
+            className="min-h-11 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-4 text-[var(--cream)]"
             name="role"
             placeholder="e.g. Relationship Officer"
             type="text"
@@ -36,10 +37,10 @@ export function SalarySubmissionForm() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm">
+        <label className="grid gap-2 text-sm text-[var(--cream-dim)]">
           <span>State</span>
           <select
-            className="min-h-12 rounded-[var(--radius-input)] border border-border bg-white px-4"
+            className="min-h-11 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-4 text-[var(--cream)]"
             defaultValue=""
             name="locationState"
           >
@@ -53,10 +54,10 @@ export function SalarySubmissionForm() {
             ))}
           </select>
         </label>
-        <label className="grid gap-2 text-sm">
+        <label className="grid gap-2 text-sm text-[var(--cream-dim)]">
           <span>Annual salary (naira)</span>
           <input
-            className="min-h-12 rounded-[var(--radius-input)] border border-border bg-white px-4"
+            className="min-h-11 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-4 text-[var(--cream)]"
             inputMode="numeric"
             name="annualSalaryNaira"
             placeholder="e.g. 4200000"
@@ -66,19 +67,19 @@ export function SalarySubmissionForm() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <label className="grid gap-2 text-sm">
+        <label className="grid gap-2 text-sm text-[var(--cream-dim)]">
           <span>Years experience</span>
           <input
-            className="min-h-12 rounded-[var(--radius-input)] border border-border bg-white px-4"
+            className="min-h-11 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-4 text-[var(--cream)]"
             name="yearsExperience"
             placeholder="e.g. 3"
             type="number"
           />
         </label>
-        <label className="grid gap-2 text-sm">
+        <label className="grid gap-2 text-sm text-[var(--cream-dim)]">
           <span>Employment type</span>
           <select
-            className="min-h-12 rounded-[var(--radius-input)] border border-border bg-white px-4"
+            className="min-h-11 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-4 text-[var(--cream)]"
             defaultValue="full_time"
             name="employmentType"
           >
@@ -87,10 +88,10 @@ export function SalarySubmissionForm() {
             <option value="part_time">Part time</option>
           </select>
         </label>
-        <label className="grid gap-2 text-sm">
+        <label className="grid gap-2 text-sm text-[var(--cream-dim)]">
           <span>Submission year</span>
           <input
-            className="min-h-12 rounded-[var(--radius-input)] border border-border bg-white px-4"
+            className="min-h-11 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-4 text-[var(--cream)]"
             defaultValue={new Date().getFullYear()}
             name="submissionYear"
             type="number"
@@ -98,19 +99,19 @@ export function SalarySubmissionForm() {
         </label>
       </div>
 
-      <div className="rounded-[var(--radius-input)] border border-[var(--border-light)] bg-[var(--bg)] px-4 py-3 text-sm leading-6 text-[var(--ink-light)]">
+      <div className="rounded-[8px] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm leading-6 text-[var(--cream-dim)]">
         Minimum five submissions are required before any aggregate becomes public for a company,
         role, and state combination.
       </div>
 
       {state.error ? (
-        <p className="rounded-[var(--radius-input)] border border-[var(--red)] bg-[var(--red-light)] px-4 py-3 text-sm text-[var(--red)]">
+        <p className="rounded-[8px] border border-[var(--red)] bg-[var(--red-glow)] px-4 py-3 text-sm text-[var(--red)]">
           {state.error}
         </p>
       ) : null}
 
       {state.success ? (
-        <p className="rounded-[var(--radius-input)] border border-[var(--green)] bg-[var(--green-light)] px-4 py-3 text-sm text-[var(--green)]">
+        <p className="rounded-[8px] border border-[var(--green)] bg-[var(--green-glow)] px-4 py-3 text-sm text-[var(--green)]">
           {state.success}
         </p>
       ) : null}
@@ -124,12 +125,8 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <button
-      className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] bg-[var(--accent)] px-4 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
-      disabled={pending}
-      type="submit"
-    >
-      {pending ? "Submitting..." : "Submit salary"}
-    </button>
+    <Button className="w-full" loading={pending} type="submit" variant="primary">
+      Submit salary
+    </Button>
   );
 }

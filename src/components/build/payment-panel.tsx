@@ -6,6 +6,7 @@ import type {
   InitializePaymentResponse,
   PaymentStatusResponse,
 } from "@/lib/payments/types";
+import { Button } from "@/components/ui/Button";
 import Script from "next/script";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -239,7 +240,7 @@ export function PaymentPanel({
   }
 
   return (
-    <section className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)]">
+    <section className="relative rounded-[16px] border border-[var(--border)] bg-[var(--off-black)] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.42)]">
       <Script
         src="https://js.paystack.co/v2/inline.js"
         strategy="afterInteractive"
@@ -248,63 +249,82 @@ export function PaymentPanel({
 
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.24em] text-[var(--ink-light)]">
-            Payment
+          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--mid)]">
+            Ready to download?
           </p>
-          <h2 className="mt-2 font-heading text-2xl text-foreground">Unlock your CV download</h2>
+          <h2 className="mt-2 font-heading text-4xl leading-none text-[var(--cream)]">
+            ₦1,500
+          </h2>
+          <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--cream-dim)]">
+            one-time payment
+          </p>
         </div>
-        <span className="rounded-full bg-[var(--accent-light)] px-3 py-2 font-mono text-sm text-[var(--accent)]">
+        <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--cream-dim)]">
           {amountLabel}
         </span>
       </div>
 
-      <p className="mt-4 text-sm leading-6 text-[var(--ink-light)]">
+      <p className="mt-4 text-sm leading-6 text-[var(--cream-dim)]">
         Cards, bank transfer, and USSD are enabled in the Paystack modal. The frontend
         does not trust its own success callback. Unlocking waits for the verified webhook.
       </p>
 
       {creditAppliedKobo > 0 ? (
-        <p className="mt-3 text-sm leading-6 text-[var(--ink-light)]">
+        <p className="mt-3 text-sm leading-6 text-[var(--cream-dim)]">
           Account credit auto-applies before checkout. Base price {baseAmountLabel}, credit
           used {creditAppliedLabel}, payable now {amountLabel}.
         </p>
       ) : null}
 
-      <div className="mt-5 rounded-[var(--radius-input)] border border-[var(--border-light)] bg-white/70 px-4 py-3 text-sm leading-6 text-[var(--ink-light)]">
+      <div className="mt-5 rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm leading-6 text-[var(--cream-dim)]">
         {statusMessage}
       </div>
 
       {reference ? (
-        <div className="mt-4 rounded-[var(--radius-input)] bg-[var(--bg)] px-4 py-3 font-mono text-xs text-foreground">
+        <div className="mt-4 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 font-mono text-xs text-[var(--cream)]">
           Reference: {reference}
         </div>
       ) : null}
 
       {gatewayStatus ? (
-        <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[var(--ink-faint)]">
+        <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[var(--mid)]">
           Gateway status: {gatewayStatus}
         </p>
       ) : null}
 
+      <div className="mt-4 flex flex-wrap gap-2">
+        <span className="rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--cream-dim)]">
+          Card
+        </span>
+        <span className="rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--cream-dim)]">
+          Bank transfer
+        </span>
+        <span className="rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--cream-dim)]">
+          USSD
+        </span>
+        <span className="rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--cream-dim)]">
+          Paystack secured
+        </span>
+      </div>
+
       {checkoutState === "paid" ? (
         <div className="mt-5 grid gap-3">
-          <div className="rounded-[var(--radius-input)] border border-[var(--green)] bg-[var(--green-light)] px-4 py-3 text-sm text-[var(--green)]">
+          <div className="rounded-[10px] border border-[var(--green)] bg-[var(--green-glow)] px-4 py-3 text-sm text-[var(--green)]">
             Payment verified. Your PDF and WhatsApp JPG were prepared on the server.
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <button
-              className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-4 text-sm font-medium text-foreground"
+            <Button
               onClick={() => {
                 void fetchDeliveryLinks();
               }}
-              type="button"
+              variant="ghost"
             >
               Refresh download links
-            </button>
+            </Button>
             {deliveryLinks ? (
               <>
                 <a
-                  className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] bg-[var(--accent)] px-4 text-sm font-medium text-white"
+                  className="inline-flex min-h-11 items-center justify-center rounded-[8px] bg-[var(--green)] px-4 font-display text-sm text-[var(--black)] transition-all duration-200 hover:translate-y-[-2px] hover:bg-[#33EE8A]"
                   href={deliveryLinks.pdfUrl}
                   rel="noreferrer"
                   target="_blank"
@@ -312,7 +332,7 @@ export function PaymentPanel({
                   Download PDF
                 </a>
                 <a
-                  className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-4 text-sm font-medium text-foreground"
+                  className="inline-flex min-h-11 items-center justify-center rounded-[8px] border border-[var(--border)] px-4 font-display text-sm text-[var(--cream-dim)] transition-all duration-200 hover:border-[var(--border-mid)] hover:bg-[var(--card)] hover:text-[var(--cream)]"
                   href={deliveryLinks.jpgUrl}
                   rel="noreferrer"
                   target="_blank"
@@ -325,49 +345,56 @@ export function PaymentPanel({
         </div>
       ) : (
         <div className="mt-5 flex flex-col gap-3">
-          <button
-            className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] bg-[var(--accent)] px-4 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+          <Button
             disabled={checkoutState === "preparing"}
+            loading={checkoutState === "preparing"}
             onClick={openCheckout}
-            type="button"
+            variant="primary"
           >
             {checkoutState === "preparing" ? "Preparing checkout..." : `Pay ${amountLabel}`}
-          </button>
+          </Button>
 
           {checkoutState === "pending" ? (
             <div className="flex flex-col gap-3 sm:flex-row">
-              <button
-                className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-4 text-sm font-medium text-foreground"
+              <Button
                 onClick={() => {
                   if (statusCheckRef.current) {
                     void statusCheckRef.current();
                   }
                 }}
-                type="button"
+                variant="ghost"
               >
                 Check payment status
-              </button>
-              <button
-                className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-4 text-sm font-medium text-foreground"
+              </Button>
+              <Button
                 onClick={reopenCheckout}
-                type="button"
+                variant="ghost"
               >
                 Reopen checkout
-              </button>
+              </Button>
             </div>
           ) : null}
 
           {checkoutState === "failed" ? (
-            <button
-              className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-4 text-sm font-medium text-foreground"
+            <Button
               onClick={openCheckout}
-              type="button"
+              variant="danger"
             >
               Start a fresh payment attempt
-            </button>
+            </Button>
           ) : null}
         </div>
       )}
+
+      {checkoutState === "pending" ? (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-[16px] bg-[rgba(10,10,8,0.74)]">
+          <div className="rounded-[12px] border border-[var(--border)] bg-[var(--off-black)] px-5 py-4 text-center">
+            <span className="mx-auto mb-2 block h-5 w-5 animate-spin rounded-full border-2 border-[var(--green)] border-r-transparent" />
+            <p className="font-display text-sm text-[var(--cream)]">Waiting for payment confirmation...</p>
+            <p className="mt-1 text-xs text-[var(--mid)]">Unlock only happens after webhook verification.</p>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
