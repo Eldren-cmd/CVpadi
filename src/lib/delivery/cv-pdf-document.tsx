@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from "@react-pdf/renderer";
-import type { CVFormData, DegreeClass, ExperienceLevel, NyscStatus } from "@/lib/cv/types";
+import type { CVFormData } from "@/lib/cv/types";
 import { fontData } from "./font-data";
 
 type LooseRecord = Record<string, unknown>;
@@ -44,32 +44,6 @@ interface NormalizedRefereeEntry {
 }
 
 let fontsRegistered = false;
-
-const GRADE_LABELS: Record<DegreeClass, string> = {
-  credit: "Credit",
-  distinction: "Distinction",
-  first_class: "First Class",
-  merit: "Merit",
-  other: "Other",
-  pass: "Pass",
-  second_class_lower: "Second Class Lower",
-  second_class_upper: "Second Class Upper",
-  third_class: "Third Class",
-};
-
-const NYSC_STATUS_LABELS: Record<NyscStatus, string> = {
-  discharged: "Discharged",
-  exempted: "Exempted",
-  not_yet: "Not yet served",
-  ongoing: "Currently serving",
-};
-
-const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
-  entry: "Entry level",
-  executive: "Executive",
-  mid: "Mid level",
-  senior: "Senior level",
-};
 
 function registerPdfFonts() {
   if (fontsRegistered) {
@@ -118,35 +92,46 @@ const styles = StyleSheet.create({
     padding: 40,
   },
   header: {
+    backgroundColor: "#D4501A",
     marginBottom: 16,
+    paddingBottom: 28,
+    paddingHorizontal: 40,
+    paddingTop: 32,
   },
   name: {
-    color: "#1A1410",
+    color: "#FFFFFF",
     fontFamily: "Playfair",
     fontSize: 26,
     fontWeight: 700,
-    marginBottom: 4,
   },
-  headerLine: {
-    color: "#5C4F3D",
+  headerContactLine: {
+    color: "rgba(255,255,255,0.85)",
     fontFamily: "DM Sans",
     fontSize: 10,
     lineHeight: 1.35,
-    marginBottom: 2,
+    marginTop: 6,
+  },
+  headerNyscLine: {
+    color: "rgba(255,255,255,0.85)",
+    fontFamily: "DM Sans",
+    fontSize: 10,
+    marginTop: 4,
   },
   section: {
     marginBottom: 16,
   },
-  sectionTitle: {
+  sectionHeaderContainer: {
     borderBottomColor: "#D4501A",
     borderBottomWidth: 0.5,
+    marginBottom: 6,
+    paddingBottom: 3,
+  },
+  sectionHeaderText: {
     color: "#D4501A",
     fontFamily: "DM Sans",
     fontSize: 9,
     fontWeight: 700,
     letterSpacing: 1.5,
-    marginBottom: 6,
-    paddingBottom: 3,
     textTransform: "uppercase",
   },
   bodyText: {
@@ -188,24 +173,28 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   chip: {
-    backgroundColor: "#F6F2EB",
-    borderColor: "#DED6C8",
+    backgroundColor: "#F5F0E4",
+    borderColor: "#DDD5C4",
     borderWidth: 1,
     borderRadius: 4,
-    color: "#3D3530",
-    fontFamily: "DM Sans",
-    fontSize: 9,
     marginBottom: 6,
     marginRight: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
+  chipText: {
+    color: "#3D3530",
+    fontFamily: "DM Sans",
+    fontSize: 9,
+  },
   refereeGrid: {
     flexDirection: "row",
   },
   refereeColumn: {
-    flexGrow: 1,
-    width: "50%",
+    flex: 1,
+  },
+  refereeColumnGap: {
+    marginRight: 20,
   },
   watermarkLayer: {
     bottom: 0,
@@ -273,39 +262,32 @@ function joinValues(
 }
 
 const formatGrade = (g: string) => {
-  const grades: Record<string, string> = {
+  return ({
     credit: "Credit",
     distinction: "Distinction",
     first_class: "First Class",
     merit: "Merit",
-    other: "Other",
     pass: "Pass",
     second_class_lower: "Second Class Lower",
     second_class_upper: "Second Class Upper",
     third_class: "Third Class",
-  };
-  return grades[g] ?? GRADE_LABELS[g as DegreeClass] ?? g.replace(/_/g, " ");
+  } as Record<string, string>)[g] ?? g;
 };
 
 const formatNysc = (s: string) => {
-  const statuses: Record<string, string> = {
+  return ({
     discharged: "Discharged",
     exempted: "Exempted",
     not_yet: "Not yet served",
     ongoing: "Currently serving",
-  };
-  return statuses[s] ?? NYSC_STATUS_LABELS[s as NyscStatus] ?? s.replace(/_/g, " ");
+  } as Record<string, string>)[s] ?? s;
 };
 
-const formatLevel = (l: string) => {
-  const levels: Record<string, string> = {
-    entry: "Entry level",
-    executive: "Executive",
-    mid: "Mid level",
-    senior: "Senior level",
-  };
-  return levels[l] ?? EXPERIENCE_LEVEL_LABELS[l as ExperienceLevel] ?? l.replace(/_/g, " ");
-};
+const SectionHeader = ({ children }: { children: string }) => (
+  <View style={styles.sectionHeaderContainer}>
+    <Text style={styles.sectionHeaderText}>{children}</Text>
+  </View>
+);
 
 function normalizeObjective(formData: CVFormData) {
   return formData.aiEnhancedObjective?.trim() || formData.careerObjective.trim();
@@ -452,8 +434,6 @@ export function CVPdfDocument({
   const phone = getOptionalString(source, ["phone"]) || formData.phone.trim();
   const email = getOptionalString(source, ["email"]) || formData.email.trim();
   const nyscStatus = getOptionalString(source, ["nysc_status", "nyscStatus"]) || formData.nyscStatus;
-  const industry = getOptionalString(source, ["industry"]) || formData.industry.trim();
-  const experienceLevel = getOptionalString(source, ["experience_level", "experienceLevel"]) || formData.experienceLevel;
 
   const objective = normalizeObjective(formData);
   const skills = normalizeSkills(formData);
@@ -468,14 +448,6 @@ export function CVPdfDocument({
     " \u00B7 ",
   );
 
-  const professionalDetails = joinValues(
-    [
-      industry ? `Industry: ${industry}` : "",
-      experienceLevel ? `Experience level: ${formatLevel(experienceLevel)}` : "",
-    ],
-    " \u00B7 ",
-  );
-
   return (
     <Document author="CVPadi" title={`${fullName || "CVPadi User"} CV`}>
       <Page size="A4" style={styles.page}>
@@ -483,31 +455,24 @@ export function CVPdfDocument({
           <Text style={styles.name}>{fullName}</Text>
 
           {contactLine ? (
-            <Text style={styles.headerLine}>{contactLine}</Text>
+            <Text style={styles.headerContactLine}>{contactLine}</Text>
           ) : null}
 
           {nyscStatus ? (
-            <Text style={styles.headerLine}>NYSC: {formatNysc(nyscStatus)}</Text>
+            <Text style={styles.headerNyscLine}>NYSC: {formatNysc(nyscStatus)}</Text>
           ) : null}
         </View>
 
-        {professionalDetails ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Professional Details</Text>
-            <Text style={styles.bodyText}>{professionalDetails}</Text>
-          </View>
-        ) : null}
-
         {objective ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Career Objective</Text>
+            <SectionHeader>Career Objective</SectionHeader>
             <Text style={styles.bodyText}>{objective}</Text>
           </View>
         ) : null}
 
         {workExperience.length > 0 ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Work Experience</Text>
+            <SectionHeader>Work Experience</SectionHeader>
             {workExperience.map((entry) => (
               <View key={entry.id} style={styles.item}>
                 {entry.company ? (
@@ -518,8 +483,12 @@ export function CVPdfDocument({
                   <Text style={styles.itemRole}>{entry.role}</Text>
                 ) : null}
 
-                {joinValues([entry.startDate, entry.endDate], " - ") ? (
-                  <Text style={styles.itemMeta}>{joinValues([entry.startDate, entry.endDate], " - ")}</Text>
+                {entry.startDate || entry.endDate ? (
+                  <Text style={styles.itemMeta}>
+                    {entry.startDate}
+                    {entry.startDate || entry.endDate ? " \u2013 " : ""}
+                    {entry.endDate || "Present"}
+                  </Text>
                 ) : null}
 
                 {entry.responsibilities.map((line, lineIndex) => (
@@ -534,7 +503,7 @@ export function CVPdfDocument({
 
         {education.length > 0 ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Education</Text>
+            <SectionHeader>Education</SectionHeader>
             {education.map((edu) => (
               <View key={edu.id} style={styles.item}>
                 {edu.institution ? (
@@ -567,12 +536,12 @@ export function CVPdfDocument({
 
         {skills.length > 0 ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Skills</Text>
+            <SectionHeader>Skills</SectionHeader>
             <View style={styles.chipRow}>
               {skills.map((skill) => (
-                <Text key={skill} style={styles.chip}>
-                  {skill}
-                </Text>
+                <View key={skill} style={styles.chip}>
+                  <Text style={styles.chipText}>{skill}</Text>
+                </View>
               ))}
             </View>
           </View>
@@ -580,16 +549,16 @@ export function CVPdfDocument({
 
         {languages.length > 0 ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Languages</Text>
+            <SectionHeader>Languages</SectionHeader>
             <Text style={styles.bodyText}>{languages.join(", ")}</Text>
           </View>
         ) : null}
 
         {certifications.length > 0 ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Certifications</Text>
+            <SectionHeader>Certifications</SectionHeader>
             {certifications.map((entry) => {
-              const details = joinValues([entry.issuer, entry.year], " | ");
+              const details = joinValues([entry.issuer, entry.year], " \u00B7 ");
 
               return (
                 <View key={entry.id} style={styles.item}>
@@ -607,22 +576,27 @@ export function CVPdfDocument({
 
         {referees.length > 0 ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Referees</Text>
+            <SectionHeader>Referees</SectionHeader>
             <View style={styles.refereeGrid}>
-              {referees.map((referee, index) => (
-                <View key={`referee_${index}`} style={styles.refereeColumn}>
+              {referees.slice(0, 2).map((referee, index) => (
+                <View
+                  key={`referee_${index}`}
+                  style={index === 0 ? [styles.refereeColumn, styles.refereeColumnGap] : styles.refereeColumn}
+                >
                   {referee.name ? (
                     <Text style={styles.itemTitle}>{referee.name}</Text>
                   ) : null}
-                  {joinValues([referee.title, referee.company], " | ") ? (
-                    <Text style={styles.itemMeta}>
-                      {joinValues([referee.title, referee.company], " | ")}
-                    </Text>
+                  {referee.title ? (
+                    <Text style={styles.itemMeta}>{referee.title}</Text>
                   ) : null}
-                  {joinValues([referee.phone, referee.email], " | ") ? (
-                    <Text style={styles.bodyText}>
-                      {joinValues([referee.phone, referee.email], " | ")}
-                    </Text>
+                  {referee.company ? (
+                    <Text style={styles.itemMeta}>{referee.company}</Text>
+                  ) : null}
+                  {referee.phone ? (
+                    <Text style={styles.bodyText}>{referee.phone}</Text>
+                  ) : null}
+                  {referee.email ? (
+                    <Text style={styles.bodyText}>{referee.email}</Text>
                   ) : null}
                 </View>
               ))}
