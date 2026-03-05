@@ -402,6 +402,7 @@ export function FormWizard({
             honeypot={honeypot}
             initialFreePreviewsUsed={initialFreePreviewsUsed}
             isComplete={scoreResult.suggestions.length === 0}
+            isPaid={isPaid}
             referralCode={initialReferralCode}
             score={scoreResult.score}
           />

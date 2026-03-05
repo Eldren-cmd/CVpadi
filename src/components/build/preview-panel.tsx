@@ -24,6 +24,7 @@ export function PreviewPanel({
   draft,
   honeypot,
   initialFreePreviewsUsed,
+  isPaid,
   referralCode,
   isComplete,
   score,
@@ -34,6 +35,7 @@ export function PreviewPanel({
   draft: CVFormData;
   honeypot: string;
   initialFreePreviewsUsed: number;
+  isPaid: boolean;
   referralCode: string;
   isComplete: boolean;
   score: number;
@@ -46,10 +48,19 @@ export function PreviewPanel({
   const [showSharePrompt, setShowSharePrompt] = useState(false);
   const [hasPreview, setHasPreview] = useState(false);
   const [statusMessage, setStatusMessage] = useState(
-    "Generate your watermarked preview. Pay to remove watermark and unlock clean downloads.",
+    isPaid
+      ? "You can regenerate your preview anytime."
+      : "Generate your watermarked preview. Pay to remove watermark and unlock clean downloads.",
   );
   const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-  const canGeneratePreview = remainingPreviews > 0 && !isGenerating;
+  const canGeneratePreview = (isPaid || remainingPreviews > 0) && !isGenerating;
+  const previewButtonLabel = isPaid
+    ? "Regenerate CV preview"
+    : (
+      remainingPreviews <= 0
+        ? "Free preview limit reached"
+        : (hasPreview ? "Regenerate preview" : "Generate free preview")
+    );
 
   async function handleGeneratePreview() {
     setIsGenerating(true);
@@ -117,9 +128,15 @@ export function PreviewPanel({
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--mid)]">Watermarked preview</p>
           <h2 className="mt-2 font-display text-2xl text-[var(--cream)]">Preview your CV before payment</h2>
         </div>
-        <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--cream-dim)]">
-          {remainingPreviews} free left
-        </span>
+        {isPaid ? (
+          <span className="rounded-full border border-[var(--green)] bg-[var(--green-glow)] px-3 py-2 font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--green)]">
+            ✓ Paid - unlimited previews
+          </span>
+        ) : (
+          <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--cream-dim)]">
+            {remainingPreviews} free left
+          </span>
+        )}
       </div>
 
       <p className="mt-4 text-sm leading-6 text-[var(--cream-dim)]">{statusMessage}</p>
@@ -187,7 +204,7 @@ export function PreviewPanel({
           }}
           variant="ghost"
         >
-          {remainingPreviews <= 0 ? "Free preview limit reached" : "Regenerate preview"}
+          {previewButtonLabel}
         </Button>
       </div>
 

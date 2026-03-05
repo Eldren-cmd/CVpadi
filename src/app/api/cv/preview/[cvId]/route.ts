@@ -67,7 +67,7 @@ export async function POST(
 
   const { data: cv, error: cvError } = await admin
     .from("cvs")
-    .select("id, user_id")
+    .select("id, is_paid, user_id")
     .eq("id", params.cvId)
     .eq("user_id", user.id)
     .single();
@@ -76,7 +76,7 @@ export async function POST(
     return NextResponse.json({ error: "Draft not found." }, { status: 404 });
   }
 
-  if (safeFingerprint) {
+  if (!cv.is_paid && safeFingerprint) {
     const { data: matchingProfiles } = await admin
       .from("profiles")
       .select("id, free_generations_used")
@@ -98,16 +98,21 @@ export async function POST(
     }
   }
 
-  const { data: claimedGeneration, error: claimError } = await admin.rpc(
-    "increment_generation_if_allowed",
-    {
-      p_limit: FREE_PREVIEW_LIMIT,
-      p_user_id: user.id,
-    },
-  );
+  let claimedGeneration: unknown = true;
+  if (!cv.is_paid) {
+    const { data: claimed, error: claimError } = await admin.rpc(
+      "increment_generation_if_allowed",
+      {
+        p_limit: FREE_PREVIEW_LIMIT,
+        p_user_id: user.id,
+      },
+    );
 
-  if (claimError) {
-    return NextResponse.json({ error: claimError.message }, { status: 500 });
+    if (claimError) {
+      return NextResponse.json({ error: claimError.message }, { status: 500 });
+    }
+
+    claimedGeneration = claimed;
   }
 
   const { data: profile, error: profileError } = await admin
@@ -133,7 +138,11 @@ export async function POST(
     );
   }
 
-  if (claimedGeneration === null && profile.free_generations_used >= FREE_PREVIEW_LIMIT) {
+  if (
+    !cv.is_paid
+    && claimedGeneration === null
+    && profile.free_generations_used >= FREE_PREVIEW_LIMIT
+  ) {
     return NextResponse.json(
       {
         error:
@@ -168,9 +177,9 @@ export async function POST(
     headers: {
       "Cache-Control": "no-store, no-cache, must-revalidate",
       "Content-Type": "image/jpeg",
-      "X-Free-Preview-Remaining": String(
-        Math.max(0, FREE_PREVIEW_LIMIT - profile.free_generations_used),
-      ),
+      "X-Free-Preview-Remaining": cv.is_paid
+        ? "unlimited"
+        : String(Math.max(0, FREE_PREVIEW_LIMIT - profile.free_generations_used)),
     },
     status: 200,
   });

@@ -5,16 +5,35 @@ import satori from "satori";
 import sharp from "sharp";
 import { Resvg } from "@resvg/resvg-js";
 import { PREVIEW_CANVAS_WIDTH } from "@/lib/cv/constants";
-import type { CVFormData } from "@/lib/cv/types";
+import type { CVFormData, DegreeClass, ExperienceLevel, NyscStatus } from "@/lib/cv/types";
 
 const DELIVERY_WIDTH = 1240;
 const CV_WIDTH = 794;
 
-const NYSC_STATUS_LABELS: Record<CVFormData["nyscStatus"], string> = {
+const GRADE_LABELS: Record<DegreeClass, string> = {
+  credit: "Credit",
+  distinction: "Distinction",
+  first_class: "First Class",
+  merit: "Merit",
+  other: "Other",
+  pass: "Pass",
+  second_class_lower: "Second Class Lower",
+  second_class_upper: "Second Class Upper",
+  third_class: "Third Class",
+};
+
+const NYSC_STATUS_LABELS: Record<NyscStatus, string> = {
   discharged: "Discharged",
   exempted: "Exempted",
   not_yet: "Not yet served",
-  ongoing: "Ongoing",
+  ongoing: "Currently serving",
+};
+
+const EXPERIENCE_LEVEL_LABELS: Record<ExperienceLevel, string> = {
+  entry: "Entry level",
+  executive: "Executive",
+  mid: "Mid level",
+  senior: "Senior level",
 };
 
 type SatoriFont = {
@@ -26,15 +45,25 @@ type SatoriFont = {
 
 type LooseRecord = Record<string, unknown>;
 
+interface PreviewEducation {
+  course: string;
+  degreeClass: string;
+  id: string;
+  institution: string;
+  year: string;
+}
+
 interface PreviewExperience {
   company: string;
   endDate: string;
+  id: string;
+  responsibilities: string;
   role: string;
   startDate: string;
-  responsibilities: string;
 }
 
 interface PreviewCertification {
+  id: string;
   issuer: string;
   name: string;
   year: string;
@@ -123,11 +152,23 @@ function normalizeStringArray(value: unknown) {
     .filter(Boolean);
 }
 
-function joinValues(values: Array<string | null | undefined>) {
+function joinValues(values: Array<string | null | undefined>, separator = " · ") {
   return values
     .map((value) => value?.trim())
     .filter((value): value is string => Boolean(value))
-    .join(" | ");
+    .join(separator);
+}
+
+function formatGrade(value: string) {
+  return GRADE_LABELS[value as DegreeClass] || value.replace(/_/g, " ");
+}
+
+function formatNysc(value: string) {
+  return NYSC_STATUS_LABELS[value as NyscStatus] || value.replace(/_/g, " ");
+}
+
+function formatExperience(value: string) {
+  return EXPERIENCE_LEVEL_LABELS[value as ExperienceLevel] || value.replace(/_/g, " ");
 }
 
 function hasRefereeContent(referee: PreviewReferee) {
@@ -136,7 +177,37 @@ function hasRefereeContent(referee: PreviewReferee) {
   );
 }
 
+function getEducation(formData: CVFormData, source: LooseRecord) {
+  const rawEntries = Array.isArray(source.education) ? source.education : formData.education;
+
+  if (!Array.isArray(rawEntries)) {
+    return [] as PreviewEducation[];
+  }
+
+  return rawEntries
+    .map((entry, index) => {
+      const item = getRecord(entry);
+
+      return {
+        course: getOptionalString(item, ["course", "course_of_study", "courseOfStudy"]),
+        degreeClass: getOptionalString(item, ["degreeClass", "degree_class"]),
+        id: getOptionalString(item, ["id"]) || `edu_${index}`,
+        institution: getOptionalString(item, ["institution", "school"]),
+        year: getOptionalString(item, ["year", "graduationYear", "graduation_year"]),
+      };
+    })
+    .filter((entry) =>
+      Boolean(entry.institution || entry.course || entry.degreeClass || entry.year),
+    );
+}
+
 function getWorkExperience(formData: CVFormData, source: LooseRecord) {
+  const noExperienceYet =
+    Boolean(source.no_experience_yet) || Boolean(source.noExperienceYet) || formData.noExperienceYet;
+  if (noExperienceYet) {
+    return [] as PreviewExperience[];
+  }
+
   const rawEntries = Array.isArray(source.work_experience)
     ? source.work_experience
     : formData.workExperience;
@@ -146,12 +217,13 @@ function getWorkExperience(formData: CVFormData, source: LooseRecord) {
   }
 
   return rawEntries
-    .map((entry) => {
+    .map((entry, index) => {
       const item = getRecord(entry);
 
       return {
         company: getOptionalString(item, ["company"]),
         endDate: getOptionalString(item, ["endDate", "end_date"]),
+        id: getOptionalString(item, ["id"]) || `exp_${index}`,
         responsibilities: getOptionalString(item, [
           "responsibilities",
           "description",
@@ -164,10 +236,10 @@ function getWorkExperience(formData: CVFormData, source: LooseRecord) {
     .filter((entry) =>
       Boolean(
         entry.company ||
-          entry.role ||
-          entry.startDate ||
-          entry.endDate ||
-          entry.responsibilities,
+        entry.role ||
+        entry.startDate ||
+        entry.endDate ||
+        entry.responsibilities,
       ),
     );
 }
@@ -182,10 +254,11 @@ function getCertifications(formData: CVFormData, source: LooseRecord) {
   }
 
   return rawEntries
-    .map((entry) => {
+    .map((entry, index) => {
       const item = getRecord(entry);
 
       return {
+        id: getOptionalString(item, ["id"]) || `cert_${index}`,
         issuer: getOptionalString(item, ["issuer", "issuing_body", "issuingBody"]),
         name: getOptionalString(item, ["name"]),
         year: getOptionalString(item, ["year"]),
@@ -251,15 +324,15 @@ function Section({
     <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
       <div
         style={{
-          borderBottom: "1px solid #D8CFC1",
+          borderBottom: "0.5px solid #D4501A",
           color: "#D4501A",
           display: "flex",
           fontFamily: "DM Sans",
           fontSize: 9,
           fontWeight: 700,
-          letterSpacing: 1.4,
-          marginBottom: 8,
-          paddingBottom: 4,
+          letterSpacing: 1.5,
+          marginBottom: 6,
+          paddingBottom: 3,
           textTransform: "uppercase",
         }}
       >
@@ -282,21 +355,32 @@ function CvPreviewLayout({
   const source = getRecord(formData as unknown);
   const displayObjective =
     formData.aiEnhancedObjective?.trim() ||
-    formData.careerObjective.trim() ||
-    "Career objective not provided yet.";
-  const location = joinValues([formData.locationCity, formData.locationState]);
-  const contactLine = joinValues([formData.email, formData.phone, location]);
-  const nyscStatus = NYSC_STATUS_LABELS[formData.nyscStatus];
-  const skills = uniqueSkills(formData);
-  const education = formData.education.filter((entry) =>
-    Boolean(entry.institution.trim() || entry.course.trim() || entry.year.trim()),
+    formData.careerObjective.trim();
+  const location = joinValues([formData.locationCity, formData.locationState], ", ");
+  const contactLine = joinValues([formData.email, formData.phone, location], " · ");
+  const dateOfBirth =
+    getOptionalString(source, ["dateOfBirth", "date_of_birth"]) || formData.dateOfBirth.trim();
+  const stateOfOrigin = getOptionalString(source, ["stateOfOrigin", "state_of_origin"]);
+  const headerMetaLine = joinValues(
+    [
+      dateOfBirth ? `Date of birth: ${dateOfBirth}` : "",
+      stateOfOrigin ? `State of origin: ${stateOfOrigin}` : "",
+    ],
+    " | ",
   );
+  const profileSummary = joinValues(
+    [
+      `Experience level: ${formatExperience(formData.experienceLevel)}`,
+      `NYSC: ${formatNysc(formData.nyscStatus)}`,
+    ],
+    " · ",
+  );
+  const skills = uniqueSkills(formData);
+  const education = getEducation(formData, source);
   const workExperience = getWorkExperience(formData, source);
   const certifications = getCertifications(formData, source);
   const referees = getReferees(formData, source);
   const languages = normalizeStringArray(source.languages ?? formData.languages);
-  const dateOfBirth = getOptionalString(source, ["dateOfBirth", "date_of_birth"]);
-  const stateOfOrigin = getOptionalString(source, ["stateOfOrigin", "state_of_origin"]);
 
   return (
     <div
@@ -316,7 +400,7 @@ function CvPreviewLayout({
           color: "#FFFFFF",
           display: "flex",
           flexDirection: "column",
-          padding: "30px 36px 24px",
+          padding: "28px 40px 20px",
           width: "100%",
         }}
       >
@@ -325,90 +409,211 @@ function CvPreviewLayout({
             color: "#FFFFFF",
             display: "flex",
             fontFamily: "Playfair",
-            fontSize: 29,
+            fontSize: 26,
             fontWeight: 700,
-            letterSpacing: -0.6,
+            letterSpacing: -0.4,
             lineHeight: 1.1,
-            marginBottom: 8,
+            marginBottom: 6,
           }}
         >
-          {formData.fullName || "Your CV Name"}
+          {formData.fullName.trim()}
         </div>
-        <div
-          style={{
-            color: "rgba(255,255,255,0.9)",
-            display: "flex",
-            fontSize: 11,
-            fontWeight: 400,
-            lineHeight: 1.4,
-            maxWidth: "100%",
-          }}
-        >
-          {contactLine || "Add your phone, email, and location."}
-        </div>
+        {contactLine ? (
+          <div
+            style={{
+              color: "rgba(255,255,255,0.92)",
+              display: "flex",
+              fontSize: 10,
+              lineHeight: 1.35,
+              marginBottom: 2,
+            }}
+          >
+            {contactLine}
+          </div>
+        ) : null}
+        {headerMetaLine ? (
+          <div
+            style={{
+              color: "rgba(255,255,255,0.92)",
+              display: "flex",
+              fontSize: 10,
+              lineHeight: 1.35,
+            }}
+          >
+            {headerMetaLine}
+          </div>
+        ) : null}
       </div>
 
       <div
         style={{
           display: "flex",
           flexDirection: "column",
-          padding: "22px 36px 30px",
+          padding: "24px 40px 40px",
           width: "100%",
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
-          <Section title="Career Objective">
-            <div
-              style={{
-                color: "#3D3530",
-                display: "flex",
-                fontSize: 10,
-                lineHeight: 1.55,
-                whiteSpace: "pre-wrap",
-              }}
-            >
-              {displayObjective}
-            </div>
-          </Section>
-        </div>
-
-        <div
-          style={{
-            alignItems: "center",
-            display: "flex",
-            marginBottom: 14,
-            width: "100%",
-          }}
-        >
-          <div
-            style={{
-              color: "#D4501A",
-              display: "flex",
-              fontSize: 9,
-              fontWeight: 700,
-              letterSpacing: 1.2,
-              marginRight: 8,
-              textTransform: "uppercase",
-            }}
-          >
-            NYSC Status:
+        {profileSummary ? (
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: 16 }}>
+            <Section title="Professional Details">
+              <div
+                style={{
+                  color: "#3D3530",
+                  display: "flex",
+                  fontSize: 10,
+                  lineHeight: 1.5,
+                }}
+              >
+                {profileSummary}
+              </div>
+            </Section>
           </div>
-          <div
-            style={{
-              backgroundColor: "#DDEEDC",
-              borderRadius: 4,
-              color: "#1E6B3A",
-              display: "flex",
-              fontSize: 9,
-              padding: "2px 8px",
-            }}
-          >
-            {nyscStatus}
-          </div>
-        </div>
+        ) : null}
 
-        {Array.isArray(skills) && skills.length > 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
+        {displayObjective ? (
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: 16 }}>
+            <Section title="Career Objective">
+              <div
+                style={{
+                  color: "#3D3530",
+                  display: "flex",
+                  fontSize: 10,
+                  lineHeight: 1.5,
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {displayObjective}
+              </div>
+            </Section>
+          </div>
+        ) : null}
+
+        {workExperience.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: 16 }}>
+            <Section title="Work Experience">
+              <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+                {workExperience.map((entry) => (
+                  <div
+                    key={entry.id}
+                    style={{ display: "flex", flexDirection: "column", marginBottom: 10 }}
+                  >
+                    {entry.company ? (
+                      <div
+                        style={{
+                          color: "#1A1410",
+                          display: "flex",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          marginBottom: 2,
+                        }}
+                      >
+                        {entry.company}
+                      </div>
+                    ) : null}
+                    {entry.role ? (
+                      <div
+                        style={{
+                          color: "#D4501A",
+                          display: "flex",
+                          fontSize: 10,
+                          marginBottom: 2,
+                        }}
+                      >
+                        {entry.role}
+                      </div>
+                    ) : null}
+                    {joinValues([entry.startDate, entry.endDate], " – ") ? (
+                      <div
+                        style={{
+                          color: "#5C4F3D",
+                          display: "flex",
+                          fontSize: 10,
+                          marginBottom: 3,
+                        }}
+                      >
+                        {joinValues([entry.startDate, entry.endDate], " – ")}
+                      </div>
+                    ) : null}
+                    {entry.responsibilities
+                      .split(/\r?\n/)
+                      .map((line) => line.trim())
+                      .filter(Boolean)
+                      .map((line, index) => (
+                        <div
+                          key={`${entry.id}_line_${index}`}
+                          style={{
+                            color: "#3D3530",
+                            display: "flex",
+                            fontSize: 10,
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          {line}
+                        </div>
+                      ))}
+                  </div>
+                ))}
+              </div>
+            </Section>
+          </div>
+        ) : null}
+
+        {education.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: 16 }}>
+            <Section title="Education">
+              <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+                {education.map((entry) => (
+                  <div
+                    key={entry.id}
+                    style={{ display: "flex", flexDirection: "column", marginBottom: 10 }}
+                  >
+                    {entry.institution ? (
+                      <div
+                        style={{
+                          color: "#1A1410",
+                          display: "flex",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          marginBottom: 2,
+                        }}
+                      >
+                        {entry.institution}
+                      </div>
+                    ) : null}
+                    {joinValues(
+                      [
+                        entry.course,
+                        entry.degreeClass ? formatGrade(entry.degreeClass) : "",
+                        entry.year,
+                      ],
+                      " | ",
+                    ) ? (
+                      <div
+                        style={{
+                          color: "#5C4F3D",
+                          display: "flex",
+                          fontSize: 10,
+                        }}
+                      >
+                        {joinValues(
+                          [
+                            entry.course,
+                            entry.degreeClass ? formatGrade(entry.degreeClass) : "",
+                            entry.year,
+                          ],
+                          " | ",
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </Section>
+          </div>
+        ) : null}
+
+        {skills.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: 16 }}>
             <Section title="Skills">
               <div style={{ display: "flex", flexWrap: "wrap", width: "100%" }}>
                 {skills.map((skill) => (
@@ -434,117 +639,43 @@ function CvPreviewLayout({
           </div>
         ) : null}
 
-        {Array.isArray(education) && education.length > 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
-            <Section title="Education">
-              <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-                {education.map((entry) => (
-                  <div
-                    key={entry.id}
-                    style={{ display: "flex", flexDirection: "column", marginBottom: 8 }}
-                  >
-                    <div
-                      style={{
-                        color: "#1A1410",
-                        display: "flex",
-                        fontSize: 10,
-                        fontWeight: 700,
-                        marginBottom: 1,
-                      }}
-                    >
-                      {entry.institution || "Institution pending"}
-                    </div>
-                    <div style={{ color: "#5A4D3E", display: "flex", fontSize: 9 }}>
-                      {joinValues([entry.course, entry.degreeClass, entry.year])}
-                    </div>
-                  </div>
-                ))}
+        {languages.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: 16 }}>
+            <Section title="Languages">
+              <div style={{ color: "#3D3530", display: "flex", fontSize: 10, lineHeight: 1.5 }}>
+                {languages.join(", ")}
               </div>
             </Section>
           </div>
         ) : null}
 
-        {Array.isArray(workExperience) && workExperience.length > 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
-            <Section title="Work Experience">
-              <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-                {workExperience.map((entry, index) => (
-                  <div
-                    key={`exp_${index}`}
-                    style={{ display: "flex", flexDirection: "column", marginBottom: 12 }}
-                  >
-                    <div
-                      style={{
-                        color: "#1A1410",
-                        display: "flex",
-                        fontSize: 11,
-                        fontWeight: 700,
-                        marginBottom: 2,
-                      }}
-                    >
-                      {entry.company || "Company"}
-                    </div>
-                    <div
-                      style={{
-                        color: "#D4501A",
-                        display: "flex",
-                        fontSize: 10,
-                        marginBottom: 2,
-                      }}
-                    >
-                      {entry.role || "Role"}
-                    </div>
-                    <div
-                      style={{
-                        color: "#6E6255",
-                        display: "flex",
-                        fontSize: 10,
-                        marginBottom: 3,
-                      }}
-                    >
-                      {joinValues([entry.startDate, entry.endDate]) || "Date not specified"}
-                    </div>
-                    <div
-                      style={{
-                        color: "#3D3530",
-                        display: "flex",
-                        fontSize: 10,
-                        lineHeight: 1.5,
-                        whiteSpace: "pre-wrap",
-                      }}
-                    >
-                      {entry.responsibilities || "Description not provided."}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Section>
-          </div>
-        ) : null}
-
-        {Array.isArray(certifications) && certifications.length > 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
+        {certifications.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: 16 }}>
             <Section title="Certifications">
               <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-                {certifications.map((entry, index) => (
+                {certifications.map((entry) => (
                   <div
-                    key={`cert_${index}`}
-                    style={{ display: "flex", flexDirection: "column", marginBottom: 7 }}
+                    key={entry.id}
+                    style={{ display: "flex", flexDirection: "column", marginBottom: 10 }}
                   >
-                    <div
-                      style={{
-                        color: "#1A1410",
-                        display: "flex",
-                        fontSize: 10,
-                        fontWeight: 700,
-                        marginBottom: 1,
-                      }}
-                    >
-                      {entry.name}
-                    </div>
-                    <div style={{ color: "#5A4D3E", display: "flex", fontSize: 9 }}>
-                      {joinValues([entry.issuer, entry.year])}
-                    </div>
+                    {entry.name ? (
+                      <div
+                        style={{
+                          color: "#1A1410",
+                          display: "flex",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          marginBottom: 2,
+                        }}
+                      >
+                        {entry.name}
+                      </div>
+                    ) : null}
+                    {joinValues([entry.issuer, entry.year], " | ") ? (
+                      <div style={{ color: "#5C4F3D", display: "flex", fontSize: 10 }}>
+                        {joinValues([entry.issuer, entry.year], " | ")}
+                      </div>
+                    ) : null}
                   </div>
                 ))}
               </div>
@@ -552,8 +683,8 @@ function CvPreviewLayout({
           </div>
         ) : null}
 
-        {Array.isArray(referees) && referees.length > 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
+        {referees.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: 16 }}>
             <Section title="Referees">
               <div style={{ display: "flex", width: "100%" }}>
                 {referees.map((entry, index) => (
@@ -566,51 +697,31 @@ function CvPreviewLayout({
                       marginRight: index === 0 ? 14 : 0,
                     }}
                   >
-                    <div
-                      style={{
-                        color: "#1A1410",
-                        display: "flex",
-                        fontSize: 10,
-                        fontWeight: 700,
-                        marginBottom: 2,
-                      }}
-                    >
-                      {entry.name || `Referee ${index + 1}`}
-                    </div>
-                    <div style={{ color: "#5A4D3E", display: "flex", fontSize: 9, marginBottom: 1 }}>
-                      {joinValues([entry.title, entry.company])}
-                    </div>
-                    <div style={{ color: "#5A4D3E", display: "flex", fontSize: 9 }}>
-                      {joinValues([entry.phone, entry.email])}
-                    </div>
+                    {entry.name ? (
+                      <div
+                        style={{
+                          color: "#1A1410",
+                          display: "flex",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          marginBottom: 2,
+                        }}
+                      >
+                        {entry.name}
+                      </div>
+                    ) : null}
+                    {joinValues([entry.title, entry.company], " | ") ? (
+                      <div style={{ color: "#5C4F3D", display: "flex", fontSize: 10, marginBottom: 2 }}>
+                        {joinValues([entry.title, entry.company], " | ")}
+                      </div>
+                    ) : null}
+                    {joinValues([entry.phone, entry.email], " | ") ? (
+                      <div style={{ color: "#3D3530", display: "flex", fontSize: 10 }}>
+                        {joinValues([entry.phone, entry.email], " | ")}
+                      </div>
+                    ) : null}
                   </div>
                 ))}
-              </div>
-            </Section>
-          </div>
-        ) : null}
-
-        {dateOfBirth ? (
-          <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
-            <Section title="Date of Birth">
-              <div style={{ color: "#3D3530", display: "flex", fontSize: 10 }}>{dateOfBirth}</div>
-            </Section>
-          </div>
-        ) : null}
-
-        {stateOfOrigin ? (
-          <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
-            <Section title="State of Origin">
-              <div style={{ color: "#3D3530", display: "flex", fontSize: 10 }}>{stateOfOrigin}</div>
-            </Section>
-          </div>
-        ) : null}
-
-        {Array.isArray(languages) && languages.length > 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
-            <Section title="Languages">
-              <div style={{ color: "#3D3530", display: "flex", fontSize: 10 }}>
-                {languages.join(", ")}
               </div>
             </Section>
           </div>
