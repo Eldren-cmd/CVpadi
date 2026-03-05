@@ -32,6 +32,15 @@ export async function GET(request: NextRequest) {
       if (!error) {
         return NextResponse.redirect(`${origin}${next}`);
       }
+
+      console.error(
+        "exchangeCodeForSession failed:",
+        error.message,
+        error.status,
+      );
+      return NextResponse.redirect(
+        `${origin}/login?error=oauth_failed&reason=${encodeURIComponent(error.message)}`,
+      );
     }
 
     return NextResponse.redirect(`${origin}/login?error=oauth_failed`);
