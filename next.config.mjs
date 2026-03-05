@@ -4,6 +4,11 @@ import { withSentryConfig } from "@sentry/nextjs";
 const nextConfig = {
   experimental: {
     instrumentationHook: true,
+    serverComponentsExternalPackages: [
+      "canvas",
+      "pdfjs-dist",
+      "@napi-rs/canvas",
+    ],
   },
 };
 

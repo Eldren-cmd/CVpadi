@@ -1,13 +1,61 @@
 import { renderToBuffer } from "@react-pdf/renderer";
-import { createCanvas } from "canvas";
-import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import {
+  DOMMatrix,
+  DOMPoint,
+  createCanvas,
+} from "canvas";
 import sharp from "sharp";
 import { PREVIEW_CANVAS_WIDTH } from "@/lib/cv/constants";
 import type { CVFormData } from "@/lib/cv/types";
 import { CVPdfDocument } from "./cv-pdf-document";
 
+const globalScope = globalThis as unknown as Record<string, unknown>;
+
+globalScope.DOMMatrix ??= DOMMatrix;
+globalScope.DOMPoint ??= DOMPoint;
+
+if (!globalScope.DOMRect) {
+  class DOMRectPolyfill {
+    public x: number;
+    public y: number;
+    public width: number;
+    public height: number;
+
+    public constructor(x = 0, y = 0, width = 0, height = 0) {
+      this.x = x;
+      this.y = y;
+      this.width = width;
+      this.height = height;
+    }
+
+    public static fromRect({
+      height = 0,
+      width = 0,
+      x = 0,
+      y = 0,
+    }: Partial<DOMRectPolyfill> = {}) {
+      return new DOMRectPolyfill(x, y, width, height);
+    }
+  }
+
+  globalScope.DOMRect = DOMRectPolyfill;
+}
+
 const DELIVERY_WIDTH = 1240;
 const RENDER_SCALE = 2;
+
+let pdfJsPromise: Promise<typeof import("pdfjs-dist/legacy/build/pdf.mjs")> | null = null;
+
+async function getPdfJs() {
+  if (!pdfJsPromise) {
+    pdfJsPromise = import("pdfjs-dist/legacy/build/pdf.mjs").then((pdfJs) => {
+      pdfJs.GlobalWorkerOptions.workerSrc = "";
+      return pdfJs;
+    });
+  }
+
+  return pdfJsPromise;
+}
 
 interface RenderCvJpgOptions {
   fingerprint: string;
@@ -25,6 +73,7 @@ async function renderFirstPagePng({
   formData: CVFormData;
   watermarked: boolean;
 }) {
+  const { getDocument } = await getPdfJs();
   const pdfBuffer = await renderToBuffer(
     <CVPdfDocument
       fingerprint={fingerprint}
