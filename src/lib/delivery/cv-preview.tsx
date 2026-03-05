@@ -205,7 +205,7 @@ function CvPreviewLayout({
           width: "100%",
         }}
       >
-        <div style={{ marginBottom: 14 }}>
+        <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
           <Section title="Career Objective">
             <div
               style={{
@@ -256,7 +256,7 @@ function CvPreviewLayout({
         </div>
 
         {skills.length ? (
-          <div style={{ marginBottom: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
             <Section title="Skills">
               <div
                 style={{
@@ -289,7 +289,7 @@ function CvPreviewLayout({
         ) : null}
 
         {experiences.length ? (
-          <div style={{ marginBottom: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
             <Section title="Work Experience">
               <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
                 {experiences.map((experience) => (
@@ -339,7 +339,7 @@ function CvPreviewLayout({
           </div>
         ) : null}
 
-        <div style={{ marginBottom: 14 }}>
+        <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
           <Section title="Education">
             <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
               {education.map((entry) => (
