@@ -43,13 +43,14 @@ if (!globalScope.DOMRect) {
 
 const DELIVERY_WIDTH = 1240;
 const RENDER_SCALE = 2;
+const PDF_WORKER_SRC = "pdfjs-dist/legacy/build/pdf.worker.mjs";
 
 let pdfJsPromise: Promise<typeof import("pdfjs-dist/legacy/build/pdf.mjs")> | null = null;
 
 async function getPdfJs() {
   if (!pdfJsPromise) {
     pdfJsPromise = import("pdfjs-dist/legacy/build/pdf.mjs").then((pdfJs) => {
-      pdfJs.GlobalWorkerOptions.workerSrc = "";
+      pdfJs.GlobalWorkerOptions.workerSrc = PDF_WORKER_SRC;
       return pdfJs;
     });
   }
@@ -83,7 +84,6 @@ async function renderFirstPagePng({
   );
   const pdf = await getDocument({
     data: new Uint8Array(pdfBuffer),
-    disableWorker: true,
   } as never).promise;
 
   try {
