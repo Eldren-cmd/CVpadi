@@ -94,15 +94,16 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: "#D4501A",
     marginBottom: 16,
-    paddingBottom: 28,
+    paddingBottom: 32,
     paddingHorizontal: 40,
     paddingTop: 32,
   },
   name: {
     color: "#FFFFFF",
     fontFamily: "Playfair",
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: 700,
+    marginBottom: 6,
   },
   headerContactLine: {
     color: "rgba(255,255,255,0.85)",
