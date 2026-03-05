@@ -169,6 +169,29 @@ const styles = StyleSheet.create({
     left: 28,
     position: "absolute",
   },
+  watermarkLayer: {
+    bottom: 120,
+    left: -60,
+    position: "absolute",
+    right: -60,
+    top: 120,
+  },
+  watermarkRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 34,
+    width: "100%",
+  },
+  watermarkText: {
+    color: "#D4501A",
+    fontFamily: "DM Sans",
+    fontSize: 24,
+    fontWeight: 700,
+    opacity: 0.14,
+    textTransform: "uppercase",
+    transform: "rotate(-28deg)",
+  },
 });
 
 function joinValues(values: Array<string | undefined | null>) {
@@ -217,9 +240,11 @@ function renderRefereeBlock(label: string, data: CVFormData["refereeOne"]) {
 export function CVPdfDocument({
   fingerprint,
   formData,
+  watermarked = false,
 }: {
   fingerprint: string;
   formData: CVFormData;
+  watermarked?: boolean;
 }) {
   registerPdfFonts();
 
@@ -324,6 +349,18 @@ export function CVPdfDocument({
             {renderRefereeBlock("Referee 2", formData.refereeTwo)}
           </View>
         </View>
+
+        {watermarked ? (
+          <View fixed style={styles.watermarkLayer}>
+            {Array.from({ length: 10 }).map((_, rowIndex) => (
+              <View key={`wm_row_${rowIndex}`} style={styles.watermarkRow}>
+                <Text style={styles.watermarkText}>CVPadi Preview</Text>
+                <Text style={styles.watermarkText}>CVPadi Preview</Text>
+                <Text style={styles.watermarkText}>CVPadi Preview</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
 
         <Text style={styles.footerFingerprint}>{fingerprint}</Text>
       </Page>

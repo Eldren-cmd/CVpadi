@@ -8,7 +8,7 @@ import {
 } from "@/lib/email/sequences";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCvAssetPaths, getSignedCvAssetLinks } from "./cv-assets";
-import { renderCvJpgBuffer } from "./cv-jpg-template";
+import { renderCvJpgBuffer } from "./cv-preview";
 import { CVPdfDocument } from "./cv-pdf-document";
 
 function createFingerprint(email: string, cvId: string) {

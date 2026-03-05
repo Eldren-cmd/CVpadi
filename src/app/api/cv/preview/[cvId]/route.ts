@@ -3,7 +3,7 @@ import { FREE_PREVIEW_LIMIT } from "@/lib/cv/constants";
 import { computeCVScore } from "@/lib/cv/score";
 import type { CVFormData } from "@/lib/cv/types";
 import { isDisposableEmail } from "@/lib/cv/validation";
-import { renderCvJpgBuffer } from "@/lib/delivery/cv-jpg-template";
+import { renderCvPreviewJpeg } from "@/lib/delivery/cv-preview";
 import { verifyRecaptchaToken } from "@/lib/security/recaptcha";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -158,10 +158,10 @@ export async function POST(
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
-  const previewBuffer = await renderCvJpgBuffer({
+  const previewBuffer = await renderCvPreviewJpeg({
     fingerprint: `preview:${user.id.slice(0, 8)}:${Date.now()}`,
     formData: body.formData,
-    variant: "preview",
+    score: score.score,
   });
 
   return new NextResponse(new Uint8Array(previewBuffer), {
