@@ -2,7 +2,6 @@ import { generateAndDeliverCvAssets } from "@/lib/delivery/cv-delivery";
 import { getAppliedCreditKobo } from "@/lib/payments/constants";
 import { createPaymentReference, getPaymentAmount, initializePaystackTransaction } from "@/lib/payments/paystack";
 import type { PaymentType } from "@/lib/payments/types";
-import { REFERRAL_CREDIT_KOBO } from "@/lib/referrals/constants";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
@@ -67,34 +66,26 @@ export async function POST(request: Request) {
   });
   const amountKobo = baseAmountKobo - creditAppliedKobo;
   const reference = createPaymentReference();
-  let referrerUserId = profile.referred_by;
   let referralCodeUsed: string | null = null;
 
-  if (referrerUserId) {
+  if (profile.referred_by) {
     const { data: referrer } = await adminSupabase
       .from("profiles")
-      .select("id, referral_code")
-      .eq("id", referrerUserId)
+      .select("referral_code")
+      .eq("id", profile.referred_by)
       .maybeSingle();
 
-    if (!referrer) {
-      referrerUserId = null;
-    } else {
+    if (referrer) {
       referralCodeUsed = referrer.referral_code;
     }
   }
 
   const paymentRecord = {
     amount_kobo: amountKobo,
-    base_amount_kobo: baseAmountKobo,
-    credit_applied_kobo: creditAppliedKobo,
     currency: "NGN",
     cv_id: cv.id,
     paystack_reference: reference,
     payment_type: body.paymentType,
-    referral_code_used: referralCodeUsed,
-    referral_credit_kobo: referrerUserId ? REFERRAL_CREDIT_KOBO : 0,
-    referrer_user_id: referrerUserId,
     status: "pending",
     user_id: user.id,
     webhook_verified: false,

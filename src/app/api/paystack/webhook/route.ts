@@ -1,7 +1,11 @@
 import * as Sentry from "@sentry/nextjs";
 import { enqueueAiEnhancement } from "@/lib/ai/queue";
 import { generateAndDeliverCvAssets } from "@/lib/delivery/cv-delivery";
-import { parsePaymentMetadata, verifyPaystackSignature } from "@/lib/payments/paystack";
+import {
+  getPaymentAmount,
+  parsePaymentMetadata,
+  verifyPaystackSignature,
+} from "@/lib/payments/paystack";
 import type { PaymentType, PaystackChargeSuccessEvent } from "@/lib/payments/types";
 import { REFERRAL_CREDIT_KOBO } from "@/lib/referrals/constants";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -48,53 +52,40 @@ export async function POST(request: Request) {
     Sentry.captureMessage("Paystack webhook missing required metadata.", "warning");
     return NextResponse.json({ received: true });
   }
+  const expectedAmountKobo = getPaymentAmount(paymentType);
+  const inferredCreditAppliedKobo = Math.max(0, expectedAmountKobo - event.data.amount);
+  const effectiveCreditAppliedKobo = Math.max(
+    0,
+    creditAppliedKobo || inferredCreditAppliedKobo,
+  );
 
   const supabase = createAdminClient();
   let { data: existingPayment } = await supabase
     .from("payments")
     .select(
-      "amount_kobo, credit_applied_kobo, referral_credit_kobo, referrer_user_id, status, webhook_verified",
+      "amount_kobo, status, webhook_verified",
     )
     .eq("paystack_reference", reference)
     .maybeSingle();
+  const paymentRowWasMissing = !existingPayment;
 
   if (!existingPayment) {
-    let referrerUserId: string | null = null;
-
-    if (referralCodeUsed) {
-      const { data: referrer } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("referral_code", referralCodeUsed)
-        .neq("id", userId)
-        .maybeSingle();
-
-      referrerUserId = referrer?.id ?? null;
-    }
-
     const { data: upsertedPayment, error: upsertError } = await supabase
       .from("payments")
       .upsert(
         {
           amount_kobo: event.data.amount,
-          base_amount_kobo: event.data.amount + creditAppliedKobo,
-          credit_applied_kobo: creditAppliedKobo,
           currency: event.data.currency ?? "NGN",
           cv_id: cvId,
           payment_type: paymentType,
           paystack_reference: reference,
-          referral_code_used: referralCodeUsed,
-          referral_credit_kobo: referrerUserId ? REFERRAL_CREDIT_KOBO : 0,
-          referrer_user_id: referrerUserId,
           status: "success",
           user_id: userId,
           webhook_verified: true,
         },
         { onConflict: "paystack_reference" },
       )
-      .select(
-        "amount_kobo, credit_applied_kobo, referral_credit_kobo, referrer_user_id, status, webhook_verified",
-      )
+      .select("amount_kobo, status, webhook_verified")
       .single();
 
     if (upsertError || !upsertedPayment) {
@@ -137,7 +128,9 @@ export async function POST(request: Request) {
       .eq("user_id", userId)
       .maybeSingle();
     const paymentAlreadyVerified =
-      existingPayment.status === "success" && existingPayment.webhook_verified;
+      !paymentRowWasMissing
+      && existingPayment.status === "success"
+      && existingPayment.webhook_verified;
 
     if (
       paymentAlreadyVerified
@@ -171,7 +164,7 @@ export async function POST(request: Request) {
         throw cvError;
       }
 
-      if (existingPayment.credit_applied_kobo > 0) {
+      if (effectiveCreditAppliedKobo > 0) {
         const { data: payerProfile, error: payerProfileError } = await supabase
           .from("profiles")
           .select("account_credit_kobo")
@@ -187,7 +180,7 @@ export async function POST(request: Request) {
           .update({
             account_credit_kobo: Math.max(
               0,
-              payerProfile.account_credit_kobo - existingPayment.credit_applied_kobo,
+              payerProfile.account_credit_kobo - effectiveCreditAppliedKobo,
             ),
           })
           .eq("id", userId);
@@ -197,31 +190,30 @@ export async function POST(request: Request) {
         }
       }
 
-      if (
-        existingPayment.referrer_user_id
-        && existingPayment.referral_credit_kobo > 0
-        && existingPayment.referrer_user_id !== userId
-      ) {
+      if (referralCodeUsed) {
         const { data: referrerProfile, error: referrerProfileError } = await supabase
           .from("profiles")
-          .select("account_credit_kobo")
-          .eq("id", existingPayment.referrer_user_id)
-          .single();
+          .select("id, account_credit_kobo")
+          .eq("referral_code", referralCodeUsed)
+          .neq("id", userId)
+          .maybeSingle();
 
-        if (referrerProfileError || !referrerProfile) {
+        if (referrerProfileError) {
           throw new Error(referrerProfileError?.message ?? "Referrer profile not found.");
         }
 
-        const { error: referralCreditError } = await supabase
-          .from("profiles")
-          .update({
-            account_credit_kobo:
-              referrerProfile.account_credit_kobo + existingPayment.referral_credit_kobo,
-          })
-          .eq("id", existingPayment.referrer_user_id);
+        if (referrerProfile) {
+          const { error: referralCreditError } = await supabase
+            .from("profiles")
+            .update({
+              account_credit_kobo:
+                referrerProfile.account_credit_kobo + REFERRAL_CREDIT_KOBO,
+            })
+            .eq("id", referrerProfile.id);
 
-        if (referralCreditError) {
-          throw referralCreditError;
+          if (referralCreditError) {
+            throw referralCreditError;
+          }
         }
       }
     }
