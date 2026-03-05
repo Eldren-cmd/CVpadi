@@ -1,17 +1,59 @@
 import {
   Document,
+  Font,
   Page,
   StyleSheet,
   Text,
   View,
 } from "@react-pdf/renderer";
+import path from "node:path";
 import type { CVFormData } from "@/lib/cv/types";
+
+let fontsRegistered = false;
+
+function registerPdfFonts() {
+  if (fontsRegistered) {
+    return;
+  }
+
+  Font.register({
+    family: "DM Sans",
+    fonts: [
+      {
+        src: path.join(process.cwd(), "public/fonts/DM-Sans-Regular.ttf"),
+        fontWeight: 400,
+      },
+      {
+        src: path.join(process.cwd(), "public/fonts/DM-Sans-Medium.ttf"),
+        fontWeight: 500,
+      },
+      {
+        src: path.join(process.cwd(), "public/fonts/DM-Sans-Bold.ttf"),
+        fontWeight: 700,
+      },
+    ],
+  });
+
+  Font.register({
+    family: "Playfair",
+    fonts: [
+      {
+        src: path.join(process.cwd(), "public/fonts/Playfair-Display-Bold.ttf"),
+        fontWeight: 700,
+      },
+    ],
+  });
+
+  Font.registerHyphenationCallback((word) => [word]);
+  fontsRegistered = true;
+}
 
 const styles = StyleSheet.create({
   page: {
     backgroundColor: "#FDFAF4",
     color: "#1A1410",
-    fontFamily: "Helvetica",
+    fontFamily: "DM Sans",
+    fontWeight: 400,
     fontSize: 10,
     lineHeight: 1.45,
     paddingBottom: 28,
@@ -25,12 +67,15 @@ const styles = StyleSheet.create({
   },
   heading: {
     color: "#1A1410",
-    fontFamily: "Times-Bold",
+    fontFamily: "Playfair",
+    fontWeight: 700,
     fontSize: 23,
     marginBottom: 5,
   },
   metaRow: {
     color: "#5C4F3D",
+    fontFamily: "DM Sans",
+    fontWeight: 400,
     fontSize: 10,
     marginBottom: 2,
   },
@@ -54,7 +99,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     borderBottom: "1 solid #EDE8DC",
     color: "#D4501A",
-    fontFamily: "Times-Bold",
+    fontFamily: "DM Sans",
+    fontWeight: 700,
     fontSize: 11,
     marginBottom: 7,
     paddingBottom: 4,
@@ -62,6 +108,8 @@ const styles = StyleSheet.create({
   },
   paragraph: {
     color: "#5C4F3D",
+    fontFamily: "DM Sans",
+    fontWeight: 400,
     fontSize: 10,
   },
   item: {
@@ -69,17 +117,22 @@ const styles = StyleSheet.create({
   },
   itemTitle: {
     color: "#1A1410",
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "DM Sans",
+    fontWeight: 700,
     fontSize: 10,
     marginBottom: 2,
   },
   itemMeta: {
     color: "#5C4F3D",
+    fontFamily: "DM Sans",
+    fontWeight: 400,
     fontSize: 9,
     marginBottom: 2,
   },
   bullet: {
     color: "#5C4F3D",
+    fontFamily: "DM Sans",
+    fontWeight: 400,
     fontSize: 9,
     marginBottom: 2,
     paddingLeft: 8,
@@ -93,6 +146,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F0E8",
     borderRadius: 4,
     color: "#1A1410",
+    fontFamily: "DM Sans",
+    fontWeight: 500,
     fontSize: 9,
     paddingHorizontal: 7,
     paddingVertical: 4,
@@ -108,6 +163,8 @@ const styles = StyleSheet.create({
   footerFingerprint: {
     bottom: 10,
     color: "#FFFFFF",
+    fontFamily: "DM Sans",
+    fontWeight: 400,
     fontSize: 1,
     left: 28,
     position: "absolute",
@@ -164,6 +221,8 @@ export function CVPdfDocument({
   fingerprint: string;
   formData: CVFormData;
 }) {
+  registerPdfFonts();
+
   const displayObjective = getDisplayObjective(formData);
   const displaySkills = getDisplaySkills(formData);
 

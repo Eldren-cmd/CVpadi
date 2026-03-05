@@ -240,7 +240,10 @@ export function PaymentPanel({
   }
 
   return (
-    <section className="relative rounded-[16px] border border-[var(--border)] bg-[var(--off-black)] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.42)]">
+    <section
+      className="relative rounded-[16px] border border-[var(--border)] bg-[var(--off-black)] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.42)]"
+      id="payment-panel"
+    >
       <Script
         src="https://js.paystack.co/v2/inline.js"
         strategy="afterInteractive"
@@ -253,7 +256,7 @@ export function PaymentPanel({
             Ready to download?
           </p>
           <h2 className="mt-2 font-heading text-4xl leading-none text-[var(--cream)]">
-            ₦1,500
+            {"\u20A6"}1,500
           </h2>
           <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--cream-dim)]">
             one-time payment

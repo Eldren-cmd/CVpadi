@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { ScoreDial } from "@/components/ui/ScoreDial";
 import { FREE_PREVIEW_LIMIT } from "@/lib/cv/constants";
 import type { CVFormData } from "@/lib/cv/types";
 import { useRef, useState } from "react";
@@ -48,6 +49,7 @@ export function PreviewPanel({
     "Generate your watermarked preview. Pay to remove watermark and unlock clean downloads.",
   );
   const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+  const canGeneratePreview = remainingPreviews > 0 && !isGenerating;
 
   async function handleGeneratePreview() {
     setIsGenerating(true);
@@ -122,10 +124,23 @@ export function PreviewPanel({
 
       <p className="mt-4 text-sm leading-6 text-[var(--cream-dim)]">{statusMessage}</p>
 
-      <div className="mt-4 rounded-[12px] border border-[var(--border)] bg-[var(--card)] p-4">
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--mid)]">This is your watermarked preview. Pay to remove.</p>
+      <div className="mt-4 rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--mid)]">
+            Watermarked preview - pay to remove watermark
+          </span>
+          <ScoreDial
+            animate
+            colorMode="green"
+            label="Score"
+            score={score}
+            size={56}
+            strokeWidth={7}
+          />
+        </div>
+
         <div
-          className={`mt-3 overflow-hidden rounded-[10px] border border-[var(--border)] bg-[var(--surface)] p-3 transition-opacity duration-300 ${hasPreview ? "opacity-100" : "opacity-80"}`.trim()}
+          className={`mt-4 overflow-hidden rounded-[10px] border border-[var(--border)] bg-[var(--card)] p-3 transition-opacity duration-300 ${hasPreview ? "opacity-100" : "opacity-80"}`.trim()}
         >
           <canvas
             className="h-auto w-full rounded-[8px] bg-white"
@@ -139,12 +154,33 @@ export function PreviewPanel({
           ) : null}
           {isGenerating ? <div className="mt-3 h-10 skeleton" /> : null}
         </div>
+
+        <div className="mt-4 flex flex-col gap-4 rounded-[10px] border border-[var(--green)] bg-[var(--green-glow)] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-display text-lg text-[var(--cream)]">Remove watermark and download</p>
+            <p className="mt-1 font-mono text-[12px] uppercase tracking-[0.1em] text-[var(--green)]">
+              {"\u20A6"}1,500 - one-time payment
+            </p>
+          </div>
+          <Button
+            className="w-full sm:w-auto"
+            onClick={() => {
+              document.getElementById("payment-panel")?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
+            }}
+            variant="primary"
+          >
+            Pay {"\u20A6"}1,500 →
+          </Button>
+        </div>
       </div>
 
       <div className="mt-4 grid gap-3 sm:flex sm:flex-wrap">
         <Button
           className="w-full sm:w-auto"
-          disabled={isGenerating || remainingPreviews <= 0}
+          disabled={!canGeneratePreview}
           loading={isGenerating}
           onClick={() => {
             void handleGeneratePreview();
