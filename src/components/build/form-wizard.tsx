@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { saveCvDraftAction } from "@/app/build/actions";
 import {
@@ -31,6 +31,7 @@ import {
   SyncIndicator,
   TagStep,
 } from "./wizard-ui";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const STEP_TITLES = [
   "Full name",
@@ -141,7 +142,7 @@ export function FormWizard({
           setDeviceFingerprint(result.visitorId);
         }
       } catch {
-        // Fingerprinting is only a soft signal. The rest of the guardrail stack still applies.
+        // Fingerprinting is a soft signal; the flow still works if it fails.
       }
     }
 
@@ -307,6 +308,7 @@ export function FormWizard({
           </div>
 
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <span className="hidden font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--cream-dim)] sm:inline-flex">
               Step {step + 1} of {STEP_TITLES.length}
             </span>
@@ -336,12 +338,12 @@ export function FormWizard({
               onClick={handleBack}
               type="button"
             >
-              ← Back
+              Back
             </button>
           ) : null}
 
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--green)]">
-            Step {step + 1} of {STEP_TITLES.length} · {STEP_TITLES[step].toUpperCase()}
+            Step {step + 1} of {STEP_TITLES.length} - {STEP_TITLES[step].toUpperCase()}
           </p>
           <h1 className="mt-3 font-heading text-[32px] leading-[1.1] text-[var(--cream)]">
             {STEP_TITLES[step]}
@@ -843,3 +845,4 @@ function refereeComplete(referee: CVFormData["refereeOne"]) {
       referee.email.trim(),
   );
 }
+

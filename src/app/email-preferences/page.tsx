@@ -43,7 +43,7 @@ export default async function EmailPreferencesPage() {
           Choose how often CVPadi emails you.
         </h1>
         <p className="mt-4 text-base leading-7 text-[var(--ink-light)]">
-          Transactional delivery emails still go out when you pay for a CV. These settings
+          Transactional download emails still go out when you pay for a CV. These settings
           control the follow-up sequences around saved drafts and post-download nudges.
         </p>
 
@@ -80,7 +80,7 @@ export default async function EmailPreferencesPage() {
             <span className="grid gap-1">
               <span className="text-sm font-medium text-foreground">Unsubscribe from all follow-ups</span>
               <span className="text-sm leading-6 text-[var(--ink-light)]">
-                Keep payment delivery emails, but stop abandoned-draft and post-download follow-ups.
+                Keep payment download emails, but stop abandoned-draft and post-download follow-ups.
               </span>
             </span>
           </label>

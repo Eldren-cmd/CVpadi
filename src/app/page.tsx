@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import Link from "next/link";
 import { useEffect } from "react";
 import "./landing.css";
@@ -110,25 +111,28 @@ export default function Home() {
         <div className="logo">
           CV<span>Padi</span>
         </div>
-        <ul>
-          <li>
-            <a href="#how">How it works</a>
-          </li>
-          <li>
-            <a href="#features">Features</a>
-          </li>
-          <li>
-            <a href="#pricing">Pricing</a>
-          </li>
-          <li>
-            <Link href="/salary">Salary database</Link>
-          </li>
-          <li>
-            <Link href="/login" className="nav-cta">
-              Build my CV →
-            </Link>
-          </li>
-        </ul>
+        <div className="nav-right">
+          <ThemeToggle className="landing-theme-toggle" />
+          <ul>
+            <li>
+              <a href="#how">How it works</a>
+            </li>
+            <li>
+              <a href="#features">Features</a>
+            </li>
+            <li>
+              <a href="#pricing">Pricing</a>
+            </li>
+            <li>
+              <Link href="/salary">Salary database</Link>
+            </li>
+            <li>
+              <Link href="/login" className="nav-cta">
+                Build my CV -&gt;
+              </Link>
+            </li>
+          </ul>
+        </div>
       </nav>
 
       <section className="hero">
@@ -161,7 +165,7 @@ export default function Home() {
 
         <div className="hero-actions">
           <Link href="/build" className="btn-primary">
-            Start building free <span className="arrow">↗</span>
+            Start building free <span className="arrow">&rarr;</span>
           </Link>
           <Link href="/check" className="btn-ghost">
             Check my existing CV
@@ -576,7 +580,7 @@ export default function Home() {
         <p className="cta-sub reveal reveal-delay-1">Build yours in 8 minutes. Free to start.</p>
         <div className="reveal reveal-delay-2">
           <Link href="/build" className="btn-primary" style={{ fontSize: "17px", padding: "20px 40px" }}>
-            Build my Nigerian CV — it&apos;s free <span className="arrow">↗</span>
+            Build my Nigerian CV — it&apos;s free <span className="arrow">&rarr;</span>
           </Link>
         </div>
         <div className="payment-badges reveal reveal-delay-3">
@@ -615,3 +619,6 @@ export default function Home() {
     </>
   );
 }
+
+
+

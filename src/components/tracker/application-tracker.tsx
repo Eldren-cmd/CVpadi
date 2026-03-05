@@ -203,7 +203,7 @@ export function ApplicationTracker({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--mid)]">Application tracker</p>
-            <h1 className="mt-2 font-heading text-5xl leading-[1.02] text-[var(--cream)]">Kanban job pipeline</h1>
+            <h1 className="mt-2 font-heading text-5xl leading-[1.02] text-[var(--cream)]">Application board</h1>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--cream-dim)]">
               Drag cards across Applied, Interview, Rejected, and Offer. On mobile, use Move to.
             </p>

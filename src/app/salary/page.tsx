@@ -44,7 +44,7 @@ export default async function SalaryPage({
   const submitRequested = searchParams?.submit === "1";
 
   return (
-    <main className="min-h-screen bg-[var(--black)] px-4 py-6 sm:px-6 sm:py-8">
+    <main className="main-content min-h-screen bg-[var(--black)] px-4 py-6 sm:px-6 sm:py-8">
       <div className="mx-auto grid max-w-6xl gap-6 page-enter">
         <section className="rounded-[16px] border border-[var(--border)] bg-[var(--off-black)] p-6 sm:p-8">
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--mid)]">Salary database</p>

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { forkCvVersionAction } from "@/app/dashboard/versions/actions";
 import type { CVFormData } from "@/lib/cv/types";
-import { formatKoboToNaira, PAYMENT_PRICES_KOBO } from "@/lib/payments/constants";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -25,7 +24,7 @@ interface BranchTimeline {
 
 export const metadata: Metadata = {
   description:
-    "See CV version history, compare current branches, and fork older versions into new payable CV branches.",
+    "See your CV version history and fork older versions into new drafts for different roles.",
   title: "CV Versions | CVPadi",
 };
 
@@ -57,30 +56,29 @@ export default async function VersionsPage() {
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
         <section className="rounded-[var(--radius-card)] border border-border bg-surface p-6 shadow-[var(--shadow-elevated)] sm:p-8">
           <p className="font-mono text-sm uppercase tracking-[0.28em] text-[var(--ink-light)]">
-            F7 - CV Version History and Forking
+            CV history
           </p>
           <h1 className="mt-3 max-w-3xl font-heading text-4xl leading-tight text-foreground sm:text-5xl">
-            Version history turns one CV into multiple monetizable branches.
+            Keep every CV version in one place.
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--ink-light)] sm:text-lg">
-            Every builder save now writes an immutable version snapshot. You can fork any
-            saved version into a new CV branch for a different industry or employer, and each
-            fork still follows the {formatKoboToNaira(PAYMENT_PRICES_KOBO.cv_redownload)} download model.
+            Every save creates a version snapshot. You can reopen older versions or fork
+            any one into a new draft for another role or industry.
           </p>
         </section>
 
         <section className="grid gap-4 lg:grid-cols-3">
           <InfoCard
-            body="The active branch stays stable for payment and delivery while older states remain visible in the timeline."
-            title="Stable builder flow"
+            body="Your current CV stays intact while older versions remain visible in the timeline."
+            title="Stable editing"
           />
           <InfoCard
-            body="Forking is free because it only creates a new draft branch. The monetization point remains the paid download."
-            title="Zero-cost branching"
+            body="Forking creates a new draft from any past version so you can tailor it for another role."
+            title="Fork in one click"
           />
           <InfoCard
-            body="This is useful for tailoring one CV toward different industries, employers, or seniority levels."
-            title="Tailoring leverage"
+            body="Track changes by version number, date, and industry focus as your CV improves."
+            title="Track changes"
           />
         </section>
 
@@ -95,7 +93,7 @@ export default async function VersionsPage() {
                   <div>
                     <div className="flex flex-wrap items-center gap-3">
                       <h2 className="font-heading text-3xl text-foreground">
-                        {timeline.current.form_data?.fullName || "Untitled CV branch"}
+                        {timeline.current.form_data?.fullName || "My CV"}
                       </h2>
                       <span className="inline-flex min-h-10 items-center rounded-full bg-[var(--accent-light)] px-3 text-sm font-medium text-[var(--accent)]">
                         Current branch
@@ -111,8 +109,7 @@ export default async function VersionsPage() {
                       </span>
                     </div>
                     <p className="mt-3 text-sm leading-6 text-[var(--ink-light)]">
-                      {timeline.current.form_data?.industry || "General"} CV branch. Current version is v
-                      {timeline.current.version_number}. Last updated {formatDate(timeline.current.updated_at)}.
+                      {timeline.current.form_data?.industry || "Your current"} CV. Version {timeline.current.version_number}. Last updated {formatDate(timeline.current.updated_at)}.
                     </p>
                   </div>
 

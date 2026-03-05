@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   description:
-    "Authenticated job details for your matched CVPadi opportunities, with scraping guardrails in place.",
+    "Authenticated job details for your matched CVPadi opportunities.",
   title: "Job Details | CVPadi",
 };
 

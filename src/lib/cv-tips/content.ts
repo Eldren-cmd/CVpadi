@@ -46,7 +46,7 @@ export const INDUSTRY_TIPS: IndustryTip[] = [
       "Mixing internship, NYSC, and full-time responsibility levels.",
     ],
     nigerianContext:
-      "Construction, utilities, manufacturing, and field employers all pay attention to safety, documentation, equipment reliability, and delivery under pressure.",
+      "Construction, utilities, manufacturing, and field employers all pay attention to safety, documentation, equipment reliability, and results under pressure.",
     slug: "engineering",
     title: "Engineering",
   },
@@ -126,7 +126,7 @@ export const INDUSTRY_TIPS: IndustryTip[] = [
       "Choosing a flashy template while hiding proof.",
     ],
     nigerianContext:
-      "Startups, banks, and outsourcing teams all care about execution. They want candidates who can ship, debug, collaborate, and communicate clearly.",
+      "Startups, banks, and outsourcing teams all care about execution. They want candidates who can ship, troubleshoot, collaborate, and communicate clearly.",
     slug: "tech",
     title: "Tech",
   },
@@ -156,7 +156,7 @@ export const INDUSTRY_TIPS: IndustryTip[] = [
     exampleBullets: [
       "Supported maintenance planning on rotating equipment and reduced shutdown risk.",
       "Prepared safety documentation and toolbox-meeting records for field teams.",
-      "Coordinated inspection follow-up to keep project milestones on track.",
+      "Coordinated inspection follow-up to keep project timelines on track.",
     ],
     intro:
       "Oil and gas CVs win by proving safety discipline, operational reliability, and site readiness.",

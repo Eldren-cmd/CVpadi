@@ -1,17 +1,4 @@
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --black: #0A0A08;
-    --off-black: #111110;
-    --green: #00E676;
-    --green-dim: #00C853;
-    --orange: #FF6B35;
-    --cream: #F5F0E4;
-    --cream-dim: #E8E0CC;
-    --mid: #666660;
-    --border: rgba(255,255,255,0.08);
-    --card: rgba(255,255,255,0.04);
-  }
+﻿*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   html { scroll-behavior: smooth; }
 
@@ -72,6 +59,10 @@
     border-bottom: 1px solid var(--border);
   }
 
+  [data-theme="light"] nav {
+    background: rgba(250, 250, 248, 0.84);
+  }
+
   .logo {
     font-family: 'Clash Display', sans-serif;
     font-size: 22px;
@@ -80,6 +71,18 @@
     letter-spacing: -0.02em;
   }
   .logo span { color: var(--green); }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .landing-theme-toggle {
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: 11px;
+  }
 
   nav ul {
     list-style: none;
@@ -362,23 +365,21 @@
   .steps {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 2px;
+    gap: 16px;
     margin-top: 64px;
-    border: 1px solid var(--border);
     border-radius: 16px;
-    overflow: hidden;
   }
 
   .step {
     padding: 48px 40px;
     background: var(--card);
-    border-right: 1px solid var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
     position: relative;
     overflow: hidden;
     transition: background 0.3s;
   }
-  .step:last-child { border-right: none; }
-  .step:hover { background: rgba(255,255,255,0.06); }
+  .step:hover { background: var(--card-hover); }
 
   .step::after {
     content: '';
@@ -419,7 +420,7 @@
   .features {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 2px;
+    gap: 16px;
     margin-top: 64px;
   }
 
@@ -433,8 +434,8 @@
     transition: all 0.3s;
   }
   .feature:hover {
-    background: rgba(255,255,255,0.06);
-    border-color: rgba(255,255,255,0.12);
+    background: var(--card-hover);
+    border-color: var(--border-mid);
     transform: translateY(-2px);
   }
 
@@ -864,13 +865,15 @@
   @media (max-width: 768px) {
     nav { padding: 16px 20px; }
     nav ul { display: none; }
+    .nav-right { width: 100%; justify-content: flex-end; }
+    .landing-theme-toggle { min-height: 38px; }
     .hero { padding: 100px 20px 60px; }
     .stats-strip { padding: 0 20px 60px; }
     .stats-inner { flex-direction: column; }
     .stat { border-right: none; border-bottom: 1px solid var(--border); }
     section { padding: 60px 20px; }
     .steps { grid-template-columns: 1fr; }
-    .step { border-right: none; border-bottom: 1px solid var(--border); }
+    .step { border: 1px solid var(--border); }
     .features { grid-template-columns: 1fr; }
     .nigeria-grid { grid-template-columns: 1fr; gap: 40px; }
     .cv-mock { transform: none; margin-bottom: 40px; }
@@ -881,3 +884,4 @@
     body { cursor: auto; }
     .cursor, .cursor-ring { display: none; }
   }
+

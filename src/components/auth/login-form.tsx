@@ -106,10 +106,6 @@ export function LoginForm({
   const handleGoogle = async () => {
     setMessage("");
     setIsGooglePending(true);
-    console.info(
-      "Google OAuth redirect origin:",
-      window.location.origin,
-    );
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",

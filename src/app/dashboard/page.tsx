@@ -147,6 +147,7 @@ export default async function DashboardPage() {
 
   const preferences = extractEmailPreferences(user.user_metadata);
   const cvFormData = (currentCv?.form_data ?? null) as CVFormData | null;
+  const hasStartedCv = hasDraftProgress(cvFormData);
   const scoreResult = cvFormData ? computeCVScore(cvFormData) : null;
   const trackerGroups = groupApplicationsByStatus((applications ?? []) as ApplicationRow[]);
   const topMatches = normalizeJobMatches((jobMatches ?? []) as JobMatchRowFromQuery[]);
@@ -154,15 +155,24 @@ export default async function DashboardPage() {
   const trackerTotal = (applications ?? []).length;
   const profileStrength = scoreResult?.score ?? 0;
   const missingSkillsNudge = cvFormData && cvFormData.skills.length < 5;
+  const welcomeFirstName = getFirstName(profile?.full_name || cvFormData?.fullName || "");
+  const cvDisplayName = hasStartedCv
+    ? cvFormData?.fullName || "My CV"
+    : "My CV — Start building to see your score";
+  const cvMeta = buildCvMeta({
+    hasStartedCv,
+    industry: cvFormData?.industry ?? "",
+    updatedAt: currentCv?.updated_at,
+    versionNumber: currentCv?.version_number,
+  });
 
   return (
     <div className="grid gap-6">
       <section className="page-enter rounded-[16px] border border-[var(--border)] bg-[var(--off-black)] px-5 py-6 sm:px-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--mid)]">Dashboard home</p>
             <h1 className="mt-2 font-heading text-5xl leading-[1] text-[var(--cream)]">
-              Welcome back, {profile?.full_name || cvFormData?.fullName || "there"}.
+              Welcome back, {welcomeFirstName || "there"}.
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--cream-dim)]">
               A single command centre for your CV quality, job matches, tracker momentum, and profile strength.
@@ -170,9 +180,12 @@ export default async function DashboardPage() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <SummaryChip label="Current score" value={scoreResult ? `${scoreResult.score}%` : "0%"} />
-            <SummaryChip label="Open matches" value={String(unreadMatches)} />
-            <SummaryChip label="Tracked roles" value={String(trackerTotal)} />
+            <SummaryChip
+              label="Current score"
+              value={hasStartedCv && scoreResult ? `${scoreResult.score}%` : "—"}
+            />
+            <SummaryChip label="Open matches" value={topMatches.length > 0 ? String(unreadMatches) : "—"} />
+            <SummaryChip label="Tracked roles" value={trackerTotal > 0 ? String(trackerTotal) : "—"} />
           </div>
         </div>
       </section>
@@ -182,13 +195,8 @@ export default async function DashboardPage() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--mid)]">My CV</p>
-              <h2 className="mt-2 font-display text-3xl text-[var(--cream)]">
-                {cvFormData?.fullName || "Untitled CV draft"}
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-[var(--cream-dim)]">
-                {cvFormData?.industry || "General"} branch · version {currentCv?.version_number ?? 1} · last edited{" "}
-                {formatDateTime(currentCv?.updated_at)}
-              </p>
+              <h2 className="mt-2 font-display text-3xl text-[var(--cream)]">{cvDisplayName}</h2>
+              {cvMeta ? <p className="mt-2 text-sm leading-6 text-[var(--cream-dim)]">{cvMeta}</p> : null}
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -212,27 +220,34 @@ export default async function DashboardPage() {
           </div>
 
           <div className="mt-6 grid gap-5 md:grid-cols-[auto_1fr]">
-            <SharedScoreDial animate colorMode="auto" label="CV score" score={scoreResult?.score ?? 0} size={96} />
-            <div>
-              <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--mid)]">Version history</p>
-              <div className="mt-3 space-y-3">
-                {((cvBranches ?? []) as CvBranchRow[]).slice(0, 4).map((branch, index) => (
-                  <div className="relative pl-6" key={branch.id}>
-                    <span
-                      className={`absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full border ${index === 0 ? "border-[var(--green)] bg-[var(--green)]" : "border-[var(--border-mid)]"}`}
-                    />
-                    {index < 3 ? (
-                      <span className="absolute left-[4px] top-4 h-6 w-px bg-[var(--border)]" />
-                    ) : null}
-                    <p className="font-display text-sm text-[var(--cream)]">Version {branch.version_number}</p>
-                    <p className="font-mono text-[11px] text-[var(--mid)]">{formatDateTime(branch.updated_at)}</p>
-                  </div>
-                ))}
-                {(cvBranches ?? []).length === 0 ? (
-                  <p className="text-sm text-[var(--mid)]">No version timeline yet.</p>
-                ) : null}
+            {hasStartedCv ? (
+              <SharedScoreDial animate colorMode="auto" label="CV score" score={scoreResult?.score ?? 0} size={96} />
+            ) : (
+              <div className="inline-flex h-24 w-24 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)]">
+                <span className="font-heading text-5xl text-[var(--cream)]">—</span>
               </div>
-            </div>
+            )}
+            {(cvBranches ?? []).length > 0 ? (
+              <div>
+                <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--mid)]">Version history</p>
+                <div className="mt-3 space-y-3">
+                  {((cvBranches ?? []) as CvBranchRow[]).slice(0, 4).map((branch, index) => (
+                    <div className="relative pl-6" key={branch.id}>
+                      <span
+                        className={`absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full border ${index === 0 ? "border-[var(--green)] bg-[var(--green)]" : "border-[var(--border-mid)]"}`}
+                      />
+                      {index < 3 ? (
+                        <span className="absolute left-[4px] top-4 h-6 w-px bg-[var(--border)]" />
+                      ) : null}
+                      <p className="font-display text-sm text-[var(--cream)]">Version {branch.version_number}</p>
+                      <p className="font-mono text-[11px] text-[var(--mid)]">
+                        {formatDateTime(branch.updated_at)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         </Card>
 
@@ -302,9 +317,8 @@ export default async function DashboardPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--mid)]">Job matches</p>
-              <h2 className="mt-2 font-display text-3xl text-[var(--cream)]">Weighted daily matches</h2>
+              <h2 className="mt-2 font-display text-3xl text-[var(--cream)]">Jobs matched to your profile</h2>
             </div>
-            <Badge variant="blue">{topMatches.length} visible</Badge>
           </div>
 
           {topMatches.length > 0 ? (
@@ -351,12 +365,12 @@ export default async function DashboardPage() {
             <div className="mt-5 rounded-[12px] border border-dashed border-[var(--border)] bg-[var(--surface)] px-5 py-8 text-center">
               <div className="mx-auto h-10 w-10 rounded-full border border-[var(--green)] bg-[var(--green-glow)]" />
               <p className="mt-4 font-display text-lg text-[var(--cream)]">No matches yet</p>
-              <p className="mt-1 text-sm text-[var(--mid)]">Complete your profile to see job matches.</p>
+              <p className="mt-1 text-sm text-[var(--mid)]">Build your CV to start seeing matched jobs.</p>
               <Link
                 className="mt-4 inline-flex min-h-11 items-center justify-center rounded-[8px] bg-[var(--green)] px-4 font-display text-sm text-[var(--black)]"
                 href={currentCv ? `/build?cv=${currentCv.id}` : "/build"}
               >
-                Complete profile
+                Build your CV
               </Link>
             </div>
           )}
@@ -368,13 +382,13 @@ export default async function DashboardPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--mid)]">Application tracker</p>
-              <h2 className="mt-2 font-display text-3xl text-[var(--cream)]">Kanban snapshot</h2>
+              <h2 className="mt-2 font-display text-3xl text-[var(--cream)]">Your applications at a glance</h2>
             </div>
             <Link
               className="inline-flex min-h-11 items-center justify-center rounded-[8px] border border-[var(--border)] px-4 font-display text-sm text-[var(--cream-dim)] transition-all duration-200 hover:border-[var(--border-mid)] hover:bg-[var(--card)] hover:text-[var(--cream)]"
               href="/dashboard/tracker"
             >
-              Open full tracker
+              View all applications
             </Link>
           </div>
 
@@ -436,6 +450,15 @@ export default async function DashboardPage() {
   );
 }
 
+function getFirstName(fullName: string) {
+  const clean = fullName.trim();
+  if (!clean) {
+    return "";
+  }
+
+  return clean.split(/\s+/)[0] ?? "";
+}
+
 function groupApplicationsByStatus(applications: ApplicationRow[]) {
   return TRACKER_STATUSES.reduce(
     (accumulator, status) => {
@@ -457,19 +480,85 @@ function normalizeJobMatches(rows: JobMatchRowFromQuery[]) {
 
 function formatDateTime(value?: string) {
   if (!value) {
-    return "just now";
+    return null;
   }
 
   const parsed = new Date(value);
 
   if (Number.isNaN(parsed.getTime())) {
-    return "recently";
+    return null;
   }
 
   return new Intl.DateTimeFormat("en-NG", {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(parsed);
+}
+
+function buildCvMeta({
+  hasStartedCv,
+  industry,
+  versionNumber,
+  updatedAt,
+}: {
+  hasStartedCv: boolean;
+  industry: string;
+  updatedAt?: string;
+  versionNumber?: number;
+}) {
+  if (!hasStartedCv) {
+    return "";
+  }
+
+  const parts: string[] = [];
+  const cleanIndustry = industry.trim();
+  if (cleanIndustry) {
+    parts.push(cleanIndustry);
+  }
+
+  if (versionNumber) {
+    parts.push(`Version ${versionNumber}`);
+  }
+
+  const formattedDate = formatDateTime(updatedAt);
+  if (formattedDate) {
+    parts.push(`Last edited ${formattedDate}`);
+  }
+
+  return parts.join(" · ");
+}
+
+function hasDraftProgress(formData: CVFormData | null) {
+  if (!formData) {
+    return false;
+  }
+
+  const education = formData.education ?? [];
+  const workExperience = formData.workExperience ?? [];
+  const certifications = formData.certifications ?? [];
+  const skills = formData.skills ?? [];
+  const languages = formData.languages ?? [];
+  const refereeOne = formData.refereeOne ?? { name: "" };
+  const refereeTwo = formData.refereeTwo ?? { name: "" };
+
+  return Boolean(
+    formData.fullName.trim() ||
+      formData.phone.trim() ||
+      formData.locationState.trim() ||
+      formData.locationCity.trim() ||
+      formData.dateOfBirth.trim() ||
+      formData.industry.trim() ||
+      formData.careerObjective.trim() ||
+      skills.length > 0 ||
+      languages.length > 0 ||
+      education.some((item) => item.institution.trim() || item.course.trim() || item.year.trim()) ||
+      workExperience.some(
+        (item) => item.company.trim() || item.role.trim() || item.responsibilities.trim(),
+      ) ||
+      certifications.some((item) => item.name.trim() || item.issuer.trim() || item.year.trim()) ||
+      refereeOne.name.trim() ||
+      refereeTwo.name.trim(),
+  );
 }
 
 function formatLocation(city?: string | null, state?: string | null) {

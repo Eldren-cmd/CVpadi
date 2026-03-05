@@ -48,6 +48,31 @@
   --font-mono: "DM Mono", monospace;
 }
 
+[data-theme="light"] {
+  --black: #fafaf8;
+  --off-black: #f2f0ea;
+  --surface: #ffffff;
+  --card: rgba(0, 0, 0, 0.03);
+  --card-hover: rgba(0, 0, 0, 0.06);
+  --border: rgba(0, 0, 0, 0.08);
+  --border-mid: rgba(0, 0, 0, 0.14);
+  --green: #00a854;
+  --green-dim: #007a3d;
+  --green-glow: rgba(0, 168, 84, 0.12);
+  --orange: #d4501a;
+  --orange-glow: rgba(212, 80, 26, 0.12);
+  --gold: #b8860b;
+  --gold-glow: rgba(184, 134, 11, 0.12);
+  --red: #cc0000;
+  --red-glow: rgba(204, 0, 0, 0.12);
+  --blue: #1f6fe0;
+  --blue-glow: rgba(31, 111, 224, 0.12);
+  --cream: #1a1410;
+  --cream-dim: #3d3530;
+  --mid: #7a736a;
+  --faint: #c8c0b0;
+}
+
 *,
 *::before,
 *::after {
@@ -58,6 +83,7 @@ html {
   background: var(--black);
   color: var(--cream);
   scroll-behavior: smooth;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {
@@ -70,6 +96,7 @@ body {
     var(--black);
   font-family: "DM Sans", sans-serif;
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 main {
@@ -117,6 +144,33 @@ textarea:focus {
 button,
 [role="button"] {
   min-height: 44px;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 8px 12px;
+  color: var(--cream-dim);
+  font-family: "DM Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--border-mid);
+  background: var(--card-hover);
+  color: var(--cream);
+}
+
+.main-content {
+  padding-bottom: 0;
 }
 
 ::selection {
@@ -344,6 +398,12 @@ button,
 
   .font-mono {
     font-family: "DM Mono", monospace;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding-bottom: calc(64px + 24px + env(safe-area-inset-bottom));
   }
 }
 

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const DASHBOARD_NAV_ITEMS = [
   {
@@ -31,7 +32,8 @@ const DASHBOARD_NAV_ITEMS = [
         />
       </svg>
     ),
-    match: (pathname: string) => pathname === "/dashboard" || pathname === "/dashboard/versions",
+    match: (pathname: string, hash: string) =>
+      pathname === "/dashboard/versions" || (pathname === "/dashboard" && hash !== "#jobs"),
   },
   {
     href: "/dashboard#jobs",
@@ -60,7 +62,7 @@ const DASHBOARD_NAV_ITEMS = [
         />
       </svg>
     ),
-    match: (pathname: string) => pathname === "/dashboard",
+    match: (pathname: string, hash: string) => pathname === "/dashboard" && hash === "#jobs",
   },
   {
     href: "/dashboard/tracker",
@@ -75,7 +77,10 @@ const DASHBOARD_NAV_ITEMS = [
         />
       </svg>
     ),
-    match: (pathname: string) => pathname === "/dashboard/tracker",
+    match: (pathname: string, hash: string) => {
+      void hash;
+      return pathname === "/dashboard/tracker";
+    },
   },
   {
     href: "/dashboard#profile",
@@ -95,28 +100,43 @@ const DASHBOARD_NAV_ITEMS = [
         />
       </svg>
     ),
-    match: (pathname: string) => pathname === "/dashboard" || pathname === "/email-preferences",
+    match: (pathname: string, hash: string) =>
+      pathname === "/email-preferences" || (pathname === "/dashboard" && hash !== "#jobs"),
   },
 ] as const;
 
 export function DashboardNav() {
   const pathname = usePathname();
+  const [hash, setHash] = useState("");
+
+  useEffect(() => {
+    const updateHash = () => {
+      setHash(window.location.hash || "");
+    };
+
+    updateHash();
+    window.addEventListener("hashchange", updateHash);
+
+    return () => {
+      window.removeEventListener("hashchange", updateHash);
+    };
+  }, [pathname]);
 
   return (
     <>
       <aside className="hidden w-72 shrink-0 lg:block">
         <div className="sticky top-6 rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)]">
           <p className="font-mono text-xs uppercase tracking-[0.24em] text-[var(--ink-light)]">
-            Phase 2.3
+            CVPadi
           </p>
           <h2 className="mt-3 font-heading text-3xl text-foreground">Dashboard</h2>
           <p className="mt-3 text-sm leading-6 text-[var(--ink-light)]">
-            Keep your CV, matches, tracker, and profile nudges in one authenticated workspace.
+            Keep your CV, matches, tracker, and profile nudges in one place.
           </p>
 
           <nav aria-label="Dashboard sections" className="mt-6 grid gap-2">
             {DASHBOARD_NAV_ITEMS.map((item) => {
-              const isActive = item.match(pathname);
+              const isActive = item.match(pathname, hash);
 
               return (
                 <Link
@@ -150,7 +170,7 @@ export function DashboardNav() {
       >
         <div className="mx-auto grid max-w-3xl grid-cols-4 gap-2">
           {DASHBOARD_NAV_ITEMS.map((item) => {
-            const isActive = item.match(pathname);
+            const isActive = item.match(pathname, hash);
 
             return (
               <Link

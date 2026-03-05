@@ -30,7 +30,7 @@ const NYSC_LINKS = [
 
 export default function NyscHubPage() {
   return (
-    <main className="min-h-screen bg-[var(--black)] px-4 py-6 sm:px-6 sm:py-8">
+    <main className="main-content min-h-screen bg-[var(--black)] px-4 py-6 sm:px-6 sm:py-8">
       <div className="mx-auto grid max-w-6xl gap-6 page-enter">
         <section className="rounded-[16px] border border-[var(--border)] bg-[var(--off-black)] p-6 sm:p-8">
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--gold)]">NYSC GUIDE HUB</p>
@@ -68,16 +68,16 @@ export default function NyscHubPage() {
           <h2 className="font-display text-2xl text-[var(--cream)]">Why this matters</h2>
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
             <InfoCard
-              body="NYSC search intent stays high all year. These pages keep bringing first-time users into the product."
-              title="Evergreen search demand"
+              body="Most corps members don't know how to present SIWES, volunteer work, or school projects on a CV. We show you exactly how to make it work for you."
+              title="Start strong from day one"
             />
             <InfoCard
-              body="The PPA page brings community submissions into the product without needing a full social platform yet."
-              title="Community proof"
+              body="Real reviews of PPA companies from corps members who've been there. Submitted anonymously, aggregated honestly - so you know what you're walking into."
+              title="Know where you're serving"
             />
             <InfoCard
-              body="The hub positions CVPadi as a Nigerian career authority, not only a one-off CV generator."
-              title="Brand positioning"
+              body="NYSC ends. Your job search shouldn't pause. We cover graduate trainee applications, skill gaps, and how to position your service year as experience."
+              title="Don't lose momentum after service"
             />
           </div>
         </section>

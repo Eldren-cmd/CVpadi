@@ -28,22 +28,22 @@ export const TRACKER_STATUS_META: Record<
 > = {
   applied: {
     accentClassName: "bg-[var(--blue-light)] text-[var(--blue)]",
-    emptyState: "No applications in Applied yet.",
+    emptyState: "Jobs you've applied to will appear here.",
     label: "Applied",
   },
   interview: {
     accentClassName: "bg-[var(--gold-light)] text-[var(--gold)]",
-    emptyState: "Move a card here when you get an interview.",
+    emptyState: "Interview invitations you're preparing for.",
     label: "Interview",
   },
   offer: {
     accentClassName: "bg-[var(--green-light)] text-[var(--green)]",
-    emptyState: "Offers will appear here.",
+    emptyState: "Roles you've received an offer for.",
     label: "Offer",
   },
   rejected: {
     accentClassName: "bg-[var(--red-light)] text-[var(--red)]",
-    emptyState: "Rejected applications will appear here.",
+    emptyState: "Applications that didn't move forward.",
     label: "Rejected",
   },
 };

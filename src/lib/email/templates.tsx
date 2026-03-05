@@ -203,8 +203,8 @@ export function CvReadyEmail({
         </a>
       </div>
       <p style={{ ...bodyStyle, marginTop: "20px" }}>
-        Development note: while you are still using Resend&apos;s test sender, delivery only
-        reaches the verified Resend inbox.
+        These links expire in 2 hours for security. If they expire, open your dashboard
+        to generate fresh downloads.
       </p>
     </EmailLayout>
   );
@@ -273,8 +273,7 @@ export function JobsDigestScaffoldEmail({
   return (
     <EmailLayout title="Your early jobs digest is taking shape.">
       <p style={bodyStyle}>
-        The full job-matching engine lands in the next phase. For now, these are the role
-        patterns CVPadi will prioritise for you based on your profile.
+        These are the role patterns CVPadi is prioritising for you based on your profile.
       </p>
       <ul style={listStyle}>
         {focusAreas.map((item) => (
