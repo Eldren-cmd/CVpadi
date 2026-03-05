@@ -187,7 +187,7 @@ export function PreviewPanel({
           }}
           variant="ghost"
         >
-          {remainingPreviews <= 0 ? "Free preview limit reached" : "Generate free preview"}
+          {remainingPreviews <= 0 ? "Free preview limit reached" : "Regenerate preview"}
         </Button>
       </div>
 

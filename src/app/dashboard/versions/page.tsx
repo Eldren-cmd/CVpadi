@@ -73,8 +73,8 @@ export default async function VersionsPage() {
             title="Stable editing"
           />
           <InfoCard
-            body="Forking creates a new draft from any past version so you can tailor it for another role."
-            title="Fork in one click"
+            body="Create a new draft from any past version so you can tailor it for another role."
+            title="Create alternate versions"
           />
           <InfoCard
             body="Track changes by version number, date, and industry focus as your CV improves."
@@ -96,7 +96,7 @@ export default async function VersionsPage() {
                         {timeline.current.form_data?.fullName || "My CV"}
                       </h2>
                       <span className="inline-flex min-h-10 items-center rounded-full bg-[var(--accent-light)] px-3 text-sm font-medium text-[var(--accent)]">
-                        Current branch
+                        Current version
                       </span>
                       <span
                         className={`inline-flex min-h-10 items-center rounded-full px-3 text-sm font-medium ${
@@ -118,7 +118,7 @@ export default async function VersionsPage() {
                       className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] bg-[var(--accent)] px-5 text-sm font-medium text-white"
                       href={`/build?cv=${timeline.current.id}`}
                     >
-                      Open current branch
+                      Open current version
                     </Link>
                     <form action={forkCvVersionAction}>
                       <input name="sourceCvId" type="hidden" value={timeline.current.id} />
@@ -155,7 +155,7 @@ export default async function VersionsPage() {
                             )}
                             {version.source_cv_id ? (
                               <span className="inline-flex min-h-9 items-center rounded-full bg-[var(--blue-light)] px-3 text-xs font-medium text-[var(--blue)]">
-                                Derived branch
+                                Derived version
                               </span>
                             ) : null}
                           </div>
@@ -173,7 +173,7 @@ export default async function VersionsPage() {
                               className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-input)] border border-border px-4 text-sm font-medium text-foreground"
                               href={`/build?cv=${version.id}`}
                             >
-                              Open branch
+                              Open version
                             </Link>
                           ) : null}
                           <form action={forkCvVersionAction}>
@@ -196,7 +196,7 @@ export default async function VersionsPage() {
         ) : (
           <section className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
             <p className="text-sm leading-6 text-[var(--ink-light)]">
-              No CV branches yet. Start in the builder and the version timeline will appear here.
+              No CV versions yet. Start in the builder and your version timeline will appear here.
             </p>
           </section>
         )}

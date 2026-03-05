@@ -35,7 +35,7 @@ export function PaymentPanel({
   const [statusMessage, setStatusMessage] = useState<string>(
     isPaid
       ? "Payment confirmed. This CV is unlocked."
-      : "Cards, bank transfer, and USSD are enabled in the Paystack checkout.",
+      : "",
   );
   const [reference, setReference] = useState<string | null>(initialPaymentReference ?? null);
   const [accessCode, setAccessCode] = useState<string | null>(null);
@@ -124,7 +124,7 @@ export function PaymentPanel({
 
     if (payload.cvUnlocked || (payload.paymentStatus === "success" && payload.webhookVerified)) {
       setCheckoutState("paid");
-      setStatusMessage("Payment confirmed by the server. Your CV is unlocked.");
+      setStatusMessage("Payment confirmed. Your CV is unlocked.");
       stopPolling();
       void fetchDeliveryLinks();
       return;
@@ -140,14 +140,14 @@ export function PaymentPanel({
     if (payload.gatewayStatus === "success") {
       setCheckoutState("pending");
       setStatusMessage(
-        "Paystack shows success. Waiting for the verified webhook before unlocking the CV.",
+        "Payment was successful. Confirming your CV unlock now.",
       );
       return;
     }
 
     setCheckoutState("pending");
     setStatusMessage(
-      "Payment is still pending. Keep this page open while Paystack sends the server confirmation.",
+      "Payment is still pending. Keep this page open while confirmation completes.",
     );
   }
 
@@ -213,7 +213,7 @@ export function PaymentPanel({
 
     setCheckoutState("pending");
     setStatusMessage(
-      "Checkout opened. Complete the payment and keep this page open for the webhook confirmation.",
+      "Checkout opened. Complete payment and keep this page open for confirmation.",
     );
 
     startPolling(payload.reference);
@@ -253,13 +253,13 @@ export function PaymentPanel({
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--mid)]">
-            Ready to download?
+            Your CV is ready
           </p>
           <h2 className="mt-2 font-heading text-4xl leading-none text-[var(--cream)]">
             {"\u20A6"}1,500
           </h2>
           <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--cream-dim)]">
-            one-time payment
+            One-time · No subscription
           </p>
         </div>
         <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--cream-dim)]">
@@ -268,8 +268,8 @@ export function PaymentPanel({
       </div>
 
       <p className="mt-4 text-sm leading-6 text-[var(--cream-dim)]">
-        Cards, bank transfer, and USSD are enabled in the Paystack modal. The frontend
-        does not trust its own success callback. Unlocking waits for the verified webhook.
+        Pay once and download your CV instantly. Your PDF and WhatsApp-ready image will be
+        sent to your email as soon as payment confirms.
       </p>
 
       {creditAppliedKobo > 0 ? (
@@ -279,9 +279,11 @@ export function PaymentPanel({
         </p>
       ) : null}
 
-      <div className="mt-5 rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm leading-6 text-[var(--cream-dim)]">
-        {statusMessage}
-      </div>
+      {statusMessage ? (
+        <div className="mt-5 rounded-[10px] border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm leading-6 text-[var(--cream-dim)]">
+          {statusMessage}
+        </div>
+      ) : null}
 
       {reference ? (
         <div className="mt-4 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 font-mono text-xs text-[var(--cream)]">
@@ -313,7 +315,7 @@ export function PaymentPanel({
       {checkoutState === "paid" ? (
         <div className="mt-5 grid gap-3">
           <div className="rounded-[10px] border border-[var(--green)] bg-[var(--green-glow)] px-4 py-3 text-sm text-[var(--green)]">
-            Payment verified. Your PDF and WhatsApp JPG were prepared on the server.
+            Payment confirmed. Your PDF and WhatsApp image are ready.
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button
@@ -394,7 +396,7 @@ export function PaymentPanel({
           <div className="rounded-[12px] border border-[var(--border)] bg-[var(--off-black)] px-5 py-4 text-center">
             <span className="mx-auto mb-2 block h-5 w-5 animate-spin rounded-full border-2 border-[var(--green)] border-r-transparent" />
             <p className="font-display text-sm text-[var(--cream)]">Waiting for payment confirmation...</p>
-            <p className="mt-1 text-xs text-[var(--mid)]">Unlock only happens after webhook verification.</p>
+            <p className="mt-1 text-xs text-[var(--mid)]">Your CV unlocks automatically once payment confirms.</p>
           </div>
         </div>
       ) : null}
