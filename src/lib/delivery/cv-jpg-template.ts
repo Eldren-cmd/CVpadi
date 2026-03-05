@@ -1,12 +1,10 @@
-import fs from "node:fs";
-import path from "node:path";
 import sharp from "sharp";
 import { PREVIEW_CANVAS_WIDTH } from "@/lib/cv/constants";
 import type { CVFormData } from "@/lib/cv/types";
+import { fontData } from "./font-data";
 
 const WIDTH = 1240;
 const HEIGHT = 1754;
-const FONT_DIRECTORY = path.join(process.cwd(), "public/fonts");
 
 let embeddedFontStyles: string | null = null;
 
@@ -94,7 +92,7 @@ function renderLineBlock(
   startY: number,
   lineHeight: number,
   fontSize = 28,
-  fontFamily = "DM Sans",
+  fontFamily = "'DM Sans', sans-serif",
   fontWeight = 400,
 ) {
   return lines
@@ -105,21 +103,15 @@ function renderLineBlock(
     .join("");
 }
 
-function getFontDataUri(fileName: string) {
-  const absolutePath = path.join(FONT_DIRECTORY, fileName);
-  const content = fs.readFileSync(absolutePath);
-  return `data:font/ttf;base64,${content.toString("base64")}`;
-}
-
 function getEmbeddedFontStyles() {
   if (embeddedFontStyles) {
     return embeddedFontStyles;
   }
 
-  const dmSansRegular = getFontDataUri("DM-Sans-Regular.ttf");
-  const dmSansMedium = getFontDataUri("DM-Sans-Medium.ttf");
-  const dmSansBold = getFontDataUri("DM-Sans-Bold.ttf");
-  const playfairBold = getFontDataUri("Playfair-Display-Bold.ttf");
+  const dmSansRegular = `data:font/truetype;base64,${fontData.dmSans400}`;
+  const dmSansMedium = `data:font/truetype;base64,${fontData.dmSans500}`;
+  const dmSansBold = `data:font/truetype;base64,${fontData.dmSans700}`;
+  const playfairBold = `data:font/truetype;base64,${fontData.playfair700}`;
 
   embeddedFontStyles = `
     <style>
@@ -230,27 +222,27 @@ export async function renderCvJpgBuffer({
       <rect x="56" y="56" width="${WIDTH - 112}" height="${HEIGHT - 112}" rx="28" fill="#FDFAF4"/>
       ${watermarkTiles}
       <rect x="56" y="56" width="${WIDTH - 112}" height="238" rx="28" fill="#D4501A"/>
-      <text x="104" y="126" fill="#F4E4D8" font-size="24" font-family="DM Sans" font-weight="500" letter-spacing="8">CVPadi</text>
-      <text x="104" y="190" fill="#FFFFFF" font-size="64" font-family="Playfair" font-weight="700">${escapeXml(formData.fullName || "Your CV")}</text>
-      <text x="104" y="234" fill="#FFF3EA" font-size="28" font-family="DM Sans">${escapeXml(heroMeta || "Location and contact details pending")}</text>
-      <text x="104" y="270" fill="#FFF3EA" font-size="24" font-family="DM Sans">${escapeXml(subMeta || "Industry and experience details pending")}</text>
+      <text x="104" y="126" fill="#F4E4D8" font-size="24" font-family="'DM Sans', sans-serif" font-weight="500" letter-spacing="8">CVPadi</text>
+      <text x="104" y="190" fill="#FFFFFF" font-size="64" font-family="'Playfair', serif" font-weight="700">${escapeXml(formData.fullName || "Your CV")}</text>
+      <text x="104" y="234" fill="#FFF3EA" font-size="28" font-family="'DM Sans', sans-serif">${escapeXml(heroMeta || "Location and contact details pending")}</text>
+      <text x="104" y="270" fill="#FFF3EA" font-size="24" font-family="'DM Sans', sans-serif">${escapeXml(subMeta || "Industry and experience details pending")}</text>
 
-      <text x="104" y="366" fill="#D4501A" font-size="24" font-family="DM Sans" font-weight="700" letter-spacing="4">CAREER OBJECTIVE</text>
+      <text x="104" y="366" fill="#D4501A" font-size="24" font-family="'DM Sans', sans-serif" font-weight="700" letter-spacing="4">CAREER OBJECTIVE</text>
       ${renderLineBlock(objectiveLines, 104, 412, 34)}
 
-      <text x="104" y="598" fill="#D4501A" font-size="24" font-family="DM Sans" font-weight="700" letter-spacing="4">WORK EXPERIENCE</text>
+      <text x="104" y="598" fill="#D4501A" font-size="24" font-family="'DM Sans', sans-serif" font-weight="700" letter-spacing="4">WORK EXPERIENCE</text>
       ${renderLineBlock(experienceLines, 104, 644, 34)}
 
-      <text x="104" y="1074" fill="#D4501A" font-size="24" font-family="DM Sans" font-weight="700" letter-spacing="4">EDUCATION</text>
+      <text x="104" y="1074" fill="#D4501A" font-size="24" font-family="'DM Sans', sans-serif" font-weight="700" letter-spacing="4">EDUCATION</text>
       ${renderLineBlock(educationLines, 104, 1120, 34)}
 
-      <text x="104" y="1290" fill="#D4501A" font-size="24" font-family="DM Sans" font-weight="700" letter-spacing="4">SKILLS</text>
+      <text x="104" y="1290" fill="#D4501A" font-size="24" font-family="'DM Sans', sans-serif" font-weight="700" letter-spacing="4">SKILLS</text>
       ${renderLineBlock(skillLines, 104, 1336, 34)}
 
-      <text x="104" y="1494" fill="#D4501A" font-size="24" font-family="DM Sans" font-weight="700" letter-spacing="4">REFEREES</text>
+      <text x="104" y="1494" fill="#D4501A" font-size="24" font-family="'DM Sans', sans-serif" font-weight="700" letter-spacing="4">REFEREES</text>
       ${renderLineBlock(refereeLines, 104, 1540, 34)}
 
-      <text x="104" y="1672" fill="#FFFFFF" font-size="4" font-family="DM Sans">${escapeXml(fingerprint)}</text>
+      <text x="104" y="1672" fill="#FFFFFF" font-size="4" font-family="'DM Sans', sans-serif">${escapeXml(fingerprint)}</text>
     </svg>
   `;
 
@@ -276,7 +268,7 @@ function createPreviewWatermarks(values: string[]) {
               fill="#B5442A"
               fill-opacity="0.42"
               font-size="${valueIndex === 0 ? 28 : 24}"
-              font-family="DM Sans"
+              font-family="'DM Sans', sans-serif"
               font-weight="700"
             >${escapeXml(value)}</text>
           `).join("")}

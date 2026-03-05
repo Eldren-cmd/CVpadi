@@ -6,8 +6,8 @@ import {
   Text,
   View,
 } from "@react-pdf/renderer";
-import path from "node:path";
 import type { CVFormData } from "@/lib/cv/types";
+import { fontData } from "./font-data";
 
 let fontsRegistered = false;
 
@@ -20,15 +20,15 @@ function registerPdfFonts() {
     family: "DM Sans",
     fonts: [
       {
-        src: path.join(process.cwd(), "public/fonts/DM-Sans-Regular.ttf"),
+        src: `data:font/truetype;base64,${fontData.dmSans400}`,
         fontWeight: 400,
       },
       {
-        src: path.join(process.cwd(), "public/fonts/DM-Sans-Medium.ttf"),
+        src: `data:font/truetype;base64,${fontData.dmSans500}`,
         fontWeight: 500,
       },
       {
-        src: path.join(process.cwd(), "public/fonts/DM-Sans-Bold.ttf"),
+        src: `data:font/truetype;base64,${fontData.dmSans700}`,
         fontWeight: 700,
       },
     ],
@@ -38,7 +38,7 @@ function registerPdfFonts() {
     family: "Playfair",
     fonts: [
       {
-        src: path.join(process.cwd(), "public/fonts/Playfair-Display-Bold.ttf"),
+        src: `data:font/truetype;base64,${fontData.playfair700}`,
         fontWeight: 700,
       },
     ],
