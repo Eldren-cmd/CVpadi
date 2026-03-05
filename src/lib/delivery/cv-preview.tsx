@@ -1,6 +1,6 @@
 import { renderToBuffer } from "@react-pdf/renderer";
 import { createCanvas } from "canvas";
-import { GlobalWorkerOptions, getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import sharp from "sharp";
 import { PREVIEW_CANVAS_WIDTH } from "@/lib/cv/constants";
 import type { CVFormData } from "@/lib/cv/types";
@@ -8,8 +8,6 @@ import { CVPdfDocument } from "./cv-pdf-document";
 
 const DELIVERY_WIDTH = 1240;
 const RENDER_SCALE = 2;
-
-GlobalWorkerOptions.workerSrc = "";
 
 interface RenderCvJpgOptions {
   fingerprint: string;
@@ -36,7 +34,8 @@ async function renderFirstPagePng({
   );
   const pdf = await getDocument({
     data: new Uint8Array(pdfBuffer),
-  }).promise;
+    disableWorker: true,
+  } as never).promise;
 
   try {
     const page = await pdf.getPage(1);
