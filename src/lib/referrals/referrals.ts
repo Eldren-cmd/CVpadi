@@ -7,7 +7,7 @@ export async function applyPendingReferralAttribution({
 }: {
   userId: string;
 }) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const referralCode = normalizeReferralCode(
     cookieStore.get(REFERRAL_COOKIE_NAME)?.value,
   );
