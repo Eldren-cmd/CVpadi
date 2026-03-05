@@ -4,7 +4,6 @@ import * as Sentry from "@sentry/nextjs";
 import type { CVFormData } from "@/lib/cv/types";
 import {
   schedulePostPaymentEmailSequences,
-  sendAiEnhancedCvEmail,
 } from "@/lib/email/sequences";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCvAssetPaths, getSignedCvAssetLinks } from "./cv-assets";
@@ -101,14 +100,7 @@ export async function generateAndDeliverCvAssets({
     const links = await getSignedCvAssetLinks({ cvId, userId });
 
     try {
-      if (isEnhancement) {
-        await sendAiEnhancedCvEmail({
-          email: profile.email,
-          fullName: profile.full_name || formData.fullName,
-          jpgUrl: links.jpgUrl,
-          pdfUrl: links.pdfUrl,
-        });
-      } else {
+      if (!isEnhancement) {
         await schedulePostPaymentEmailSequences({
           email: profile.email,
           fullName: profile.full_name || formData.fullName,
@@ -122,7 +114,7 @@ export async function generateAndDeliverCvAssets({
       Sentry.withScope((scope) => {
         scope.setTag("cv_id", cvId);
         scope.setTag("user_id", userId);
-        scope.setTag("delivery_channel", isEnhancement ? "resend_ai" : "resend");
+        scope.setTag("delivery_channel", "resend");
         Sentry.captureException(error);
       });
     }
