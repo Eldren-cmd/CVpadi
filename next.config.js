@@ -4,7 +4,7 @@ const { withSentryConfig } = require("@sentry/nextjs");
 const nextConfig = {
   experimental: {
     instrumentationHook: true,
-    serverComponentsExternalPackages: ["canvas", "pdfjs-dist"],
+    serverComponentsExternalPackages: ["@resvg/resvg-js"],
   },
 };
 
