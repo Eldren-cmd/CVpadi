@@ -20,6 +20,9 @@ declare global {
 
 type CheckoutState = "idle" | "preparing" | "pending" | "paid" | "failed";
 
+const MAX_POLL_ATTEMPTS = 30;
+const POLL_INTERVAL_MS = 3000;
+
 export function PaymentPanel({
   availableCreditKobo,
   cvId,
@@ -51,7 +54,11 @@ export function PaymentPanel({
       - Math.min(availableCreditKobo, PAYMENT_PRICES_KOBO[DEFAULT_PAYMENT_TYPE]),
   );
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollingAttemptRef = useRef(0);
+  const isStatusCheckInFlightRef = useRef(false);
   const statusCheckRef = useRef<(() => Promise<void>) | null>(null);
+  const [attemptCount, setAttemptCount] = useState(0);
+  const [pollingTimedOut, setPollingTimedOut] = useState(false);
   const baseAmountLabel = useMemo(
     () => formatKoboToNaira(PAYMENT_PRICES_KOBO[DEFAULT_PAYMENT_TYPE]),
     [],
@@ -111,9 +118,16 @@ export function PaymentPanel({
     });
 
     if (!response.ok) {
-      setCheckoutState("failed");
-      setStatusMessage("Unable to read the payment status right now.");
-      stopPolling();
+      if (response.status === 401) {
+        setCheckoutState("failed");
+        setStatusMessage("Your session expired. Please sign in and check payment status again.");
+        stopPolling();
+        return;
+      }
+
+      setCheckoutState("pending");
+      setStatusMessage("Still confirming payment. Retrying automatically...");
+      setGatewayStatus(null);
       return;
     }
 
@@ -168,12 +182,39 @@ export function PaymentPanel({
 
   function startPolling(referenceToCheck: string) {
     stopPolling();
-    void checkPaymentStatus(referenceToCheck);
-    pollingRef.current = setInterval(() => {
-      if (statusCheckRef.current) {
-        void statusCheckRef.current();
+    pollingAttemptRef.current = 0;
+    setAttemptCount(0);
+    setPollingTimedOut(false);
+
+    const tick = async () => {
+      if (isStatusCheckInFlightRef.current) {
+        return;
       }
-    }, 5000);
+
+      if (pollingAttemptRef.current >= MAX_POLL_ATTEMPTS) {
+        stopPolling();
+        setPollingTimedOut(true);
+        setStatusMessage(
+          "Payment received - still confirming. Click below to check again.",
+        );
+        return;
+      }
+
+      pollingAttemptRef.current += 1;
+      setAttemptCount(pollingAttemptRef.current);
+
+      isStatusCheckInFlightRef.current = true;
+      try {
+        await checkPaymentStatus(referenceToCheck);
+      } finally {
+        isStatusCheckInFlightRef.current = false;
+      }
+    };
+
+    void tick();
+    pollingRef.current = setInterval(() => {
+      void tick();
+    }, POLL_INTERVAL_MS);
   }
 
   async function openCheckout() {
@@ -363,6 +404,7 @@ export function PaymentPanel({
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button
                 onClick={() => {
+                  setPollingTimedOut(false);
                   if (statusCheckRef.current) {
                     void statusCheckRef.current();
                   }
@@ -380,6 +422,28 @@ export function PaymentPanel({
             </div>
           ) : null}
 
+          {checkoutState === "pending" && pollingTimedOut ? (
+            <div className="rounded-[12px] border border-[var(--gold)] bg-[var(--gold-glow)] px-6 py-5 text-center">
+              <p className="font-display text-base text-[var(--cream)]">
+                Payment received - still confirming
+              </p>
+              <p className="mt-2 text-sm text-[var(--cream-dim)]">
+                Your payment was successful. If this page has not unlocked yet, click below to
+                check again.
+              </p>
+              <button
+                className="mt-4 inline-flex min-h-11 items-center justify-center rounded-[8px] bg-[var(--gold)] px-6 font-display text-sm text-[var(--black)] transition-all duration-200 hover:translate-y-[-2px]"
+                onClick={() => window.location.reload()}
+                type="button"
+              >
+                Check payment status -&gt;
+              </button>
+              <p className="mt-3 font-mono text-[11px] text-[var(--mid)]">
+                Your CV will not be lost. Check your email - it may have already arrived.
+              </p>
+            </div>
+          ) : null}
+
           {checkoutState === "failed" ? (
             <Button
               onClick={openCheckout}
@@ -391,12 +455,17 @@ export function PaymentPanel({
         </div>
       )}
 
-      {checkoutState === "pending" ? (
+      {checkoutState === "pending" && !pollingTimedOut ? (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-[16px] bg-[rgba(10,10,8,0.74)]">
-          <div className="rounded-[12px] border border-[var(--border)] bg-[var(--off-black)] px-5 py-4 text-center">
-            <span className="mx-auto mb-2 block h-5 w-5 animate-spin rounded-full border-2 border-[var(--green)] border-r-transparent" />
-            <p className="font-display text-sm text-[var(--cream)]">Waiting for payment confirmation...</p>
-            <p className="mt-1 text-xs text-[var(--mid)]">Your CV unlocks automatically once payment confirms.</p>
+          <div className="rounded-[12px] border border-[var(--border)] bg-[var(--off-black)] px-6 py-6 text-center">
+            <span className="mx-auto mb-4 block h-12 w-12 animate-spin rounded-full border-[3px] border-[var(--faint)] border-t-[var(--green)]" />
+            <p className="font-display text-lg text-[var(--cream)]">Confirming your payment...</p>
+            <p className="mt-2 text-sm text-[var(--mid)]">
+              This usually takes a few seconds. Do not refresh the page.
+            </p>
+            <p className="mt-3 font-mono text-[11px] text-[var(--faint)]">
+              {attemptCount} / {MAX_POLL_ATTEMPTS} checks completed
+            </p>
           </div>
         </div>
       ) : null}
