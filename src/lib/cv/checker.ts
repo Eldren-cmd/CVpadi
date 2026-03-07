@@ -296,7 +296,7 @@ function extractYear(value: string) {
 
 export async function extractTextFromPdfBuffer(buffer: Buffer): Promise<string> {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pdfParse = require("pdf-parse") as (buffer: Buffer) => Promise<{ text: string }>;
+  const pdfParse = require("pdf-parse/lib/pdf-parse.js") as (buffer: Buffer) => Promise<{ text: string }>;
   const parsed = await pdfParse(buffer);
   return parsed.text
     .replace(/\r/g, "\n")
