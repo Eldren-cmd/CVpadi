@@ -16,7 +16,6 @@ import {
 import { computeCVScore } from "@/lib/cv/score";
 import type { CVFormData, SyncStatus } from "@/lib/cv/types";
 import { isAtLeast13, nigerianPhoneRegex } from "@/lib/cv/validation";
-import Link from "next/link";
 import Script from "next/script";
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { PaymentPanel } from "./payment-panel";
@@ -296,12 +295,12 @@ export function FormWizard({
 
       <header className="fixed inset-x-0 top-0 z-30 border-b border-[var(--border)] bg-[var(--off-black)]/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-3 sm:px-6">
-          <Link
+          <a
             className="font-display text-xl tracking-[-0.02em] text-[var(--cream)] transition-opacity hover:opacity-80"
             href="/dashboard"
           >
             CV<span className="text-[var(--green)]">Padi</span>
-          </Link>
+          </a>
 
           <div className="flex-1">
             <div className="h-[5px] overflow-hidden rounded-full bg-[var(--faint)]">
@@ -313,12 +312,12 @@ export function FormWizard({
           </div>
 
           <div className="flex items-center gap-3">
-            <Link
+            <a
               className="hidden items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--cream-dim)] transition-colors hover:text-[var(--cream)] sm:inline-flex"
               href="/dashboard"
             >
               ← Dashboard
-            </Link>
+            </a>
             <ThemeToggle />
             <span className="hidden font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--cream-dim)] sm:inline-flex">
               Step {step + 1} of {STEP_TITLES.length}

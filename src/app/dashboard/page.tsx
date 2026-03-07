@@ -167,7 +167,7 @@ export default async function DashboardPage() {
   });
 
   return (
-    <div className="grid gap-6">
+    <div className="grid min-h-screen gap-6">
       <section className="page-enter rounded-[16px] border border-[var(--border)] bg-[var(--off-black)] px-5 py-6 sm:px-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>

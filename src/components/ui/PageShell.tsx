@@ -115,7 +115,7 @@ export function PageShell({ children, title }: PageShellProps) {
 
   return (
     <div className="min-h-screen bg-[var(--black)] text-[var(--cream)]">
-      <div className="mx-auto flex w-full max-w-[1440px] gap-6 px-4 py-6 sm:px-6">
+      <div className="mx-auto flex min-h-screen w-full max-w-[1440px] flex-col gap-6 px-4 py-6 sm:px-6 lg:flex-row">
         <aside className="sticky top-4 hidden h-[calc(100vh-2rem)] w-[280px] shrink-0 flex-col rounded-[12px] border border-[var(--border)] bg-[var(--off-black)] p-4 lg:flex">
           <div className="border-b border-[var(--border)] pb-4">
             <Link className="font-display text-2xl tracking-[-0.02em]" href="/dashboard">
@@ -160,7 +160,7 @@ export function PageShell({ children, title }: PageShellProps) {
           </div>
         </aside>
 
-        <div className="main-content min-w-0 flex-1">
+        <main className="main-content min-w-0 flex-1 overflow-auto pb-20 lg:pb-0">
           {title ? (
             <header className="mb-4 rounded-[12px] border border-[var(--border)] bg-[var(--off-black)] px-4 py-4 sm:px-5">
               <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--mid)]">CVPadi</p>
@@ -169,7 +169,7 @@ export function PageShell({ children, title }: PageShellProps) {
           ) : null}
 
           <div className="page-enter">{children}</div>
-        </div>
+        </main>
       </div>
 
       <nav
