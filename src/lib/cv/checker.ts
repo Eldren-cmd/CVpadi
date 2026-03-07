@@ -47,13 +47,6 @@ const EXPERIENCE_HINTS = [
   "lead",
 ];
 
-export async function extractTextFromPdfBuffer(buffer: Buffer) {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pdfParse = require("pdf-parse") as (buffer: Buffer) => Promise<{ text: string }>;
-  const parsed = await pdfParse(buffer);
-  return normalizeWhitespace(parsed.text ?? "");
-}
-
 export function scoreCvCheckInput(rawText: string) {
   const normalizedText = normalizeWhitespace(rawText);
   const formData = mapRawTextToCvFormData(normalizedText);
@@ -299,4 +292,15 @@ function parseInlineList(section: string) {
 
 function extractYear(value: string) {
   return value.match(/\b(19|20)\d{2}\b/)?.[0] ?? null;
+}
+
+export async function extractTextFromPdfBuffer(buffer: Buffer): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const pdfParse = require("pdf-parse") as (buffer: Buffer) => Promise<{ text: string }>;
+  const parsed = await pdfParse(buffer);
+  return parsed.text
+    .replace(/\r/g, "\n")
+    .replace(/\t/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
