@@ -562,7 +562,7 @@ async function sendEmail({
   const resend = getResendClient();
 
   await resend.emails.send({
-    from: process.env.EMAIL_FROM!,
+    from: process.env.EMAIL_FROM ?? "CVPadi <onboarding@resend.dev>",
     react,
     subject,
     to: email,

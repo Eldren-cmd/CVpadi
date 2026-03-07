@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { ScoreDial } from "@/components/ui/ScoreDial";
 import { FREE_PREVIEW_LIMIT } from "@/lib/cv/constants";
 import type { CVFormData } from "@/lib/cv/types";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScoreSharePrompt } from "./score-share-prompt";
 
 declare global {
@@ -61,6 +61,14 @@ export function PreviewPanel({
         ? "Free preview limit reached"
         : (hasPreview ? "Regenerate preview" : "Generate free preview")
     );
+  void isComplete;
+
+  useEffect(() => {
+    if (!isPaid) return;
+    const storageKey = `cvpadi_score_share_prompt_${cvId}`;
+    if (localStorage.getItem(storageKey) === "dismissed") return;
+    setShowSharePrompt(true);
+  }, [isPaid, cvId]);
 
   async function handleGeneratePreview() {
     setIsGenerating(true);
@@ -105,11 +113,6 @@ export function PreviewPanel({
         canvas: canvasRef.current,
       });
       setHasPreview(true);
-      maybeShowSharePrompt({
-        cvId,
-        isComplete,
-        onShow: () => setShowSharePrompt(true),
-      });
 
       setStatusMessage("Preview ready. This version stays watermarked until payment is confirmed.");
     } catch (error) {
@@ -213,7 +216,11 @@ export function PreviewPanel({
           <ScoreSharePrompt
             accountCreditKobo={accountCreditKobo}
             name={draft.fullName || "Nigerian Candidate"}
-            onDismiss={() => setShowSharePrompt(false)}
+            onDismiss={() => {
+              const storageKey = `cvpadi_score_share_prompt_${cvId}`;
+              localStorage.setItem(storageKey, "dismissed");
+              setShowSharePrompt(false);
+            }}
             referralCode={referralCode}
             score={score}
           />
@@ -221,28 +228,6 @@ export function PreviewPanel({
       ) : null}
     </Card>
   );
-}
-
-function maybeShowSharePrompt({
-  cvId,
-  isComplete,
-  onShow,
-}: {
-  cvId: string;
-  isComplete: boolean;
-  onShow: () => void;
-}) {
-  if (!isComplete) {
-    return;
-  }
-
-  const storageKey = `cvpadi_score_share_prompt_${cvId}`;
-  if (localStorage.getItem(storageKey)) {
-    return;
-  }
-
-  localStorage.setItem(storageKey, "shown");
-  onShow();
 }
 
 async function drawPreviewOnCanvas({

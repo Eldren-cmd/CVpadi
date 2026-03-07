@@ -51,16 +51,22 @@ export function CvScoreChecker() {
     setStatusMessage("Analyzing your CV...");
 
     try {
-      const payload = new FormData();
-      payload.set("text", cvText);
-      if (pdfFile) {
-        payload.set("pdf", pdfFile);
-      }
-
-      const response = await fetch("/api/check/score", {
-        body: payload,
-        method: "POST",
-      });
+      const response = pdfFile
+        ? await (() => {
+            const payload = new FormData();
+            payload.set("file", pdfFile);
+            return fetch("/api/check/score", {
+              body: payload,
+              method: "POST",
+            });
+          })()
+        : await fetch("/api/check/score", {
+            body: JSON.stringify({ text: cvText }),
+            headers: {
+              "Content-Type": "application/json",
+            },
+            method: "POST",
+          });
 
       const nextResult = (await response.json()) as CheckResult | { error?: string };
 

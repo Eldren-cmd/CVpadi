@@ -112,12 +112,12 @@ export function ScoreSharePrompt({
   }
 
   return (
-    <div className="rounded-[var(--radius-input)] border border-[var(--gold)] bg-[var(--gold-light)] px-4 py-4 text-sm text-foreground">
-      <p className="font-medium">
+    <div className="rounded-[var(--radius-input)] border border-[var(--gold)] bg-[var(--card)] px-4 py-4 text-sm">
+      <p className="font-medium text-[var(--cream)]">
         Looking good. Share your score now while the result still feels fresh.
       </p>
-      <p className="mt-2 leading-6 text-[var(--ink-light)]">
-        This is the moment the docs call out: first completed CV view, not payment.
+      <p className="mt-2 leading-6 text-[var(--cream-dim)]">
+        Your CV score is ready. Share it while the momentum is fresh.
       </p>
 
       <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -149,18 +149,18 @@ export function ScoreSharePrompt({
         </a>
       </div>
 
-      <div className="mt-5 rounded-[var(--radius-input)] border border-[var(--gold)] bg-white/80 px-4 py-4">
-        <p className="font-medium">
-          Invite the next person while the result still feels real.
+      <div className="mt-5 rounded-[var(--radius-input)] border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
+        <p className="font-medium text-[var(--cream)]">
+          Know someone job hunting? Send them your referral link.
         </p>
-        <p className="mt-2 leading-6 text-[var(--ink-light)]">
-          When someone signs up through your link and completes a verified payment,
+        <p className="mt-2 leading-6 text-[var(--cream-dim)]">
+          When someone signs up through your link and pays for their CV,
           you earn {rewardLabel} toward your next CV purchase. Your current credit
           balance is {creditBalanceLabel}.
         </p>
         {referralUrl ? (
           <>
-            <div className="mt-4 rounded-[var(--radius-input)] bg-[var(--bg)] px-4 py-3 font-mono text-xs text-foreground">
+            <div className="mt-4 rounded-[var(--radius-input)] border border-[var(--border)] bg-[var(--off-black)] px-4 py-3 font-mono text-xs text-[var(--cream)]">
               {referralUrl}
             </div>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -193,14 +193,14 @@ export function ScoreSharePrompt({
             </div>
           </>
         ) : (
-          <p className="mt-4 text-xs uppercase tracking-[0.14em] text-[var(--ink-light)]">
+          <p className="mt-4 text-xs uppercase tracking-[0.14em] text-[var(--cream-dim)]">
             Referral code still loading.
           </p>
         )}
       </div>
 
       {statusMessage ? (
-        <p className="mt-3 text-xs uppercase tracking-[0.14em] text-[var(--ink-light)]">
+        <p className="mt-3 text-xs uppercase tracking-[0.14em] text-[var(--cream-dim)]">
           {statusMessage}
         </p>
       ) : null}

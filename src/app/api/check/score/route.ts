@@ -7,36 +7,48 @@ import {
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const formData = await request.formData();
-  const rawText = String(formData.get("text") || "").trim();
-  const pdfFile = formData.get("pdf");
+  const contentType = request.headers.get("content-type") ?? "";
+  let extractedText = "";
 
-  let extractedText = rawText;
+  if (contentType.includes("multipart/form-data")) {
+    const formData = await request.formData();
+    const pdfFile = formData.get("file") ?? formData.get("pdf");
+    extractedText = String(formData.get("text") || "").trim();
 
-  if (!extractedText && pdfFile instanceof File && pdfFile.size > 0) {
-    if (pdfFile.size > 5 * 1024 * 1024) {
-      return NextResponse.json(
-        { error: "PDF must be 5MB or smaller." },
-        { status: 400 },
-      );
+    if (!extractedText && pdfFile instanceof File && pdfFile.size > 0) {
+      if (pdfFile.size > 5 * 1024 * 1024) {
+        return NextResponse.json(
+          { error: "PDF must be 5MB or smaller." },
+          { status: 400 },
+        );
+      }
+
+      if (pdfFile.type === "application/pdf") {
+        const buffer = Buffer.from(await pdfFile.arrayBuffer());
+        if (!buffer.subarray(0, 4).equals(Buffer.from("%PDF"))) {
+          return NextResponse.json(
+            { error: "Upload a valid PDF file." },
+            { status: 400 },
+          );
+        }
+
+        try {
+          extractedText = await extractTextFromPdfBuffer(buffer);
+        } catch {
+          return NextResponse.json(
+            { error: "Unable to read that PDF. Paste the CV text instead." },
+            { status: 400 },
+          );
+        }
+      } else {
+        extractedText = (await pdfFile.text()).trim();
+      }
     }
-
-    const buffer = Buffer.from(await pdfFile.arrayBuffer());
-    if (!buffer.subarray(0, 4).equals(Buffer.from("%PDF"))) {
-      return NextResponse.json(
-        { error: "Upload a valid PDF file." },
-        { status: 400 },
-      );
-    }
-
-    try {
-      extractedText = await extractTextFromPdfBuffer(buffer);
-    } catch {
-      return NextResponse.json(
-        { error: "Unable to read that PDF. Paste the CV text instead." },
-        { status: 400 },
-      );
-    }
+  } else {
+    const body = (await request.json().catch(() => null)) as
+      | { content?: string; text?: string }
+      | null;
+    extractedText = String(body?.text ?? body?.content ?? "").trim();
   }
 
   if (!extractedText) {
