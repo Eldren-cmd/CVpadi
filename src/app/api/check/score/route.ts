@@ -23,19 +23,9 @@ export async function POST(request: Request) {
 
         if (pdfFile.type === "application/pdf") {
           const buffer = Buffer.from(await pdfFile.arrayBuffer());
-          if (!buffer.subarray(0, 4).equals(Buffer.from("%PDF"))) {
-            return NextResponse.json(
-              { error: "Upload a valid PDF file." },
-              { status: 400 },
-            );
-          }
-
           try {
-            const { PDFParse } = await import("pdf-parse");
-            const parser = new PDFParse({ data: buffer });
-            const parsed = await parser.getText();
-            await parser.destroy();
-            extractedText = parsed.text?.replace(/\r/g, "\n").replace(/\t/g, " ").replace(/\n{3,}/g, "\n\n").trim() ?? "";
+            const { extractTextFromPdfBuffer } = await import("@/lib/cv/checker");
+            extractedText = await extractTextFromPdfBuffer(buffer);
           } catch (pdfError) {
             console.error("PDF parse error:", pdfError);
             return NextResponse.json(

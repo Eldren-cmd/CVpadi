@@ -48,10 +48,9 @@ const EXPERIENCE_HINTS = [
 ];
 
 export async function extractTextFromPdfBuffer(buffer: Buffer) {
-  const { PDFParse } = await import("pdf-parse");
-  const parser = new PDFParse({ data: buffer });
-  const parsed = await parser.getText();
-  await parser.destroy();
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const pdfParse = require("pdf-parse") as (buffer: Buffer) => Promise<{ text: string }>;
+  const parsed = await pdfParse(buffer);
   return normalizeWhitespace(parsed.text ?? "");
 }
 
