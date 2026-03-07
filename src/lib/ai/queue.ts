@@ -2,11 +2,13 @@ import * as Sentry from "@sentry/nextjs";
 import type { CVFormData } from "@/lib/cv/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enhanceCvFormData } from "./claude";
+import { getEnhancementSourceSignature } from "./enhancement-utils";
 import { getCvAssetPaths } from "@/lib/delivery/cv-assets";
 import { generateAndDeliverCvAssets } from "@/lib/delivery/cv-delivery";
 
 interface AiQueueRow {
   attempts: number;
+  created_at?: string | null;
   cvs?: unknown;
   cv_id: string;
   id: string;
@@ -21,26 +23,50 @@ interface AiQueueRow {
 export async function enqueueAiEnhancement({
   cvId,
   userId,
+  forceRequeue = false,
 }: {
   cvId: string;
   userId: string;
+  forceRequeue?: boolean;
 }) {
   if (!process.env.ANTHROPIC_API_KEY) {
     return;
   }
 
   const supabase = createAdminClient();
+  const { data: cv, error: cvError } = await supabase
+    .from("cvs")
+    .select("updated_at, form_data")
+    .eq("id", cvId)
+    .eq("user_id", userId)
+    .single();
+
+  if (cvError || !cv) {
+    throw new Error(cvError?.message ?? "CV not found for AI enhancement queue.");
+  }
+
   const { data: existing } = await supabase
     .from("ai_enhancement_queue")
-    .select("id, status")
+    .select("id, status, created_at")
     .eq("cv_id", cvId)
     .maybeSingle();
 
-  if (existing && existing.status !== "failed") {
-    return;
-  }
+  const currentFormData = cv.form_data as CVFormData;
+  const currentSignature = getEnhancementSourceSignature(currentFormData);
+  const lastSignature = currentFormData.aiEnhancementSourceSignature?.trim() ?? "";
+  const lastEnhancedAt = currentFormData.aiEnhancementUpdatedAt
+    ? Date.parse(currentFormData.aiEnhancementUpdatedAt)
+    : 0;
+  const cvUpdatedAt = cv.updated_at ? Date.parse(cv.updated_at) : 0;
+  const hasSourceChanged = lastSignature
+    ? currentSignature !== lastSignature
+    : Boolean(lastEnhancedAt && cvUpdatedAt > lastEnhancedAt + 1000);
 
-  if (existing && existing.status === "failed") {
+  if (existing) {
+    if (!forceRequeue && existing.status !== "failed" && !hasSourceChanged) {
+      return;
+    }
+
     const { error } = await supabase
       .from("ai_enhancement_queue")
       .update({

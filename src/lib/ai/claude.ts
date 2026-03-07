@@ -1,4 +1,8 @@
 import type { CVFormData } from "@/lib/cv/types";
+import {
+  getEnhancementSourceSignature,
+  isValidEnhancement,
+} from "./enhancement-utils";
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 export const CLAUDE_MODEL = "claude-haiku-4-5-20251001";
@@ -39,9 +43,14 @@ export async function enhanceCvFormData(formData: CVFormData) {
     }),
   ]);
 
+  const finalObjective = enhancedObjective && isValidEnhancement(enhancedObjective, careerObjective)
+    ? enhancedObjective
+    : null;
+
   return {
-    aiEnhancedObjective: enhancedObjective || formData.aiEnhancedObjective || careerObjective,
+    aiEnhancedObjective: finalObjective,
     aiEnhancementUpdatedAt: new Date().toISOString(),
+    aiEnhancementSourceSignature: getEnhancementSourceSignature(formData),
     aiSuggestedSkills: mergeSuggestedSkills(formData.skills, suggestedSkills),
   };
 }
@@ -55,11 +64,19 @@ async function rewriteCareerObjective({
   industry: string;
   objective: string;
 }) {
+  const prompt = `You are a professional CV writer specialising in Nigerian job applications.
+
+The user has provided this career objective:
+"${objective}"
+
+If the text is too short, unclear, or contains errors, do your best to infer their intent based on their industry (${industry}) and experience level (${experience}) and write a strong objective anyway.
+
+Rewrite this into a compelling 3-4 sentence career objective specific to the Nigerian job market. Return ONLY the rewritten objective with no explanation, no preamble, no quotation marks.`;
+
   const text = await sendClaudeMessage({
     maxTokens: 350,
-    system:
-      "You are a professional CV writer specialising in Nigerian job applications. Rewrite this career objective to be compelling, specific to the industry, and 3-4 sentences. Use professional Nigerian English. Return only the rewritten objective.",
-    user: `Industry: ${industry}. Experience: ${experience}. Objective: ${objective}`,
+    system: "You are a professional CV writer specialising in Nigerian job applications.",
+    user: prompt,
   });
 
   return text.replace(/\s+/g, " ").trim();

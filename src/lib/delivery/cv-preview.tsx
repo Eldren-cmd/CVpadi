@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import satori from "satori";
 import sharp from "sharp";
 import { Resvg } from "@resvg/resvg-js";
+import { formatDateOfBirth, getDisplayObjective } from "@/lib/ai/enhancement-utils";
 import { PREVIEW_CANVAS_WIDTH } from "@/lib/cv/constants";
 import type { CVFormData, DegreeClass, ExperienceLevel, NyscStatus } from "@/lib/cv/types";
 
@@ -353,13 +354,12 @@ function CvPreviewLayout({
   watermarked: boolean;
 }) {
   const source = getRecord(formData as unknown);
-  const displayObjective =
-    formData.aiEnhancedObjective?.trim() ||
-    formData.careerObjective.trim();
+  const displayObjective = getDisplayObjective(formData);
   const location = joinValues([formData.locationCity, formData.locationState], ", ");
   const contactLine = joinValues([formData.email, formData.phone, location], " · ");
-  const dateOfBirth =
-    getOptionalString(source, ["dateOfBirth", "date_of_birth"]) || formData.dateOfBirth.trim();
+  const dateOfBirth = formatDateOfBirth(
+    getOptionalString(source, ["dateOfBirth", "date_of_birth"]) || formData.dateOfBirth.trim(),
+  );
   const stateOfOrigin = getOptionalString(source, ["stateOfOrigin", "state_of_origin"]);
   const headerMetaLine = joinValues(
     [
@@ -852,3 +852,4 @@ export async function renderCvPreviewJpeg({
     variant: "preview",
   });
 }
+

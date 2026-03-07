@@ -6,6 +6,7 @@ import {
   Text,
   View,
 } from "@react-pdf/renderer";
+import { formatDateOfBirth, getDisplayObjective } from "@/lib/ai/enhancement-utils";
 import type { CVFormData } from "@/lib/cv/types";
 import { fontData } from "./font-data";
 
@@ -111,6 +112,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 1.35,
     marginTop: 6,
+  },
+  headerMetaLine: {
+    color: "rgba(255,255,255,0.85)",
+    fontFamily: "DM Sans",
+    fontSize: 10,
+    lineHeight: 1.35,
+    marginTop: 4,
   },
   headerNyscLine: {
     color: "rgba(255,255,255,0.85)",
@@ -291,7 +299,7 @@ const SectionHeader = ({ children }: { children: string }) => (
 );
 
 function normalizeObjective(formData: CVFormData) {
-  return formData.aiEnhancedObjective?.trim() || formData.careerObjective.trim();
+  return getDisplayObjective(formData);
 }
 
 function normalizeSkills(formData: CVFormData) {
@@ -434,6 +442,10 @@ export function CVPdfDocument({
   const locationState = getOptionalString(source, ["location_state", "locationState"]) || formData.locationState.trim();
   const phone = getOptionalString(source, ["phone"]) || formData.phone.trim();
   const email = getOptionalString(source, ["email"]) || formData.email.trim();
+  const dateOfBirth = formatDateOfBirth(
+    getOptionalString(source, ["date_of_birth", "dateOfBirth"]) || formData.dateOfBirth.trim(),
+  );
+  const stateOfOrigin = getOptionalString(source, ["state_of_origin", "stateOfOrigin"]);
   const nyscStatus = getOptionalString(source, ["nysc_status", "nyscStatus"]) || formData.nyscStatus;
 
   const objective = normalizeObjective(formData);
@@ -448,6 +460,13 @@ export function CVPdfDocument({
     [locationCity, locationState, phone, email],
     " \u00B7 ",
   );
+  const headerMetaLine = joinValues(
+    [
+      dateOfBirth ? `Date of birth: ${dateOfBirth}` : "",
+      stateOfOrigin ? `State of origin: ${stateOfOrigin}` : "",
+    ],
+    " | ",
+  );
 
   return (
     <Document author="CVPadi" title={`${fullName || "CVPadi User"} CV`}>
@@ -457,6 +476,10 @@ export function CVPdfDocument({
 
           {contactLine ? (
             <Text style={styles.headerContactLine}>{contactLine}</Text>
+          ) : null}
+
+          {headerMetaLine ? (
+            <Text style={styles.headerMetaLine}>{headerMetaLine}</Text>
           ) : null}
 
           {nyscStatus ? (

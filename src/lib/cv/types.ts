@@ -65,6 +65,7 @@ export interface CVFormData {
   aiEnhancedObjective?: string | null;
   aiSuggestedSkills?: string[];
   aiEnhancementUpdatedAt?: string | null;
+  aiEnhancementSourceSignature?: string | null;
   refereeOne: RefereeEntry;
   refereeTwo: RefereeEntry;
   furthestStepIndex: number;

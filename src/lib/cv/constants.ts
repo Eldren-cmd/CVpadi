@@ -221,6 +221,7 @@ export function createDefaultCVFormData(email = ""): CVFormData {
     aiEnhancedObjective: null,
     aiSuggestedSkills: [],
     aiEnhancementUpdatedAt: null,
+    aiEnhancementSourceSignature: null,
     refereeOne: createRefereeEntry(),
     refereeTwo: createRefereeEntry(),
     furthestStepIndex: 0,

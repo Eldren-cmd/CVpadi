@@ -1,5 +1,6 @@
 "use server";
 
+import { enqueueAiEnhancement } from "@/lib/ai/queue";
 import { computeCVScore } from "@/lib/cv/score";
 import type { CVFormData, DraftSaveResult } from "@/lib/cv/types";
 import { isDisposableEmail } from "@/lib/cv/validation";
@@ -92,6 +93,21 @@ export async function saveCvDraftAction({
     });
   } catch {
     // Email sequence scheduling should not block draft saves.
+  }
+
+  try {
+    const { data: cv } = await supabase
+      .from("cvs")
+      .select("is_paid")
+      .eq("id", cvId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (cv?.is_paid) {
+      await enqueueAiEnhancement({ cvId, userId: user.id });
+    }
+  } catch {
+    // Enhancement queueing should not block draft saves.
   }
 
   return {
