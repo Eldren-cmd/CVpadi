@@ -25,7 +25,7 @@ export function CvScoreChecker() {
   const [result, setResult] = useState<CheckResult | null>(null);
   const [showNextStep, setShowNextStep] = useState(false);
   const [statusMessage, setStatusMessage] = useState(
-    "Paste your CV text or upload a PDF to run an instant Nigerian CV diagnostic.",
+    "Paste your CV text or upload a PDF to get an instant Nigerian CV review.",
   );
   const [isPending, setIsPending] = useState(false);
   const [isDraggingPdf, setIsDraggingPdf] = useState(false);
@@ -76,7 +76,7 @@ export function CvScoreChecker() {
       }
 
       setResult(nextResult);
-      setStatusMessage("Diagnostic ready. Use the highest-severity fixes first.");
+      setStatusMessage("Your review is ready. Start with the highest-priority fixes first.");
     } catch (error) {
       setResult(null);
       setStatusMessage(
@@ -99,10 +99,10 @@ export function CvScoreChecker() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] page-enter">
       <Card className="!rounded-[16px] !border-[var(--border)] !bg-[var(--off-black)] !p-5 sm:!p-6">
-        <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--mid)]">CV diagnostic</p>
+        <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--mid)]">CV review</p>
         <h1 className="mt-2 font-heading text-5xl leading-[1.02] text-[var(--cream)]">Check my Nigerian CV</h1>
         <p className="mt-3 text-sm leading-6 text-[var(--cream-dim)]">
-          Fast, clinical feedback from the same score engine used in the builder.
+          Fast, practical feedback on what to improve before you send your CV out.
         </p>
 
         <form className="mt-5 grid gap-4" onSubmit={handleSubmit}>
@@ -170,8 +170,8 @@ export function CvScoreChecker() {
               <div className="mt-4 flex items-center gap-4">
                 <ScoreDial animate colorMode="auto" label="Your CV score" score={result?.score ?? 0} size={144} />
                 <div>
-                  <p className="font-display text-2xl text-[var(--cream)]">Diagnostic score</p>
-                  <p className="text-sm text-[var(--cream-dim)]">Top 5 fixes shown in priority order.</p>
+                  <p className="font-display text-2xl text-[var(--cream)]">Your score</p>
+                  <p className="text-sm text-[var(--cream-dim)]">Top 5 fixes shown in order of impact.</p>
                 </div>
               </div>
 
@@ -179,11 +179,11 @@ export function CvScoreChecker() {
                 {result ? (
                   result.suggestions.length > 0 ? (
                     result.suggestions.map((suggestion, index) => {
-                      const severity = index === 0 ? "high" : index < 3 ? "medium" : "low";
-                      const severityColor =
-                        severity === "high"
+                      const priority = index === 0 ? "high" : index < 3 ? "medium" : "low";
+                      const priorityColor =
+                        priority === "high"
                           ? "var(--red)"
-                          : severity === "medium"
+                          : priority === "medium"
                             ? "var(--gold)"
                             : "var(--green)";
 
@@ -199,8 +199,8 @@ export function CvScoreChecker() {
                             <div className="flex-1">
                               <p className="text-sm leading-6 text-[var(--cream-dim)]">{suggestion.message}</p>
                               <p className="mt-1 flex items-center gap-2 text-xs uppercase tracking-[0.1em] text-[var(--mid)]">
-                                <span className="h-2 w-2 rounded-full" style={{ background: severityColor }} />
-                                {severity} severity
+                                <span className="h-2 w-2 rounded-full" style={{ background: priorityColor }} />
+                                {priority} priority
                               </p>
                             </div>
                           </div>
@@ -225,8 +225,8 @@ export function CvScoreChecker() {
         {showNextStep ? (
           <Card className="!rounded-[16px] !border-[var(--green)] !bg-[var(--off-black)] !p-5 sm:!p-6">
             <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--green)]">Next step</p>
-            <h2 className="mt-2 font-display text-2xl text-[var(--cream)]">Rebuild your CV properly →</h2>
-            <p className="mt-2 text-sm text-[var(--cream-dim)]">Enter your email and continue in the full builder flow.</p>
+            <h2 className="mt-2 font-display text-2xl text-[var(--cream)]">Build the stronger version now →</h2>
+            <p className="mt-2 text-sm text-[var(--cream-dim)]">Enter your email and continue in the full CV builder.</p>
             <div className="mt-4 rounded-[10px] border border-dashed border-[var(--green)] bg-[var(--green-glow)] p-4">
               <input
                 className="min-h-11 w-full rounded-[8px] border border-[var(--border)] bg-[var(--off-black)] px-4 text-[var(--cream)]"

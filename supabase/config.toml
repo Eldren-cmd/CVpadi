@@ -1,0 +1,5 @@
+[functions.process-email-sequences]
+schedule = "0 * * * *"
+
+[functions.process-ai-queue]
+schedule = "*/15 * * * *"

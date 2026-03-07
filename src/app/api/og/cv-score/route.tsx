@@ -79,7 +79,7 @@ export async function GET(request: Request) {
               lineHeight: 1.3,
             }}
           >
-            <span>Built with CVPadi&apos;s Nigerian CV score engine.</span>
+            <span>Scored with CVPadi&apos;s Nigerian CV checker.</span>
             <span>Check yours and tighten your draft before recruiters do.</span>
           </div>
         </div>

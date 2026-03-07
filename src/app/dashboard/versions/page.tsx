@@ -24,7 +24,7 @@ interface BranchTimeline {
 
 export const metadata: Metadata = {
   description:
-    "See your CV version history and fork older versions into new drafts for different roles.",
+    "See your saved CV history and turn older versions into new drafts for different roles.",
   title: "CV Versions | CVPadi",
 };
 
@@ -62,7 +62,7 @@ export default async function VersionsPage() {
             Keep every CV version in one place.
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--ink-light)] sm:text-lg">
-            Every save creates a version snapshot. You can reopen older versions or fork
+            Every save creates a dated version. You can reopen older copies or turn
             any one into a new draft for another role or industry.
           </p>
         </section>
@@ -70,15 +70,15 @@ export default async function VersionsPage() {
         <section className="grid gap-4 lg:grid-cols-3">
           <InfoCard
             body="Your current CV stays intact while older versions remain visible in the timeline."
-            title="Stable editing"
+            title="Edit with confidence"
           />
           <InfoCard
-            body="Create a new draft from any past version so you can tailor it for another role."
-            title="Create alternate versions"
+            body="Start a new draft from any past version when you want to tailor it for another role."
+            title="Create tailored copies"
           />
           <InfoCard
             body="Track changes by version number, date, and industry focus as your CV improves."
-            title="Track changes"
+            title="See your progress"
           />
         </section>
 
@@ -96,7 +96,7 @@ export default async function VersionsPage() {
                         {timeline.current.form_data?.fullName || "My CV"}
                       </h2>
                       <span className="inline-flex min-h-10 items-center rounded-full bg-[var(--accent-light)] px-3 text-sm font-medium text-[var(--accent)]">
-                        Current version
+                        Current CV
                       </span>
                       <span
                         className={`inline-flex min-h-10 items-center rounded-full px-3 text-sm font-medium ${
@@ -126,7 +126,7 @@ export default async function VersionsPage() {
                         className="inline-flex min-h-12 items-center justify-center rounded-[var(--radius-input)] border border-border px-5 text-sm font-medium text-foreground"
                         type="submit"
                       >
-                        Fork current version
+                        Use as new copy
                       </button>
                     </form>
                   </div>
@@ -146,7 +146,7 @@ export default async function VersionsPage() {
                             </p>
                             {version.is_snapshot ? (
                               <span className="inline-flex min-h-9 items-center rounded-full bg-[var(--bg)] px-3 text-xs font-medium text-[var(--ink-light)]">
-                                Snapshot
+                                Saved version
                               </span>
                             ) : (
                               <span className="inline-flex min-h-9 items-center rounded-full bg-[var(--accent-light)] px-3 text-xs font-medium text-[var(--accent)]">
@@ -155,7 +155,7 @@ export default async function VersionsPage() {
                             )}
                             {version.source_cv_id ? (
                               <span className="inline-flex min-h-9 items-center rounded-full bg-[var(--blue-light)] px-3 text-xs font-medium text-[var(--blue)]">
-                                Derived version
+                                Copied from another version
                               </span>
                             ) : null}
                           </div>
@@ -163,7 +163,7 @@ export default async function VersionsPage() {
                             {version.form_data?.industry || "General"} - {formatDate(version.updated_at)}
                           </p>
                           <p className="mt-2 text-sm leading-6 text-[var(--ink-light)]">
-                            Score-ready role framing, summary, and data for this version remain preserved.
+                            Your summary, structure, and details stay preserved in this version.
                           </p>
                         </div>
 
@@ -182,7 +182,7 @@ export default async function VersionsPage() {
                               className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-input)] border border-border px-4 text-sm font-medium text-foreground"
                               type="submit"
                             >
-                              Fork this version
+                              Use as new copy
                             </button>
                           </form>
                         </div>
@@ -196,7 +196,7 @@ export default async function VersionsPage() {
         ) : (
           <section className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-6">
             <p className="text-sm leading-6 text-[var(--ink-light)]">
-              No CV versions yet. Start in the builder and your version timeline will appear here.
+              No saved CV versions yet. Start in the builder and they will appear here.
             </p>
           </section>
         )}

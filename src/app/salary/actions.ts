@@ -83,6 +83,66 @@ export async function submitSalaryAction(
     };
   }
 
+  const normalizedCompany = company.toLowerCase();
+  const normalizedRole = role.toLowerCase();
+  const normalizedState = locationState.toLowerCase();
+
+  const { data: userSubmissions, error: existingSubmissionError } = await supabase
+    .from("salary_submissions")
+    .select("company, role, location_state")
+    .eq("user_id", user.id);
+
+  if (existingSubmissionError) {
+    return {
+      error: existingSubmissionError.message,
+    };
+  }
+
+  const duplicateSubmission = (userSubmissions ?? []).some((submission) =>
+    submission.company.trim().toLowerCase() === normalizedCompany
+    && submission.role.trim().toLowerCase() === normalizedRole
+    && (submission.location_state?.trim().toLowerCase() ?? "") === normalizedState,
+  );
+
+  if (duplicateSubmission) {
+    return {
+      error: "You already submitted salary data for this company, role, and state.",
+    };
+  }
+
+  const { data: peerRows, error: peerRowsError } = await supabase
+    .from("salary_submissions")
+    .select("salary_annual_kobo")
+    .ilike("company", company)
+    .ilike("role", role)
+    .eq("location_state", locationState);
+
+  if (peerRowsError) {
+    return {
+      error: peerRowsError.message,
+    };
+  }
+
+  if ((peerRows ?? []).length > 0) {
+    const medianAnnualKobo = calculateMedian(
+      peerRows
+        .map((row) => Number(row.salary_annual_kobo))
+        .filter((value) => Number.isFinite(value) && value > 0),
+    );
+
+    if (medianAnnualKobo > 0) {
+      const proposedAnnualKobo = Math.round(annualSalaryNaira * 100);
+      const lowerBound = Math.round(medianAnnualKobo * 0.3);
+      const upperBound = Math.round(medianAnnualKobo * 3);
+
+      if (proposedAnnualKobo < lowerBound || proposedAnnualKobo > upperBound) {
+        return {
+          error: "That salary looks far outside the usual range for this role. Double-check the amount and try again.",
+        };
+      }
+    }
+  }
+
   const { error } = await supabase.from("salary_submissions").insert({
     company,
     employment_type: employmentType,
@@ -106,4 +166,19 @@ export async function submitSalaryAction(
   return {
     success: "Salary submitted. It becomes public once five people report the same company, role, and state combination.",
   };
+}
+
+function calculateMedian(values: number[]) {
+  if (values.length === 0) {
+    return 0;
+  }
+
+  const sorted = [...values].sort((left, right) => left - right);
+  const middle = Math.floor(sorted.length / 2);
+
+  if (sorted.length % 2 === 0) {
+    return Math.round((sorted[middle - 1] + sorted[middle]) / 2);
+  }
+
+  return sorted[middle];
 }

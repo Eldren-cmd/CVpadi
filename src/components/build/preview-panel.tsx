@@ -70,6 +70,14 @@ export function PreviewPanel({
     setShowSharePrompt(true);
   }, [isPaid, cvId]);
 
+  useEffect(() => {
+    if (!isPaid) {
+      return;
+    }
+
+    setStatusMessage("You can regenerate your preview anytime.");
+  }, [isPaid]);
+
   async function handleGeneratePreview() {
     setIsGenerating(true);
     setStatusMessage("Generating watermarked preview...");

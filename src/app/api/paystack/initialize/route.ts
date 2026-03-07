@@ -1,7 +1,10 @@
+import * as Sentry from "@sentry/nextjs";
+import { enqueueAiEnhancement } from "@/lib/ai/queue";
 import { generateAndDeliverCvAssets } from "@/lib/delivery/cv-delivery";
 import { getAppliedCreditKobo } from "@/lib/payments/constants";
 import { createPaymentReference, getPaymentAmount, initializePaystackTransaction } from "@/lib/payments/paystack";
 import type { PaymentType } from "@/lib/payments/types";
+import { REFERRAL_CREDIT_KOBO } from "@/lib/referrals/constants";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
@@ -67,12 +70,13 @@ export async function POST(request: Request) {
   const amountKobo = baseAmountKobo - creditAppliedKobo;
   const reference = createPaymentReference();
   let referralCodeUsed: string | null = null;
+  const referrerUserId = profile.referred_by ?? null;
 
-  if (profile.referred_by) {
+  if (referrerUserId) {
     const { data: referrer } = await adminSupabase
       .from("profiles")
       .select("referral_code")
-      .eq("id", profile.referred_by)
+      .eq("id", referrerUserId)
       .maybeSingle();
 
     if (referrer) {
@@ -82,10 +86,15 @@ export async function POST(request: Request) {
 
   const paymentRecord = {
     amount_kobo: amountKobo,
+    base_amount_kobo: baseAmountKobo,
+    credit_applied_kobo: creditAppliedKobo,
     currency: "NGN",
     cv_id: cv.id,
     paystack_reference: reference,
     payment_type: body.paymentType,
+    referral_code_used: referralCodeUsed,
+    referral_credit_kobo: referrerUserId ? REFERRAL_CREDIT_KOBO : 0,
+    referrer_user_id: referrerUserId,
     status: "pending",
     user_id: user.id,
     webhook_verified: false,
@@ -123,7 +132,42 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: cvUnlockError.message }, { status: 500 });
     }
 
+    if (referrerUserId) {
+      const { data: referrerProfile, error: referrerProfileError } = await adminSupabase
+        .from("profiles")
+        .select("account_credit_kobo")
+        .eq("id", referrerUserId)
+        .maybeSingle();
+
+      if (referrerProfileError) {
+        return NextResponse.json({ error: referrerProfileError.message }, { status: 500 });
+      }
+
+      if (referrerProfile) {
+        const { error: referrerCreditError } = await adminSupabase
+          .from("profiles")
+          .update({
+            account_credit_kobo: referrerProfile.account_credit_kobo + REFERRAL_CREDIT_KOBO,
+          })
+          .eq("id", referrerUserId);
+
+        if (referrerCreditError) {
+          return NextResponse.json({ error: referrerCreditError.message }, { status: 500 });
+        }
+      }
+    }
+
     await generateAndDeliverCvAssets({ cvId: cv.id, userId: user.id });
+    try {
+      await enqueueAiEnhancement({ cvId: cv.id, userId: user.id });
+    } catch (queueError) {
+      Sentry.withScope((scope) => {
+        scope.setTag("cv_id", cv.id);
+        scope.setTag("user_id", user.id);
+        scope.setTag("payment_reference", reference);
+        Sentry.captureException(queueError);
+      });
+    }
 
     return NextResponse.json({
       accessCode: "",

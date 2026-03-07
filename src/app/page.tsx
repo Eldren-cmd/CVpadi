@@ -398,7 +398,7 @@ export default function Home() {
         <div className="features">
           <div className="feature reveal">
             <div className="feature-icon">📊</div>
-            <div className="feature-title">CV Score Engine</div>
+              <div className="feature-title">CV Score Check</div>
             <div className="feature-desc">
               Get a score out of 100 before you pay. See exactly which sections are hurting you and
               fix them in seconds. Five specific improvement tips, not vague advice.

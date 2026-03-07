@@ -89,6 +89,7 @@ export function FormWizard({
 }) {
   const [draft, setDraft] = useState<CVFormData>(initialDraft);
   const [cvId, setCvId] = useState(initialCvId);
+  const [isCvPaid, setIsCvPaid] = useState(isPaid);
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<Errors>({});
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("saved");
@@ -189,7 +190,7 @@ export function FormWizard({
           setStatusMessage(
             error instanceof Error
               ? error.message
-              : "Saved locally. Server sync failed.",
+              : "Saved on this device. Online save failed.",
           );
         }
       });
@@ -351,7 +352,7 @@ export function FormWizard({
 
           {showRestoreBanner ? (
             <div className="mt-5 rounded-[10px] border border-[var(--gold)] bg-[var(--gold-glow)] px-4 py-3 text-sm leading-6 text-[var(--cream)]">
-              <p>We found newer local progress. Restore it?</p>
+              <p>We found a newer draft saved on this device. Restore it?</p>
               <div className="mt-2 flex gap-3">
                 <button
                   className="font-display text-sm text-[var(--gold)]"
@@ -365,7 +366,7 @@ export function FormWizard({
                   onClick={() => setShowRestoreBanner(false)}
                   type="button"
                 >
-                  Keep server copy
+                  Keep current saved version
                 </button>
               </div>
             </div>
@@ -400,18 +401,19 @@ export function FormWizard({
             deviceFingerprint={deviceFingerprint}
             draft={draft}
             honeypot={honeypot}
-            initialFreePreviewsUsed={initialFreePreviewsUsed}
-            isComplete={scoreResult.suggestions.length === 0}
-            isPaid={isPaid}
-            referralCode={initialReferralCode}
-            score={scoreResult.score}
-          />
-          <PaymentPanel
-            availableCreditKobo={initialAccountCreditKobo}
-            cvId={cvId}
-            initialPaymentReference={initialPaymentReference}
-            isPaid={isPaid}
-          />
+          initialFreePreviewsUsed={initialFreePreviewsUsed}
+          isComplete={scoreResult.suggestions.length === 0}
+          isPaid={isCvPaid}
+          referralCode={initialReferralCode}
+          score={scoreResult.score}
+        />
+        <PaymentPanel
+          availableCreditKobo={initialAccountCreditKobo}
+          cvId={cvId}
+          initialPaymentReference={initialPaymentReference}
+          isPaid={isCvPaid}
+          onPaid={() => setIsCvPaid(true)}
+        />
         </div>
       </div>
     </div>
@@ -809,7 +811,7 @@ function validateStep(step: number, draft: CVFormData): Errors {
     case 5:
       return isAtLeast13(draft.dateOfBirth)
         ? {}
-        : { dateOfBirth: "The user must be at least 13 years old." };
+        : { dateOfBirth: "You must be at least 13 years old." };
     case 6:
       return draft.industry ? {} : { industry: "Select an industry." };
     case 9:

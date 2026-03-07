@@ -52,7 +52,7 @@ export default async function SalaryPage({
             Nigerian salary ranges by company, role, and state.
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--cream-dim)]">
-            Precision salary data from verified submissions. Public ranges appear only when enough people submit the same company + role + state combination.
+            Salary ranges from verified submissions. Public results appear only when enough people submit the same company, role, and state combination.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <a
@@ -115,7 +115,7 @@ export default async function SalaryPage({
               <p className="mt-1 text-sm text-[var(--mid)]">Rows appear when there are at least 5 submissions.</p>
             </div>
             <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--cream-dim)]">
-              {aggregates.length} groups
+              {aggregates.length} salary ranges
             </span>
           </div>
 
@@ -154,7 +154,10 @@ export default async function SalaryPage({
             </div>
           ) : (
             <div className="mt-4 rounded-[10px] border border-[var(--gold)] bg-[var(--gold-glow)] px-4 py-4 text-sm text-[var(--gold)]" style={{ borderLeftWidth: "3px" }}>
-              <p className="font-mono text-xs uppercase tracking-[0.12em]">No salary group is public yet for this filter</p>
+              <p className="font-mono text-xs uppercase tracking-[0.12em]">No salary data yet for this search</p>
+              <p className="mt-2 text-sm normal-case tracking-normal">
+                Be the first to submit and help unlock a public salary range for this role.
+              </p>
             </div>
           )}
         </section>

@@ -20,7 +20,7 @@ export async function GET(
   const { data: payment, error: paymentError } = await supabase
     .from("payments")
     .select(
-      "amount_kobo, currency, cv_id, payment_type, status, webhook_verified",
+      "amount_kobo, base_amount_kobo, credit_applied_kobo, currency, cv_id, payment_type, status, webhook_verified",
     )
     .eq("paystack_reference", params.reference)
     .eq("user_id", user.id)
@@ -31,9 +31,13 @@ export async function GET(
   }
 
   let gatewayStatus: string | null = null;
-  let creditAppliedKobo = 0;
+  let creditAppliedKobo = payment.credit_applied_kobo ?? 0;
+  let baseAmountKobo = payment.base_amount_kobo ?? 0;
 
-  if (!payment.webhook_verified) {
+  if (
+    !payment.webhook_verified
+    || ((baseAmountKobo <= 0 || creditAppliedKobo < 0) && payment.status === "success")
+  ) {
     try {
       const verified = await verifyPaystackTransaction(params.reference);
       gatewayStatus = verified.status;
@@ -43,9 +47,9 @@ export async function GET(
           ? metadata.creditAppliedKobo
           : Number.parseInt(String(metadata.creditAppliedKobo ?? "0"), 10) || 0;
       creditAppliedKobo = Math.max(0, parsedCredit);
+      baseAmountKobo = payment.amount_kobo + creditAppliedKobo;
     } catch {
       gatewayStatus = null;
-      creditAppliedKobo = 0;
     }
   }
 
@@ -58,7 +62,7 @@ export async function GET(
 
   return NextResponse.json({
     amountKobo: payment.amount_kobo,
-    baseAmountKobo: payment.amount_kobo + creditAppliedKobo,
+    baseAmountKobo: baseAmountKobo > 0 ? baseAmountKobo : payment.amount_kobo + creditAppliedKobo,
     creditAppliedKobo,
     currency: payment.currency,
     cvUnlocked: Boolean(cv?.is_paid),

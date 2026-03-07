@@ -175,7 +175,7 @@ export default async function DashboardPage() {
               Welcome back, {welcomeFirstName || "there"}.
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--cream-dim)]">
-              A single command centre for your CV quality, job matches, tracker momentum, and profile strength.
+              Everything you need to manage your CV, job matches, application progress, and profile strength in one place.
             </p>
           </div>
 
@@ -247,7 +247,12 @@ export default async function DashboardPage() {
                   ))}
                 </div>
               </div>
-            ) : null}
+            ) : (
+              <div>
+                <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-[var(--mid)]">Version history</p>
+                <p className="mt-3 text-sm text-[var(--mid)]">Your saved versions will appear here as you edit your CV.</p>
+              </div>
+            )}
           </div>
         </Card>
 

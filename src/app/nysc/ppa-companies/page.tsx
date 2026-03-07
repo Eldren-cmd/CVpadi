@@ -44,9 +44,9 @@ export default async function PpaCompaniesPage({
             Which PPA companies are worth your service year?
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--ink-light)] sm:text-lg">
-            This page uses email-verified community submissions to surface which NYSC PPA
-            companies people would actually recommend. Public aggregates unlock only after
-            enough corps members report the same company in the same state.
+            This page uses email-verified community submissions to show which NYSC PPA
+            companies corps members would actually recommend. Results appear only after
+            enough people report the same company in the same state.
           </p>
         </section>
 
@@ -86,12 +86,12 @@ export default async function PpaCompaniesPage({
             <div>
               <h2 className="font-heading text-2xl text-foreground">Public PPA company table</h2>
               <p className="mt-2 text-sm leading-6 text-[var(--ink-light)] sm:text-base">
-                Same pattern as salary data: we only show public aggregates once there are at
-                least five submissions for that company and state.
+                We only show public results once there are at least five submissions for the
+                same company and state.
               </p>
             </div>
             <span className="inline-flex min-h-11 items-center rounded-full bg-[var(--blue-light)] px-4 text-sm font-medium text-[var(--blue)]">
-              {aggregates.length} visible groups
+              {aggregates.length} visible results
             </span>
           </div>
 
@@ -126,8 +126,8 @@ export default async function PpaCompaniesPage({
             </div>
           ) : (
             <div className="mt-5 rounded-[var(--radius-input)] border border-[var(--gold)] bg-[var(--gold-light)] px-4 py-4 text-sm leading-6 text-foreground">
-              No PPA company is public yet for this filter. That is expected early on. The
-              page is live now so search indexing starts before the data fills in.
+              No PPA company reviews are visible for this search yet. That is normal early on.
+              Be the first to submit a review and help other corps members.
             </div>
           )}
         </section>
@@ -140,7 +140,7 @@ export default async function PpaCompaniesPage({
         >
           <h2 className="font-heading text-2xl text-foreground">Submit your PPA review</h2>
           <p className="mt-2 text-sm leading-6 text-[var(--ink-light)] sm:text-base">
-            Email verification is required to submit, but we do not force a password flow here.
+            Email verification is required before you can submit.
           </p>
 
           <div className="mt-5">

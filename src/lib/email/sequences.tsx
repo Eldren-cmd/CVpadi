@@ -60,7 +60,7 @@ export async function scheduleBuildEmailSequences({
 }) {
   const supabase = createAdminClient();
 
-  if (furthestStepIndex >= 3) {
+  if (furthestStepIndex >= 1) {
     const welcomeSequence = await getOrCollapseSequence({
       sequenceType: "abandonment",
       stepNumber: 1,

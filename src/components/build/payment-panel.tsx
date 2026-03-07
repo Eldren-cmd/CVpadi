@@ -28,11 +28,13 @@ export function PaymentPanel({
   cvId,
   initialPaymentReference,
   isPaid,
+  onPaid,
 }: {
   availableCreditKobo: number;
   cvId: string;
   initialPaymentReference?: string | null;
   isPaid: boolean;
+  onPaid?: () => void;
 }) {
   const [checkoutState, setCheckoutState] = useState<CheckoutState>(isPaid ? "paid" : "idle");
   const [statusMessage, setStatusMessage] = useState<string>(
@@ -76,12 +78,13 @@ export function PaymentPanel({
 
     setCheckoutState("paid");
     setStatusMessage("Payment confirmed. This CV is unlocked.");
+    onPaid?.();
     stopPolling();
     if (!deliveryLinks) {
       void fetchDeliveryLinks();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPaid]);
+  }, [isPaid, onPaid]);
 
   useEffect(() => {
     if (!initialPaymentReference || isPaid) {
@@ -90,7 +93,7 @@ export function PaymentPanel({
 
     setReference(initialPaymentReference);
     setCheckoutState("pending");
-    setStatusMessage("Checking the payment reference returned from Paystack.");
+    setStatusMessage("Checking your payment now.");
     startPolling(initialPaymentReference);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialPaymentReference, isPaid]);
@@ -139,6 +142,7 @@ export function PaymentPanel({
     if (payload.cvUnlocked || (payload.paymentStatus === "success" && payload.webhookVerified)) {
       setCheckoutState("paid");
       setStatusMessage("Payment confirmed. Your CV is unlocked.");
+      onPaid?.();
       stopPolling();
       void fetchDeliveryLinks();
       return;
@@ -146,7 +150,7 @@ export function PaymentPanel({
 
     if (payload.gatewayStatus === "failed" || payload.gatewayStatus === "abandoned") {
       setCheckoutState("failed");
-      setStatusMessage("Paystack marked this payment attempt as incomplete.");
+      setStatusMessage("This payment attempt was not completed.");
       stopPolling();
       return;
     }
@@ -195,7 +199,7 @@ export function PaymentPanel({
         stopPolling();
         setPollingTimedOut(true);
         setStatusMessage(
-          "Payment received - still confirming. Click below to check again.",
+          "Payment received. Still confirming. Click below to check again.",
         );
         return;
       }
@@ -248,6 +252,7 @@ export function PaymentPanel({
     if (payload.amountKobo === 0) {
       setCheckoutState("paid");
       setStatusMessage("Your account credit covered this purchase. The CV is unlocked.");
+      onPaid?.();
       void fetchDeliveryLinks();
       return;
     }
@@ -300,7 +305,7 @@ export function PaymentPanel({
             {"\u20A6"}1,500
           </h2>
           <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--cream-dim)]">
-            One-time · No subscription
+            One-time / No subscription
           </p>
         </div>
         <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--cream-dim)]">
@@ -334,7 +339,7 @@ export function PaymentPanel({
 
       {gatewayStatus ? (
         <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[var(--mid)]">
-          Gateway status: {gatewayStatus}
+          Payment status: {gatewayStatus}
         </p>
       ) : null}
 
@@ -425,7 +430,7 @@ export function PaymentPanel({
           {checkoutState === "pending" && pollingTimedOut ? (
             <div className="rounded-[12px] border border-[var(--gold)] bg-[var(--gold-glow)] px-6 py-5 text-center">
               <p className="font-display text-base text-[var(--cream)]">
-                Payment received - still confirming
+                Payment received. Still confirming
               </p>
               <p className="mt-2 text-sm text-[var(--cream-dim)]">
                 Your payment was successful. If this page has not unlocked yet, click below to
@@ -439,7 +444,7 @@ export function PaymentPanel({
                 Check payment status -&gt;
               </button>
               <p className="mt-3 font-mono text-[11px] text-[var(--mid)]">
-                Your CV will not be lost. Check your email - it may have already arrived.
+                Your CV will not be lost. Check your email. It may have already arrived.
               </p>
             </div>
           ) : null}
@@ -472,3 +477,4 @@ export function PaymentPanel({
     </section>
   );
 }
+

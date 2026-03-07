@@ -63,7 +63,7 @@ export async function POST(request: Request) {
   let { data: existingPayment } = await supabase
     .from("payments")
     .select(
-      "amount_kobo, status, webhook_verified",
+      "amount_kobo, base_amount_kobo, credit_applied_kobo, status, webhook_verified",
     )
     .eq("paystack_reference", reference)
     .maybeSingle();
@@ -75,17 +75,21 @@ export async function POST(request: Request) {
       .upsert(
         {
           amount_kobo: event.data.amount,
+          base_amount_kobo: expectedAmountKobo,
+          credit_applied_kobo: effectiveCreditAppliedKobo,
           currency: event.data.currency ?? "NGN",
           cv_id: cvId,
           payment_type: paymentType,
           paystack_reference: reference,
+          referral_code_used: referralCodeUsed,
+          referral_credit_kobo: referralCodeUsed ? REFERRAL_CREDIT_KOBO : 0,
           status: "success",
           user_id: userId,
           webhook_verified: true,
         },
         { onConflict: "paystack_reference" },
       )
-      .select("amount_kobo, status, webhook_verified")
+      .select("amount_kobo, base_amount_kobo, credit_applied_kobo, status, webhook_verified")
       .single();
 
     if (upsertError || !upsertedPayment) {
@@ -144,7 +148,10 @@ export async function POST(request: Request) {
       const { error: paymentError } = await supabase
         .from("payments")
         .update({
+          base_amount_kobo: expectedAmountKobo,
+          credit_applied_kobo: effectiveCreditAppliedKobo,
           currency: event.data.currency ?? "NGN",
+          referral_code_used: referralCodeUsed,
           status: "success",
           webhook_verified: true,
         })
@@ -213,6 +220,18 @@ export async function POST(request: Request) {
 
           if (referralCreditError) {
             throw referralCreditError;
+          }
+
+          const { error: paymentReferralError } = await supabase
+            .from("payments")
+            .update({
+              referral_credit_kobo: REFERRAL_CREDIT_KOBO,
+              referrer_user_id: referrerProfile.id,
+            })
+            .eq("paystack_reference", reference);
+
+          if (paymentReferralError) {
+            throw paymentReferralError;
           }
         }
       }

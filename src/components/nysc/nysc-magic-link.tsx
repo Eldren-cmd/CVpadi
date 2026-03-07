@@ -14,7 +14,7 @@ export function NyscMagicLink({
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || window.location.origin;
   const [email, setEmail] = useState(initialEmail);
   const [statusMessage, setStatusMessage] = useState(
-    "Verify your email with a magic link. That unlocks NYSC community submissions without a password flow.",
+    "Verify your email with a magic link. That unlocks NYSC community submissions without creating a password.",
   );
   const [isPending, setIsPending] = useState(false);
 
