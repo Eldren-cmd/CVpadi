@@ -1,4 +1,3 @@
-import { PDFParse } from "pdf-parse";
 import {
   createCertificationEntry,
   createDefaultCVFormData,
@@ -49,10 +48,11 @@ const EXPERIENCE_HINTS = [
 ];
 
 export async function extractTextFromPdfBuffer(buffer: Buffer) {
+  const { PDFParse } = await import("pdf-parse");
   const parser = new PDFParse({ data: buffer });
   const parsed = await parser.getText();
   await parser.destroy();
-  return normalizeWhitespace(parsed.text);
+  return normalizeWhitespace(parsed.text ?? "");
 }
 
 export function scoreCvCheckInput(rawText: string) {
