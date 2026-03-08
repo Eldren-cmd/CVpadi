@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://cvpadi.com";
 
 const shellStyle: CSSProperties = {
   backgroundColor: "#F5F0E8",
@@ -354,3 +354,4 @@ function getRoleFocusAreas(industry: string) {
       ];
   }
 }
+

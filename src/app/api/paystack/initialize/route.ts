@@ -190,7 +190,7 @@ export async function POST(request: Request) {
   try {
     const transaction = await initializePaystackTransaction({
       amountKobo,
-      callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/build`,
+      callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://cvpadi.com"}/build`,
       email: user.email ?? "",
       metadata: {
         creditAppliedKobo,
@@ -224,3 +224,4 @@ export async function POST(request: Request) {
     );
   }
 }
+

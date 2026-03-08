@@ -11,11 +11,6 @@ export function normalizeReferralCode(value?: string | null) {
 }
 
 export function buildReferralUrl(referralCode: string) {
-  const origin = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
-
-  if (!origin) {
-    return `/ref/${referralCode}`;
-  }
-
+  const origin = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://cvpadi.com";
   return `${origin}/ref/${referralCode}`;
 }

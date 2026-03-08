@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
@@ -12,7 +12,7 @@ export function SalaryMagicLink({
 }) {
   const supabase = createClient();
   const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || window.location.origin;
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://cvpadi.com";
   const [email, setEmail] = useState(initialEmail);
   const [statusMessage, setStatusMessage] = useState(
     "Verify your email with a magic link to unlock salary submission.",
@@ -71,3 +71,4 @@ export function SalaryMagicLink({
     </form>
   );
 }
+

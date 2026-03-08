@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/Button";
@@ -21,6 +21,7 @@ export function LoginForm({
   initialEmail?: string;
   nextPath: string;
 }) {
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://cvpadi.com").replace(/\/$/, "");
   const router = useRouter();
   const [mode, setMode] = useState<"password" | "magic">("password");
   const [message, setMessage] = useState("");
@@ -67,7 +68,7 @@ export function LoginForm({
         email: values.email,
         password: values.password,
         options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+          emailRedirectTo: `${appUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`,
         },
       });
 
@@ -88,7 +89,7 @@ export function LoginForm({
       const { error } = await supabase.auth.signInWithOtp({
         email: values.email,
         options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+          emailRedirectTo: `${appUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`,
         },
       });
 
@@ -110,7 +111,7 @@ export function LoginForm({
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+        redirectTo: `${appUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`,
       },
     });
 
@@ -254,7 +255,7 @@ export function LoginForm({
         >
           {messageTone === "success" ? (
             <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full border border-[var(--green)] check-bounce">
-              ✓
+              ?
             </span>
           ) : null}
           {message}
@@ -263,3 +264,4 @@ export function LoginForm({
     </div>
   );
 }
+

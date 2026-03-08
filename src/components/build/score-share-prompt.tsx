@@ -20,7 +20,7 @@ export function ScoreSharePrompt({
   const [statusMessage, setStatusMessage] = useState("");
   const shareUrl = useMemo(() => {
     const origin =
-      process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || window.location.origin;
+      process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://cvpadi.com";
     const params = new URLSearchParams({
       name,
       score: String(score),
@@ -215,3 +215,4 @@ export function ScoreSharePrompt({
     </div>
   );
 }
+

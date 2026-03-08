@@ -219,7 +219,7 @@ export async function processDailyJobMatches(limitUsers?: number): Promise<JobMa
       const topMatches = scoredMatches.slice(0, 3);
 
       await sendJobsDigestEmail({
-        buildUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/build`,
+        buildUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://cvpadi.com"}/build`,
         email: profile.email,
         fullName: profile.full_name ?? userProfile.fullName,
         jobs: topMatches.map((match) => match.digestItem),
@@ -399,3 +399,4 @@ function shouldSendDailyDigest(
 
   return true;
 }
+

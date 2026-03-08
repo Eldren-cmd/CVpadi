@@ -1,13 +1,15 @@
-﻿import { createServerClient } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams, origin } = new URL(request.url);
-    const code = searchParams.get("code");
-    const next = searchParams.get("next") ?? "/build";
+    const requestUrl = new URL(request.url);
+    const code = requestUrl.searchParams.get("code");
+    const next = requestUrl.searchParams.get("next") ?? "/build";
+    const safeNext = next.startsWith("/") ? next : "/build";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? requestUrl.origin;
     const supabaseKey =
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -37,7 +39,7 @@ export async function GET(request: NextRequest) {
 
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       if (!error) {
-        return NextResponse.redirect(`${origin}${next}`);
+        return NextResponse.redirect(new URL(safeNext, appUrl));
       }
 
       console.error(
@@ -46,14 +48,18 @@ export async function GET(request: NextRequest) {
         error.status,
       );
       return NextResponse.redirect(
-        `${origin}/login?error=oauth_failed&reason=${encodeURIComponent(error.message)}`,
+        new URL(
+          `/login?error=oauth_failed&reason=${encodeURIComponent(error.message)}`,
+          appUrl,
+        ),
       );
     }
 
-    return NextResponse.redirect(`${origin}/login?error=oauth_failed`);
+    return NextResponse.redirect(new URL("/login?error=oauth_failed", appUrl));
   } catch (err) {
     console.error("Auth callback error:", err);
-    const origin = new URL(request.url).origin;
-    return NextResponse.redirect(`${origin}/login?error=oauth_failed`);
+    const requestUrl = new URL(request.url);
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? requestUrl.origin;
+    return NextResponse.redirect(new URL("/login?error=oauth_failed", appUrl));
   }
 }

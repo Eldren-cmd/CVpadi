@@ -11,7 +11,7 @@ export function NyscMagicLink({
 }) {
   const supabase = createClient();
   const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || window.location.origin;
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://cvpadi.com";
   const [email, setEmail] = useState(initialEmail);
   const [statusMessage, setStatusMessage] = useState(
     "Verify your email with a magic link. That unlocks NYSC community submissions without creating a password.",
@@ -74,3 +74,4 @@ export function NyscMagicLink({
     </form>
   );
 }
+

@@ -266,7 +266,7 @@ async function sendEnhancementFollowUpEmail({
 
   const emailRes = await fetch("https://api.resend.com/emails", {
     body: JSON.stringify({
-      from: process.env.EMAIL_FROM ?? "CVPadi <onboarding@resend.dev>",
+      from: process.env.EMAIL_FROM ?? "CVPadi <hello@cvpadi.com>",
       html: `
       <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;color:#1A1410;">
         <div style="margin-bottom:24px;">
@@ -308,3 +308,4 @@ async function sendEnhancementFollowUpEmail({
     console.error("Enhancement email failed:", emailError);
   }
 }
+

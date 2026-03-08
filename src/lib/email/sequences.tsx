@@ -14,7 +14,7 @@ import {
   ResumeSavedEmail,
 } from "./templates";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://cvpadi.com";
 
 function getResendClient() {
   const apiKey = process.env.RESEND_API_KEY;
@@ -562,7 +562,7 @@ async function sendEmail({
   const resend = getResendClient();
 
   await resend.emails.send({
-    from: process.env.EMAIL_FROM ?? "CVPadi <onboarding@resend.dev>",
+    from: process.env.EMAIL_FROM ?? "CVPadi <hello@cvpadi.com>",
     react,
     subject,
     to: email,
@@ -753,3 +753,4 @@ function captureSequenceError(
     Sentry.captureException(error);
   });
 }
+
