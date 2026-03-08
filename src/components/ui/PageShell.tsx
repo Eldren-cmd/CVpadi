@@ -74,9 +74,9 @@ const BOTTOM_ITEMS = [
     label: "Salary",
   },
   {
-    href: "/email-preferences",
+    href: "/dashboard/profile",
     icon: "ME",
-    isActive: (pathname: string) => pathname === "/email-preferences",
+    isActive: (pathname: string) => pathname === "/dashboard/profile",
     label: "Profile",
   },
 ] as const;
@@ -142,8 +142,8 @@ export function PageShell({ children, title }: PageShellProps) {
           <div className="mt-auto grid gap-1.5 border-t border-[var(--border)] pt-4">
             <ThemeToggle />
             <Link
-              className={`flex min-h-11 items-center gap-3 rounded-[8px] border-l-[3px] px-3 text-sm font-display transition-all duration-150 ${pathname === "/email-preferences" ? "border-l-[var(--green)] bg-[var(--green-glow)] text-[var(--green)]" : "border-l-transparent text-[var(--mid)] hover:bg-[var(--card)] hover:text-[var(--cream-dim)]"}`.trim()}
-              href="/email-preferences"
+              className={`flex min-h-11 items-center gap-3 rounded-[8px] border-l-[3px] px-3 text-sm font-display transition-all duration-150 ${pathname === "/dashboard/profile" ? "border-l-[var(--green)] bg-[var(--green-glow)] text-[var(--green)]" : "border-l-transparent text-[var(--mid)] hover:bg-[var(--card)] hover:text-[var(--cream-dim)]"}`.trim()}
+              href="/dashboard/profile"
             >
               <span aria-hidden="true" className="font-mono text-[11px] uppercase tracking-[0.08em]">ME</span>
               <span>Profile</span>

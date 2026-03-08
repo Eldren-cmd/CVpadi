@@ -83,7 +83,7 @@ const DASHBOARD_NAV_ITEMS = [
     },
   },
   {
-    href: "/dashboard#profile",
+    href: "/dashboard/profile",
     label: "Profile",
     icon: (
       <svg aria-hidden="true" className="h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -100,8 +100,10 @@ const DASHBOARD_NAV_ITEMS = [
         />
       </svg>
     ),
-    match: (pathname: string, hash: string) =>
-      pathname === "/email-preferences" || (pathname === "/dashboard" && hash !== "#jobs"),
+    match: (pathname: string, hash: string) => {
+      void hash;
+      return pathname === "/dashboard/profile";
+    },
   },
 ] as const;
 
@@ -156,9 +158,9 @@ export function DashboardNav() {
           </nav>
 
           <div className="mt-6 rounded-[var(--radius-input)] border border-[var(--border-light)] bg-white/70 px-4 py-4 text-sm leading-6 text-[var(--ink-light)]">
-            Need more control over job alerts and follow-ups?
-            <Link className="ml-1 font-medium text-[var(--accent)]" href="/email-preferences">
-              Edit notification settings
+            Need your referral link or a quick way to sign out?
+            <Link className="ml-1 font-medium text-[var(--accent)]" href="/dashboard/profile">
+              Open your profile
             </Link>
           </div>
         </div>
