@@ -1,108 +1,205 @@
-# CVPadi
+# 📄 CVPadi — AI-Powered CV Builder for Nigerian Job Seekers
 
-Current milestone: Phase 1 foundation through auth, the conversational CV builder, the Paystack payment flow, server-side CV delivery, the queued Claude enhancement worker, and the current live Phase 2 dashboard and guardrail slices. The repo now includes Supabase runtime integration, Sentry wiring, auth flows, the draft-saving build wizard, verified Paystack routes, PDF/JPG asset generation, Resend-based delivery, the v4 off-path AI refresh flow, the weighted job-matching processor, the authenticated dashboard home, and the Phase 2 loophole fixes around protected job access.
+> A full-stack SaaS platform that helps Nigerian professionals build, 
+> score, and deliver standout CVs — with AI enhancement, job matching, 
+> and Paystack payments.
 
-## Included
+[![Live App](https://img.shields.io/badge/Live%20App-cvpadi.vercel.app-C9A84C?style=for-the-badge&logo=vercel&logoColor=white)](https://cvpadi.vercel.app)
+[![TypeScript](https://img.shields.io/badge/TypeScript-94%25-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://github.com/Eldren-cmd/CVpadi)
+[![Next.js](https://img.shields.io/badge/Next.js%2014-App%20Router-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://github.com/Eldren-cmd/CVpadi)
 
-- Next.js 14 App Router scaffold with TypeScript, Tailwind CSS, and ESLint
-- CVPadi app shell, design tokens, and offline-safe local font stacks
-- Checkpointed environment template in `.env.example`
-- Supabase migration in `supabase/migrations/202603030001_checkpoint1_schema.sql`
-- Sentry instrumentation for app, server, edge, and global error boundaries
-- Supabase browser/server clients and auth-refresh middleware
-- `/login` with email-password, magic-link, and Google sign-in
-- `/build` conversational CV wizard with local backup, restore banner, sync indicator, and score suggestions
-- `/api/paystack/initialize`, `/api/paystack/status/[reference]`, and `/api/paystack/webhook`
-- Builder-side Paystack panel that waits for server confirmation before showing the CV as unlocked
-- Server-generated PDF and WhatsApp JPG uploads to the private `cv-assets` bucket
-- Signed asset delivery route at `/api/cv-assets/[cvId]`
-- Resend email delivery with 2-hour signed links
-- Email sequence scheduling for abandoned drafts and post-download follow-ups
-- Preference centre at `/email-preferences`
-- Scheduled sequence processor at `/api/email-sequences/process`
-- Free preview route at `/api/cv/preview/[cvId]` rendered server-side into a watermarked 600px canvas preview
-- FingerprintJS soft-signal tracking, disposable-email blocking, edge preview rate limiting, and the atomic free-preview counter
-- CV score share card route at `/api/og/cv-score?score=87&name=Adaeze`, triggered after the first completed preview
-- Public CV score checker at `/check` with `/api/check/score`, supporting pasted text and PDF uploads through `pdf-parse`
-- Public salary database at `/salary` with a five-submission aggregate threshold and magic-link email verification before submission
-- Protected application tracker at `/dashboard/tracker` with Applied, Interview, Rejected, and Offer columns
-- Static industry CV tips pages at `/cv-tips/[industry]` with build-time generation and industry-prefilled build links
-- NYSC guide hub at `/nysc` with evergreen pages and email-verified PPA company submissions
-- CV version timeline and forking dashboard at `/dashboard/versions`
-- Referral landing at `/ref/[code]` with first-view sharing and auto-applied account credits
-- Supabase Edge Function scraper at `supabase/functions/scrape-jobs` for legal job sources only, using v4's two-tier source model
-- Background Claude enhancement queue with the protected processor route at `/api/ai-enhancement/process` and the Supabase wrapper at `supabase/functions/process-ai-queue`
-- Weighted job-match processor at `/api/job-matches/process` with the Supabase wrapper at `supabase/functions/process-job-matches`
-- Authenticated dashboard home at `/dashboard` with desktop sidebar and mobile bottom navigation
-- Authenticated job-detail route at `/jobs/[jobId]` backed by the rate-limited `/api/jobs/[jobId]` endpoint
+---
 
-## Local Development
+## 📋 About
 
-Install dependencies and run the app:
+CVPadi is a SaaS CV builder built specifically for the Nigerian job 
+market. Users go through a conversational build wizard, get an AI 
+score on their CV, pay via Paystack to unlock their final PDF, and 
+receive AI-enhanced delivery assets by email — all in one flow.
 
+It solves a real problem: most Nigerian job seekers submit generic, 
+unoptimised CVs. CVPadi gives them a professional, AI-improved CV 
+matched to real job opportunities scraped from the Nigerian market.
+
+---
+
+## ✨ Features
+
+### 🧠 CV Builder
+- Conversational wizard with local backup and Supabase sync
+- Real-time CV score suggestions as you build
+- Watermarked free preview before payment
+- CV version timeline with forking — iterate without losing history
+
+### 💳 Payments
+- Paystack integration with HMAC SHA-512 webhook verification
+- Server-side price validation before unlocking
+- Referral system with account credits applied at checkout
+
+### 🤖 AI Enhancement (Claude API)
+- Background queue worker powered by Claude Haiku
+- Rewrites CV objective, suggests missing skills
+- Regenerates PDF + WhatsApp JPG delivery assets post-payment
+- Runs every 15 minutes via Supabase Edge Function + pg_cron
+
+### 📬 Email Delivery (Resend)
+- PDF and WhatsApp JPG delivered via 2-hour signed URLs
+- Abandoned draft email sequences
+- Post-download follow-up sequences
+- User preference centre at `/email-preferences`
+
+### 💼 Job Matching
+- Supabase Edge Function job scraper from legal Nigerian sources
+- Auto-disables sources after 3 consecutive failures
+- Weighted matching: industry 30% · location 25% · experience 25% · skills 20%
+- Only serves matches scoring ≥ 40
+- Authenticated job detail route — matched jobs only
+- Daily digest at 8:00 AM WAT via pg_cron
+
+### 🛡️ Anti-Abuse Stack
+- FingerprintJS soft signal
+- Disposable email blocking
+- Edge preview rate limiting
+- Atomic SQL free-preview counter
+- reCAPTCHA (enforced in production)
+
+### 📊 Dashboard
+- Application tracker (Applied / Interview / Rejected / Offer)
+- Authenticated job matches feed
+- CV version history and fork flow
+- Referral landing with attribution tracking
+
+### 🌍 Public Pages
+- `/check` — public CV score checker (paste text or upload PDF)
+- `/salary` — community salary database with magic-link verification
+- `/cv-tips/[industry]` — static industry-specific CV guides
+- `/nysc` — NYSC CV guide, PPA company directory, after-NYSC advice
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 14 App Router + TypeScript |
+| Styling | Tailwind CSS |
+| Database | Supabase (PostgreSQL + RLS + pg_cron) |
+| Auth | Supabase Auth (email, magic link, Google) |
+| Payments | Paystack (webhooks + HMAC verification) |
+| AI | Claude API (Haiku — queued enhancement) |
+| Email | Resend |
+| Storage | Supabase private bucket + signed URLs |
+| PDF Generation | Server-side PDF + WhatsApp JPG |
+| Job Scraping | Supabase Edge Functions |
+| Error Monitoring | Sentry (app, server, edge) |
+| Deployment | Vercel |
+
+---
+
+## 🚀 Getting Started
 ```bash
+git clone https://github.com/Eldren-cmd/CVpadi.git
+cd CVpadi
 npm install
+cp .env.example .env.local
+# Fill in your env vars (see below)
 npm run dev
-npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-## Current Routes
+---
 
-- `/` status page for the current milestone
-- `/login` authentication entry
-- `/check` public CV score checker
-- `/salary` public salary database
-- `/dashboard/tracker` protected application tracker
-- `/dashboard` protected dashboard home
-- `/dashboard/versions` protected CV version timeline and forking
-- `/jobs/[jobId]` authenticated matched-job details
-- `/ref/[code]` referral landing route that stores attribution before auth/build
-- `/cv-tips/[industry]` static industry CV tips pages
-- `/nysc` hub with `/nysc/cv-guide`, `/nysc/ppa-companies`, and `/nysc/after-nysc`
-- `/build` protected CV builder
-- `/auth/callback` Supabase auth exchange route
-- `/email-preferences` user email cadence controls
+## 🔑 Environment Variables
 
-## Checkpoint Status
+See `.env.example` for the full list. Key variables:
 
-Completed:
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-side Supabase access |
+| `PAYSTACK_SECRET_KEY` | Paystack server key (never expose to client) |
+| `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` | Paystack public key |
+| `ANTHROPIC_API_KEY` | Claude API key for AI enhancement |
+| `RESEND_API_KEY` | Email delivery |
+| `EMAIL_SEQUENCE_CRON_SECRET` | Shared secret for cron processors |
+| `SENTRY_DSN` | Error monitoring |
 
-1. Setup Checkpoint 0: Sentry
-2. Setup Checkpoint 1: Supabase
-3. Setup Checkpoint 2: Paystack
-4. Setup Checkpoint 3: Resend
-5. Setup Checkpoint 4: Repo-side v4 scraper alignment (database migration, seed file, and two-tier scraper logic)
-6. Setup Checkpoint 5: Claude API
+---
 
-## Notes
+## 📁 Key Routes
 
-- The schema migration includes RLS, core policies, timestamp triggers, the atomic free-generation counter function, and the AI enhancement queue table.
-- The build wizard writes to `localStorage` only as a crash-recovery backup. Supabase remains the primary store.
-- Free preview generation now happens on the server, returns a low-resolution JPG for a `<canvas>` preview, and burns a watermark across the name, phone, and email fields.
-- FingerprintJS is only a soft signal. The live guardrail stack combines it with disposable-email blocking, edge rate limiting, reCAPTCHA when keys are configured, and the atomic SQL counter.
-- The Paystack webhook verifies HMAC SHA-512 signatures and checks the amount against a server-side price constant before unlocking a CV.
-- Delivery assets are generated on the server, stored in the private `cv-assets` bucket, and exposed through 2-hour signed URLs only after verified payment.
-- Development email delivery should use Resend's test sender and only reaches the verified Resend inbox. Before production, switch `EMAIL_FROM` to a verified domain sender.
-- Before production, register the live Paystack webhook URL as `https://<your-production-domain>/api/paystack/webhook`.
-- Before public launch, set `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` and `RECAPTCHA_SECRET_KEY` so the invisible reCAPTCHA checks move from dev-bypass mode to enforced mode.
-- The delayed email processor expects `EMAIL_SEQUENCE_CRON_SECRET` and is designed to be invoked by the `supabase/functions/process-email-sequences` wrapper on an hourly cron.
-- The queued Claude enhancement worker also reuses `EMAIL_SEQUENCE_CRON_SECRET` and is designed to be invoked by the `supabase/functions/process-ai-queue` wrapper every 15 minutes.
-- The daily job-matching digest processor also reuses `EMAIL_SEQUENCE_CRON_SECRET` and is designed to be invoked by the `supabase/functions/process-job-matches` wrapper at `8:00 AM WAT`.
-- Run `supabase/migrations/202603030004_cv_versioning.sql` before testing the version timeline and fork flow.
-- Run `supabase/migrations/202603030005_referral_system.sql` before testing referral checkout crediting.
-- Run `supabase/migrations/202603030006_job_scraper_source_index.sql` before testing job imports.
-- Run `supabase/migrations/202603030007_job_sources_table.sql` and then `supabase/seed.sql` to align the database with the v4 job-source model.
-- Run `supabase/migrations/202603030008_schedule_scrape_jobs.sql` if you want the daily scraper schedule managed from the repo via `pg_cron`.
-- Run `supabase/migrations/202603030009_ai_enhancement_queue_uniqueness.sql` before testing the AI queue against Supabase.
-- Run `supabase/migrations/202603030010_schedule_process_ai_queue.sql` if you want the 15-minute AI processor schedule managed from the repo via `pg_cron`.
-- Run `supabase/migrations/202603030011_schedule_process_job_matches.sql` if you want the `8:00 AM WAT` job-matching schedule managed from the repo via `pg_cron`.
-- Set `JOB_SCRAPER_SOURCES_JSON` and `SENTRY_DSN` as Supabase Edge Function secrets, then verify them with `supabase secrets list`.
-- The scraper now loads stable sources from `job_sources` and corporate sources from `JOB_SCRAPER_SOURCES_JSON`.
-- Stable sources track `last_scrape_status`, `consecutive_failures`, and auto-disable after three failed runs.
-- The automated scraper schedule is `6:00 AM WAT` (`0 5 * * *` UTC).
-- Verified payments now enqueue a separate Claude Haiku enhancement pass that rewrites the objective, suggests missing skills, regenerates delivery assets, and emails the refreshed files without blocking the payment webhook.
-- Daily job matches now use the v4 weighted formula: industry 30, location 25, experience 25, skills overlap up to 20. Only matches scoring `>= 40` are persisted in `job_matches`.
-- Run `supabase/migrations/202603030012_phase2_loophole_fixes.sql` before testing honeypot job flagging and the authenticated job-details flow.
-- Job details now require authentication, are rate-limited at 10 requests per minute per IP, and only resolve for jobs already matched to the current user.
+| Route | Description |
+|---|---|
+| `/` | Landing / milestone status |
+| `/login` | Auth (email, magic link, Google) |
+| `/build` | Protected CV builder wizard |
+| `/check` | Public CV score checker |
+| `/salary` | Community salary database |
+| `/dashboard` | Authenticated dashboard home |
+| `/dashboard/tracker` | Job application tracker |
+| `/dashboard/versions` | CV version history + fork |
+| `/jobs/[jobId]` | Authenticated matched job detail |
+| `/cv-tips/[industry]` | Static industry CV guides |
+| `/nysc` | NYSC guide hub |
+| `/ref/[code]` | Referral landing |
+| `/email-preferences` | Email cadence controls |
+
+---
+
+## 🗄️ Database Migrations
+
+Run in order before testing each feature:
+```bash
+# Core schema
+supabase/migrations/202603030001_checkpoint1_schema.sql
+
+# CV versioning
+supabase/migrations/202603030004_cv_versioning.sql
+
+# Referral system
+supabase/migrations/202603030005_referral_system.sql
+
+# Job scraper
+supabase/migrations/202603030006_job_scraper_source_index.sql
+supabase/migrations/202603030007_job_sources_table.sql
+supabase/seed.sql
+
+# Scheduled jobs (pg_cron)
+supabase/migrations/202603030008_schedule_scrape_jobs.sql
+supabase/migrations/202603030010_schedule_process_ai_queue.sql
+supabase/migrations/202603030011_schedule_process_job_matches.sql
+
+# Phase 2 fixes
+supabase/migrations/202603030012_phase2_loophole_fixes.sql
+```
+
+---
+
+## 💡 What I Built & Learned
+
+- Full SaaS architecture with Next.js 14 App Router
+- Supabase RLS policies, Edge Functions, and pg_cron scheduling
+- Paystack webhook security with HMAC SHA-512 signature verification
+- AI integration with Claude API in a queued background worker pattern
+- PDF and image asset generation and delivery via signed storage URLs
+- Email sequences and preference management with Resend
+- Multi-signal anti-abuse stack combining fingerprinting, rate limiting, and atomic SQL
+- Weighted job-matching algorithm with automated scraping pipeline
+
+---
+
+## 👤 Author
+
+**Gabriel Adenrele Adegboyega** — Full Stack Developer
+
+[![Portfolio](https://img.shields.io/badge/Portfolio-ga--royal--portfolio.vercel.app-C9A84C?style=flat-square&logo=vercel)](https://ga-royal-portfolio.vercel.app)
+[![GitHub](https://img.shields.io/badge/GitHub-Eldren--cmd-1A0A2E?style=flat-square&logo=github)](https://github.com/Eldren-cmd)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-adenrele--gabriel-0077B5?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/adenrele-gabriel-9332b9183/)
+
+---
+
+## 📄 License
+
+MIT © 2026 Gabriel Adenrele Adegboyega
