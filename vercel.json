@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/ai-enhancement/process",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/email-sequences/process",
+      "schedule": "0 * * * *"
+    }
+  ]
+}
