@@ -171,7 +171,7 @@ export default async function DashboardPage() {
       <section className="page-enter rounded-[16px] border border-[var(--border)] bg-[var(--off-black)] px-5 py-6 sm:px-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="mt-2 font-heading text-5xl leading-[1] text-[var(--cream)]">
+            <h1 className="mt-2 font-heading text-3xl leading-tight break-words text-[var(--cream)] sm:text-5xl">
               Welcome back, {welcomeFirstName || "there"}.
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--cream-dim)]">
@@ -195,7 +195,7 @@ export default async function DashboardPage() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--mid)]">My CV</p>
-              <h2 className="mt-2 font-display text-3xl text-[var(--cream)]">{cvDisplayName}</h2>
+              <h2 className="mt-2 font-heading text-3xl break-words text-[var(--cream)] sm:text-4xl">{cvDisplayName}</h2>
               {cvMeta ? <p className="mt-2 text-sm leading-6 text-[var(--cream-dim)]">{cvMeta}</p> : null}
             </div>
 

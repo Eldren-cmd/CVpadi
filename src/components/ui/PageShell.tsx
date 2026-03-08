@@ -59,7 +59,7 @@ const BOTTOM_ITEMS = [
     href: "/dashboard",
     icon: "CV",
     isActive: (pathname: string) => pathname === "/dashboard" || pathname === "/dashboard/versions",
-    label: "CV",
+    label: "My CV",
   },
   {
     href: "/dashboard/tracker",
