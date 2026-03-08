@@ -20,7 +20,7 @@ declare global {
 
 type CheckoutState = "idle" | "preparing" | "pending" | "paid" | "failed";
 
-const MAX_POLL_ATTEMPTS = 30;
+const MAX_POLL_ATTEMPTS = 60;
 const POLL_INTERVAL_MS = 3000;
 
 export function PaymentPanel({
@@ -148,10 +148,16 @@ export function PaymentPanel({
       return;
     }
 
-    if (payload.gatewayStatus === "failed" || payload.gatewayStatus === "abandoned") {
+    if (payload.gatewayStatus === "failed") {
       setCheckoutState("failed");
       setStatusMessage("This payment attempt was not completed.");
       stopPolling();
+      return;
+    }
+
+    if (payload.gatewayStatus === "abandoned") {
+      setCheckoutState("pending");
+      setStatusMessage("Checkout was closed. Complete payment to unlock your CV.");
       return;
     }
 
