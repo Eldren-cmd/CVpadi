@@ -16,6 +16,7 @@ import {
 import { computeCVScore } from "@/lib/cv/score";
 import type { CVFormData, SyncStatus } from "@/lib/cv/types";
 import { isAtLeast13, nigerianPhoneRegex } from "@/lib/cv/validation";
+import Link from "next/link";
 import Script from "next/script";
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { PaymentPanel } from "./payment-panel";
@@ -103,10 +104,8 @@ export function FormWizard({
   const [scoreResult, setScoreResult] = useState(() => computeCVScore(initialDraft));
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const storageKey = useMemo(() => `cvpadi_draft_${userId}`, [userId]);
-  const progress = ((step + 1) / STEP_TITLES.length) * 100;
   const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
   const [shakeStep, setShakeStep] = useState(false);
-  const [progressFlash, setProgressFlash] = useState(false);
 
   useEffect(() => {
     const localDraft = localStorage.getItem(storageKey);
@@ -249,8 +248,6 @@ export function FormWizard({
       recaptchaToken,
       requireRecaptcha: step === 0,
     });
-    setProgressFlash(true);
-    window.setTimeout(() => setProgressFlash(false), 280);
     setStep((current) => Math.min(current + 1, STEP_TITLES.length - 1));
   };
 
@@ -293,41 +290,46 @@ export function FormWizard({
         />
       ) : null}
 
-      <header className="fixed inset-x-0 top-0 z-30 border-b border-[var(--border)] bg-[var(--off-black)]/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-3 sm:px-6">
-          <a
-            className="font-display text-xl tracking-[-0.02em] text-[var(--cream)] transition-opacity hover:opacity-80"
+      <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--black)] px-4 py-3">
+        <div className="mx-auto grid w-full max-w-6xl grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-3">
+          <Link
+            aria-label="Go to dashboard"
+            className="flex items-center gap-2 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--cream-dim)] transition-colors hover:border-[var(--border-mid)] hover:text-[var(--cream)]"
+            href="/dashboard"
+          >
+            <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+              <path
+                d="M19 12H5M5 12l7-7M5 12l7 7"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+              />
+            </svg>
+            <span className="hidden sm:inline">Dashboard</span>
+          </Link>
+
+          <Link
+            className="justify-self-center font-display text-xl tracking-[-0.02em] text-[var(--cream)] transition-opacity hover:opacity-80"
             href="/dashboard"
           >
             CV<span className="text-[var(--green)]">Padi</span>
-          </a>
+          </Link>
 
-          <div className="flex-1">
-            <div className="h-[5px] overflow-hidden rounded-full bg-[var(--faint)]">
-              <div
-                className={`h-full rounded-full bg-[var(--green)] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${progressFlash ? "shadow-[0_0_18px_var(--green)]" : ""}`.trim()}
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <a
-              className="hidden items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--cream-dim)] transition-colors hover:text-[var(--cream)] sm:inline-flex"
-              href="/dashboard"
-            >
-              ← Dashboard
-            </a>
-            <ThemeToggle />
-            <span className="hidden font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--cream-dim)] sm:inline-flex">
+          <div className="flex items-center justify-self-end gap-2 sm:gap-3">
+            <span className="whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--cream-dim)] sm:hidden">
+              {step + 1}/{STEP_TITLES.length}
+            </span>
+            <span className="hidden whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--cream-dim)] sm:inline">
               Step {step + 1} of {STEP_TITLES.length}
             </span>
             <SyncIndicator syncStatus={syncStatus} />
+            <ThemeToggle />
           </div>
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pt-28 sm:px-6">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pt-6 sm:px-6 sm:pt-8">
         <section className="mx-auto w-full max-w-[560px] rounded-[16px] border border-[var(--border)] bg-[var(--off-black)] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.45)]">
           <div aria-hidden="true" className="sr-only">
             <label htmlFor="company-website">Leave this field empty</label>
