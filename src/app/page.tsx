@@ -187,10 +187,6 @@ export default function Home() {
             </div>
             <div className="stat-label">Nigerian format</div>
           </div>
-          <div className="stat">
-            <div className="stat-number">₦0</div>
-            <div className="stat-label">To start building</div>
-          </div>
         </div>
       </div>
 
