@@ -43,9 +43,10 @@
   --radius-badge: 999px;
   --shadow-card: 0 20px 60px rgba(0, 0, 0, 0.35);
   --shadow-elevated: 0 32px 90px rgba(0, 0, 0, 0.45);
-  --font-heading: "Fraunces", serif;
-  --font-body: "DM Sans", sans-serif;
-  --font-mono: "DM Mono", monospace;
+  --font-heading: var(--font-heading-next), serif;
+  --font-body: var(--font-body-next), sans-serif;
+  --font-mono: var(--font-mono-next), monospace;
+  --font-display: var(--font-body-next), sans-serif;
 }
 
 [data-theme="light"] {
@@ -94,7 +95,7 @@ body {
     radial-gradient(circle at top right, rgba(0, 230, 118, 0.08), transparent 40%),
     radial-gradient(circle at bottom left, rgba(255, 107, 53, 0.06), transparent 38%),
     var(--black);
-  font-family: "DM Sans", sans-serif;
+  font-family: var(--font-body);
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
@@ -208,7 +209,7 @@ button,
   background: var(--card);
   padding: 8px 12px;
   color: var(--cream-dim);
-  font-family: "DM Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.05em;
   transition: all 0.2s ease;
@@ -436,19 +437,19 @@ button,
   }
 
   .font-heading {
-    font-family: "Fraunces", serif;
+    font-family: var(--font-heading);
   }
 
   .font-display {
-    font-family: "Clash Display", sans-serif;
+    font-family: var(--font-display);
   }
 
   .font-body {
-    font-family: "DM Sans", sans-serif;
+    font-family: var(--font-body);
   }
 
   .font-mono {
-    font-family: "DM Mono", monospace;
+    font-family: var(--font-mono);
   }
 }
 

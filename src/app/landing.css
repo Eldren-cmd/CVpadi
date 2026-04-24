@@ -1,11 +1,11 @@
-﻿*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   html { scroll-behavior: smooth; }
 
   body {
     background: var(--black);
     color: var(--cream);
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--font-body);
     overflow-x: hidden;
   }
 
@@ -39,7 +39,7 @@
   }
 
   .logo {
-    font-family: 'Clash Display', sans-serif;
+    font-family: var(--font-display);
     font-size: 22px;
     font-weight: 700;
     color: var(--cream);
@@ -120,7 +120,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     letter-spacing: 0.2em;
     color: var(--green);
@@ -137,7 +137,7 @@
   }
 
   .hero-headline {
-    font-family: 'Fraunces', serif;
+    font-family: var(--font-heading);
     font-size: clamp(52px, 8vw, 110px);
     font-weight: 900;
     line-height: 0.92;
@@ -198,7 +198,7 @@
     gap: 10px;
     background: var(--green);
     color: var(--black);
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--font-body);
     font-size: 15px;
     font-weight: 600;
     padding: 16px 32px;
@@ -245,7 +245,7 @@
   }
 
   .section-label {
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.25em;
     color: var(--green);
@@ -254,7 +254,7 @@
   }
 
   .section-headline {
-    font-family: 'Fraunces', serif;
+    font-family: var(--font-heading);
     font-size: clamp(36px, 5vw, 64px);
     font-weight: 900;
     line-height: 1.0;
@@ -295,7 +295,7 @@
   .step:hover::after { transform: scaleX(1); }
 
   .step-num {
-    font-family: 'Fraunces', serif;
+    font-family: var(--font-heading);
     font-size: 72px;
     font-weight: 900;
     color: rgba(255,255,255,0.06);
@@ -303,7 +303,7 @@
     margin-bottom: 24px;
   }
   .step-title {
-    font-family: 'Clash Display', sans-serif;
+    font-family: var(--font-display);
     font-size: 22px;
     font-weight: 600;
     color: var(--cream);
@@ -352,7 +352,7 @@
     margin-bottom: 24px;
   }
   .feature-title {
-    font-family: 'Clash Display', sans-serif;
+    font-family: var(--font-display);
     font-size: 20px;
     font-weight: 600;
     color: var(--cream);
@@ -369,7 +369,7 @@
   .feature-tag {
     display: inline-block;
     margin-top: 20px;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.15em;
     color: var(--green);
@@ -451,7 +451,7 @@
     top: -16px; right: -16px;
     background: var(--green);
     color: var(--black);
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 500;
     padding: 6px 14px;
@@ -459,11 +459,11 @@
     letter-spacing: 0.05em;
   }
 
-  .cv-mock-name { font-size: 18px; font-weight: 700; color: #1A1410; font-family: 'Clash Display', sans-serif; }
-  .cv-mock-role { font-size: 12px; color: #888; margin-bottom: 16px; font-family: 'DM Sans', sans-serif; }
+  .cv-mock-name { font-size: 18px; font-weight: 700; color: #1A1410; font-family: var(--font-display); }
+  .cv-mock-role { font-size: 12px; color: #888; margin-bottom: 16px; font-family: var(--font-body); }
   .cv-mock-divider { height: 1px; background: #eee; margin: 16px 0; }
   .cv-mock-section { margin-bottom: 14px; }
-  .cv-mock-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.15em; color: #D4501A; font-family: 'DM Mono', monospace; margin-bottom: 6px; }
+  .cv-mock-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.15em; color: #D4501A; font-family: var(--font-mono); margin-bottom: 6px; }
   .cv-mock-line { height: 8px; background: #f0f0f0; border-radius: 4px; margin-bottom: 4px; }
   .cv-mock-line.w100 { width: 100%; }
   .cv-mock-line.w80 { width: 80%; }
@@ -476,7 +476,7 @@
     font-size: 9px;
     padding: 3px 8px;
     border-radius: 4px;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-mono);
     letter-spacing: 0.1em;
   }
   .cv-mock-score {
@@ -502,7 +502,7 @@
     font-size: 10px;
     font-weight: 700;
     color: var(--cream);
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-mono);
   }
 
   /* PRICING */
@@ -539,7 +539,7 @@
     transform: translateX(-50%);
     background: var(--green);
     color: var(--black);
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 9px;
     font-weight: 500;
     letter-spacing: 0.15em;
@@ -548,7 +548,7 @@
   }
 
   .price-tier {
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     letter-spacing: 0.2em;
     color: var(--mid);
@@ -556,7 +556,7 @@
     margin-bottom: 16px;
   }
   .price-amount {
-    font-family: 'Fraunces', serif;
+    font-family: var(--font-heading);
     font-size: 52px;
     font-weight: 900;
     color: var(--cream);
@@ -576,7 +576,7 @@
     font-weight: 300;
   }
   .price-features li::before {
-    content: '✓';
+    content: '?';
     color: var(--green);
     font-size: 12px;
     flex-shrink: 0;
@@ -628,7 +628,7 @@
     content: '"';
     position: absolute;
     top: 20px; right: 24px;
-    font-family: 'Fraunces', serif;
+    font-family: var(--font-heading);
     font-size: 60px;
     color: rgba(255,255,255,0.06);
     line-height: 1;
@@ -654,7 +654,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Clash Display', sans-serif;
+    font-family: var(--font-display);
     font-size: 13px;
     font-weight: 700;
     flex-shrink: 0;
@@ -663,9 +663,9 @@
     font-size: 13px;
     font-weight: 500;
     color: var(--cream);
-    font-family: 'Clash Display', sans-serif;
+    font-family: var(--font-display);
   }
-  .author-role { font-size: 11px; color: var(--mid); margin-top: 2px; font-family: 'DM Mono', monospace; }
+  .author-role { font-size: 11px; color: var(--mid); margin-top: 2px; font-family: var(--font-mono); }
 
   /* CTA SECTION */
   .cta-section {
@@ -676,7 +676,7 @@
   }
 
   .cta-headline {
-    font-family: 'Fraunces', serif;
+    font-family: var(--font-heading);
     font-size: clamp(40px, 6vw, 80px);
     font-weight: 900;
     line-height: 1.0;
@@ -703,7 +703,7 @@
     padding: 6px 14px;
     font-size: 12px;
     color: var(--mid);
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-mono);
     letter-spacing: 0.05em;
   }
   .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
@@ -720,7 +720,7 @@
   }
 
   .footer-logo {
-    font-family: 'Clash Display', sans-serif;
+    font-family: var(--font-display);
     font-size: 20px;
     font-weight: 700;
     color: var(--cream);
@@ -743,7 +743,7 @@
   .footer-copy {
     font-size: 12px;
     color: var(--mid);
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-mono);
     letter-spacing: 0.05em;
   }
 
@@ -763,11 +763,38 @@
 
   /* MOBILE */
   @media (max-width: 768px) {
-    nav { padding: 16px 20px; }
+    body::before { display: none; }
+    nav {
+      padding: 16px 20px;
+      backdrop-filter: none;
+      background: rgba(10, 10, 8, 0.94);
+    }
     nav ul { display: none; }
     .nav-right { width: 100%; justify-content: flex-end; }
     .landing-theme-toggle { min-height: 38px; }
     .hero { padding: 100px 20px 60px; }
+    .orb {
+      display: none;
+      animation: none;
+      filter: none;
+    }
+    .hero-eyebrow,
+    .hero-sub,
+    .hero-actions {
+      opacity: 1;
+      animation: none;
+    }
+    .hero-headline .line span {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+    .reveal,
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
     section { padding: 60px 20px; }
     .steps { grid-template-columns: 1fr; }
     .step { border: 1px solid var(--border); }
@@ -781,4 +808,5 @@
     body { cursor: auto; }
     .cursor, .cursor-ring { display: none; }
   }
+
 

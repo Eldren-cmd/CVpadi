@@ -8,6 +8,12 @@ import "./landing.css";
 export default function Home() {
   useEffect(() => {
     const reveals = document.querySelectorAll<HTMLElement>(".reveal");
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+    if (isMobile) {
+      reveals.forEach((element) => element.classList.add("visible"));
+      return;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
