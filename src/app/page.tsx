@@ -1,52 +1,19 @@
-﻿"use client";
-
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { LandingReveal } from "@/components/home/LandingReveal";
+import { DeferredThemeToggle } from "@/components/ui/DeferredThemeToggle";
 import Link from "next/link";
-import { useEffect } from "react";
 import "./landing.css";
 
 export default function Home() {
-  useEffect(() => {
-    const reveals = document.querySelectorAll<HTMLElement>(".reveal");
-    const isMobile = window.matchMedia("(max-width: 768px)").matches;
-
-    if (isMobile) {
-      reveals.forEach((element) => element.classList.add("visible"));
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-          }
-        });
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" },
-    );
-
-    reveals.forEach((element) => observer.observe(element));
-
-    document
-      .querySelectorAll<HTMLElement>(".step, .feature, .testimonial, .nigeria-list li")
-      .forEach((element, index) => {
-        element.style.transitionDelay = `${(index % 3) * 0.1}s`;
-      });
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
 
   return (
     <>
+      <LandingReveal />
       <nav>
         <div className="logo">
           CV<span>Padi</span>
         </div>
         <div className="nav-right">
-          <ThemeToggle className="landing-theme-toggle" />
+          <DeferredThemeToggle className="landing-theme-toggle" />
           <ul>
             <li>
               <a href="#how">How it works</a>
@@ -153,42 +120,42 @@ export default function Home() {
         <div className="nigeria-grid">
           <ul className="nigeria-list">
             <li className="reveal">
-              <span className="check">✓</span>
+              <span className="check">?</span>
               <span>
                 <strong>NYSC status</strong> — Discharged, Exempted, Ongoing, or Not yet. Formatted
                 correctly every time.
               </span>
             </li>
             <li className="reveal reveal-delay-1">
-              <span className="check">✓</span>
+              <span className="check">?</span>
               <span>
                 <strong>2 referees</strong> — Standard Nigerian format. Name, title, company,
                 phone, and email.
               </span>
             </li>
             <li className="reveal reveal-delay-2">
-              <span className="check">✓</span>
+              <span className="check">?</span>
               <span>
                 <strong>Date of birth</strong> — Always included. Nigerian CVs require it, unlike
                 Western formats.
               </span>
             </li>
             <li className="reveal reveal-delay-3">
-              <span className="check">✓</span>
+              <span className="check">?</span>
               <span>
                 <strong>State of origin</strong> — A field that matters in Nigerian hiring. We
                 include it properly.
               </span>
             </li>
             <li className="reveal">
-              <span className="check">✓</span>
+              <span className="check">?</span>
               <span>
                 <strong>Passport photo slot</strong> — The photo most Nigerian employers still
                 expect on a CV.
               </span>
             </li>
             <li className="reveal reveal-delay-1">
-              <span className="check">✓</span>
+              <span className="check">?</span>
               <span>
                 <strong>Nigerian phone format</strong> — We validate 07X, 08X, 09X automatically.
                 No more embarrassing wrong numbers.
@@ -198,7 +165,7 @@ export default function Home() {
 
           <div style={{ position: "relative", paddingBottom: "40px" }}>
             <div className="cv-mock reveal reveal-delay-2">
-              <div className="cv-mock-badge">✓ Nigerian format</div>
+              <div className="cv-mock-badge">? Nigerian format</div>
               <div className="cv-mock-name">Adaeze Okafor</div>
               <div className="cv-mock-role">Software Engineer • Lagos, Nigeria • 08012345678</div>
               <div className="cv-mock-divider" />
@@ -251,7 +218,7 @@ export default function Home() {
 
         <div className="features">
           <div className="feature reveal">
-            <div className="feature-icon">📊</div>
+            <div className="feature-icon">??</div>
               <div className="feature-title">CV Score Check</div>
             <div className="feature-desc">
               Get a score out of 100 before you pay. See exactly which sections are hurting you and
@@ -260,7 +227,7 @@ export default function Home() {
             <span className="feature-tag">Free to check</span>
           </div>
           <div className="feature reveal reveal-delay-1">
-            <div className="feature-icon">💬</div>
+            <div className="feature-icon">??</div>
             <div className="feature-title">WhatsApp-Ready Image</div>
             <div className="feature-desc">
               Nigerian recruiters often ask for CVs on WhatsApp. Get a high-resolution JPG of your
@@ -269,7 +236,7 @@ export default function Home() {
             <span className="feature-tag">Included with download</span>
           </div>
           <div className="feature reveal reveal-delay-2">
-            <div className="feature-icon">💰</div>
+            <div className="feature-icon">??</div>
             <div className="feature-title">Nigerian Salary Database</div>
             <div className="feature-desc">
               Anonymous salary ranges by company, role, and state. Community-submitted. GTBank,
@@ -278,7 +245,7 @@ export default function Home() {
             <span className="feature-tag">Free, no account needed</span>
           </div>
           <div className="feature reveal reveal-delay-3">
-            <div className="feature-icon">📋</div>
+            <div className="feature-icon">??</div>
             <div className="feature-title">Application Tracker</div>
             <div className="feature-desc">
               Track every job you apply to in one place. Applied, Interview, Rejected, Offer. When
@@ -305,7 +272,7 @@ export default function Home() {
           <div className="price-card reveal">
             <div className="price-tier">Free</div>
             <div className="price-amount">
-              <span className="currency">₦</span>0
+              <span className="currency">?</span>0
             </div>
             <div className="price-desc">
               Build your full CV and see your score. No payment until you&apos;re happy with what you
@@ -326,7 +293,7 @@ export default function Home() {
           <div className="price-card featured reveal reveal-delay-1">
             <div className="price-tier">Paid download</div>
             <div className="price-amount">
-              <span className="currency">₦</span>1,500
+              <span className="currency">?</span>1,500
             </div>
             <div className="price-desc">
               One-time payment. Remove watermark, get your PDF and WhatsApp image. Yours to keep
@@ -338,7 +305,7 @@ export default function Home() {
               <li>WhatsApp-ready JPG</li>
               <li>AI-polished objective</li>
               <li>Delivered to your inbox</li>
-              <li>Edit free, re-download ₦500</li>
+              <li>Edit free, re-download ?500</li>
             </ul>
             <Link href="/build" className="price-btn">
               Get my CV now
@@ -387,7 +354,7 @@ export default function Home() {
           </div>
           <div className="testimonial reveal reveal-delay-1">
             <p className="testimonial-text">
-              I paid ₦1,500 and had my CV in my inbox in under 10 minutes. The WhatsApp image was
+              I paid ?1,500 and had my CV in my inbox in under 10 minutes. The WhatsApp image was
               a genius addition — my recruiter actually asked me to send it that way.
             </p>
             <div className="testimonial-author">
@@ -473,6 +440,8 @@ export default function Home() {
     </>
   );
 }
+
+
 
 
 

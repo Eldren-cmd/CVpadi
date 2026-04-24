@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Mono, DM_Sans, Fraunces } from "next/font/google";
-import { CustomCursor } from "@/components/ui/CustomCursor";
+import { DeferredCustomCursor } from "@/components/ui/DeferredCustomCursor";
 import "./globals.css";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://cvpadi.com";
@@ -47,9 +47,10 @@ export default function RootLayout({
         />
       </head>
       <body className={`${dmSans.variable} ${dmMono.variable} ${fraunces.variable}`}>
-        <CustomCursor />
+        <DeferredCustomCursor />
         {children}
       </body>
     </html>
   );
 }
+
