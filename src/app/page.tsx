@@ -194,65 +194,6 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="marquee-section">
-        <div className="marquee-track">
-          <div className="marquee-item">
-            <span className="dot" />NYSC status included
-          </div>
-          <div className="marquee-item">
-            <span className="dot" />2 Nigerian referees
-          </div>
-          <div className="marquee-item">
-            <span className="dot" />Bank transfer payment
-          </div>
-          <div className="marquee-item">
-            <span className="dot" />Date of birth formatted
-          </div>
-          <div className="marquee-item">
-            <span className="dot" />Works on any phone
-          </div>
-          <div className="marquee-item">
-            <span className="dot" />Auto-saves your progress
-          </div>
-          <div className="marquee-item">
-            <span className="dot" />WhatsApp-ready image
-          </div>
-          <div className="marquee-item">
-            <span className="dot" />CV score out of 100
-          </div>
-          <div className="marquee-item">
-            <span className="dot" />State of origin field
-          </div>
-          <div className="marquee-item">
-            <span className="dot" />NYSC status included
-          </div>
-          <div className="marquee-item">
-            <span className="dot" />2 Nigerian referees
-          </div>
-          <div className="marquee-item">
-            <span className="dot" />Bank transfer payment
-          </div>
-          <div className="marquee-item">
-            <span className="dot" />Date of birth formatted
-          </div>
-          <div className="marquee-item">
-            <span className="dot" />Works on any phone
-          </div>
-          <div className="marquee-item">
-            <span className="dot" />Auto-saves your progress
-          </div>
-          <div className="marquee-item">
-            <span className="dot" />WhatsApp-ready image
-          </div>
-          <div className="marquee-item">
-            <span className="dot" />CV score out of 100
-          </div>
-          <div className="marquee-item">
-            <span className="dot" />State of origin field
-          </div>
-        </div>
-      </div>
-
       <section id="how">
         <div className="section-label reveal">How it works</div>
         <h2 className="section-headline reveal reveal-delay-1">

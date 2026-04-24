@@ -304,39 +304,6 @@
     font-family: 'DM Mono', monospace;
   }
 
-  /* MARQUEE */
-  .marquee-section {
-    padding: 0 0 80px;
-    overflow: hidden;
-    position: relative;
-  }
-  .marquee-track {
-    display: flex;
-    gap: 0;
-    animation: marquee 25s linear infinite;
-    width: max-content;
-  }
-  .marquee-track:hover { animation-play-state: paused; }
-  .marquee-item {
-    padding: 14px 32px;
-    border: 1px solid var(--border);
-    border-left: none;
-    font-size: 13px;
-    color: var(--mid);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    font-family: 'DM Mono', monospace;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .marquee-item .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; }
-  @keyframes marquee {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
-  }
-
   /* SECTION */
   section {
     padding: 100px 40px;
