@@ -7,75 +7,6 @@ import "./landing.css";
 
 export default function Home() {
   useEffect(() => {
-    const cursor = document.getElementById("cursor");
-    const ring = document.getElementById("cursorRing");
-
-    if (!cursor || !ring) {
-      return;
-    }
-
-    let mouseX = 0;
-    let mouseY = 0;
-    let ringX = 0;
-    let ringY = 0;
-    let rafId = 0;
-
-    const handleMouseMove = (event: MouseEvent) => {
-      mouseX = event.clientX;
-      mouseY = event.clientY;
-      cursor.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-
-    const animateRing = () => {
-      ringX += (mouseX - ringX) * 0.12;
-      ringY += (mouseY - ringY) * 0.12;
-      ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%)`;
-      rafId = requestAnimationFrame(animateRing);
-    };
-
-    animateRing();
-
-    const interactiveElements = document.querySelectorAll<HTMLElement>(
-      "a, button, .step, .feature, .testimonial, .price-card",
-    );
-
-    const interactiveHandlers: Array<{
-      element: HTMLElement;
-      mouseEnter: () => void;
-      mouseLeave: () => void;
-    }> = [];
-
-    interactiveElements.forEach((element) => {
-      const mouseEnter = () => {
-        cursor.style.transform += " scale(2.5)";
-        cursor.style.background = "var(--orange)";
-        ring.style.opacity = "0";
-      };
-
-      const mouseLeave = () => {
-        cursor.style.background = "var(--green)";
-        ring.style.opacity = "1";
-      };
-
-      element.addEventListener("mouseenter", mouseEnter);
-      element.addEventListener("mouseleave", mouseLeave);
-      interactiveHandlers.push({ element, mouseEnter, mouseLeave });
-    });
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      cancelAnimationFrame(rafId);
-
-      interactiveHandlers.forEach(({ element, mouseEnter, mouseLeave }) => {
-        element.removeEventListener("mouseenter", mouseEnter);
-        element.removeEventListener("mouseleave", mouseLeave);
-      });
-    };
-  }, []);
-
-  useEffect(() => {
     const reveals = document.querySelectorAll<HTMLElement>(".reveal");
 
     const observer = new IntersectionObserver(
@@ -104,9 +35,6 @@ export default function Home() {
 
   return (
     <>
-      <div className="cursor" id="cursor" />
-      <div className="cursor-ring" id="cursorRing" />
-
       <nav>
         <div className="logo">
           CV<span>Padi</span>

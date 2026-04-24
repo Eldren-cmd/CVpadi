@@ -99,6 +99,57 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+.app-cursor,
+.app-cursor-ring {
+  display: none;
+}
+
+@media (pointer: fine) {
+  body.has-custom-cursor,
+  body.has-custom-cursor a,
+  body.has-custom-cursor button,
+  body.has-custom-cursor [role="button"],
+  body.has-custom-cursor input,
+  body.has-custom-cursor select,
+  body.has-custom-cursor textarea,
+  body.has-custom-cursor summary,
+  body.has-custom-cursor label[for] {
+    cursor: none !important;
+  }
+
+  .app-cursor {
+    display: block;
+    width: 12px;
+    height: 12px;
+    background: var(--green);
+    border-radius: 50%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0;
+    transition: transform 0.15s ease, background 0.2s, opacity 0.2s ease;
+    transform: translate(-50%, -50%);
+  }
+
+  .app-cursor-ring {
+    display: block;
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(0, 230, 118, 0.4);
+    border-radius: 50%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    opacity: 0;
+    transition: transform 0.4s ease, opacity 0.3s ease;
+    transform: translate(-50%, -50%);
+  }
+}
+
 main {
   position: relative;
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CustomCursor } from "@/components/ui/CustomCursor";
 import "./globals.css";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://cvpadi.com";
@@ -29,7 +30,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <CustomCursor />
+        {children}
+      </body>
     </html>
   );
 }
