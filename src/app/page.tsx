@@ -173,23 +173,6 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="stats-strip">
-        <div className="stats-inner">
-          <div className="stat">
-            <div className="stat-number">
-              8<span className="unit">min</span>
-            </div>
-            <div className="stat-label">Avg. build time</div>
-          </div>
-          <div className="stat">
-            <div className="stat-number">
-              100<span className="unit">%</span>
-            </div>
-            <div className="stat-label">Nigerian format</div>
-          </div>
-        </div>
-      </div>
-
       <section id="how">
         <div className="section-label reveal">How it works</div>
         <h2 className="section-headline reveal reveal-delay-1">
