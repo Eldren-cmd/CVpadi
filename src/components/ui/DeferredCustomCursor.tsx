@@ -3,21 +3,6 @@
 import { useEffect, useState } from "react";
 import type { ComponentType } from "react";
 
-function scheduleIdle(callback: () => void) {
-  const idleHost = globalThis as typeof globalThis & {
-    requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
-    cancelIdleCallback?: (handle: number) => void;
-  };
-
-  if (typeof idleHost.requestIdleCallback === "function") {
-    const idleId = idleHost.requestIdleCallback(() => callback(), { timeout: 1500 });
-    return () => idleHost.cancelIdleCallback?.(idleId);
-  }
-
-  const timeoutId = setTimeout(callback, 300);
-  return () => clearTimeout(timeoutId);
-}
-
 export function DeferredCustomCursor() {
   const [CursorComponent, setCursorComponent] = useState<ComponentType | null>(null);
 
@@ -26,11 +11,29 @@ export function DeferredCustomCursor() {
       return;
     }
 
-    return scheduleIdle(() => {
+    let hasLoaded = false;
+
+    const loadCursor = () => {
+      if (hasLoaded) {
+        return;
+      }
+
+      hasLoaded = true;
+      window.removeEventListener("pointermove", loadCursor);
+      window.removeEventListener("mousemove", loadCursor);
+
       import("./CustomCursor").then((module) => {
         setCursorComponent(() => module.CustomCursor);
       });
-    });
+    };
+
+    window.addEventListener("pointermove", loadCursor, { passive: true, once: true });
+    window.addEventListener("mousemove", loadCursor, { passive: true, once: true });
+
+    return () => {
+      window.removeEventListener("pointermove", loadCursor);
+      window.removeEventListener("mousemove", loadCursor);
+    };
   }, []);
 
   if (!CursorComponent) {

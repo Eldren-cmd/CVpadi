@@ -61,7 +61,7 @@ export default function Home() {
 
         <p className="hero-sub">
           Built for Nigerian employers. NYSC status, 2 referees, correct date of birth format.
-          Not a generic template — a CV that actually gets you called.
+          Not a generic template &mdash; a CV that actually gets you called.
         </p>
 
         <div className="hero-actions">
@@ -87,7 +87,7 @@ export default function Home() {
             <div className="step-title">Answer questions</div>
             <div className="step-desc">
               One question at a time. We guide you through every section Nigerian employers
-              actually check — NYSC status, referees, state of origin, everything.
+              actually check &mdash; NYSC status, referees, state of origin, everything.
             </div>
           </div>
           <div className="step reveal reveal-delay-1">
@@ -102,7 +102,7 @@ export default function Home() {
             <div className="step-num">03</div>
             <div className="step-title">Pay & download</div>
             <div className="step-desc">
-              Pay with card, bank transfer, or USSD — whatever works for you. Get your PDF and a
+              Pay with card, bank transfer, or USSD &mdash; whatever works for you. Get your PDF and a
               WhatsApp-ready image delivered instantly to your inbox.
             </div>
           </div>
@@ -120,44 +120,44 @@ export default function Home() {
         <div className="nigeria-grid">
           <ul className="nigeria-list">
             <li className="reveal">
-              <span className="check">?</span>
+              <span className="check">&#10003;</span>
               <span>
-                <strong>NYSC status</strong> — Discharged, Exempted, Ongoing, or Not yet. Formatted
+                <strong>NYSC status</strong> &mdash; Discharged, Exempted, Ongoing, or Not yet. Formatted
                 correctly every time.
               </span>
             </li>
             <li className="reveal reveal-delay-1">
-              <span className="check">?</span>
+              <span className="check">&#10003;</span>
               <span>
-                <strong>2 referees</strong> — Standard Nigerian format. Name, title, company,
+                <strong>2 referees</strong> &mdash; Standard Nigerian format. Name, title, company,
                 phone, and email.
               </span>
             </li>
             <li className="reveal reveal-delay-2">
-              <span className="check">?</span>
+              <span className="check">&#10003;</span>
               <span>
-                <strong>Date of birth</strong> — Always included. Nigerian CVs require it, unlike
+                <strong>Date of birth</strong> &mdash; Always included. Nigerian CVs require it, unlike
                 Western formats.
               </span>
             </li>
             <li className="reveal reveal-delay-3">
-              <span className="check">?</span>
+              <span className="check">&#10003;</span>
               <span>
-                <strong>State of origin</strong> — A field that matters in Nigerian hiring. We
+                <strong>State of origin</strong> &mdash; A field that matters in Nigerian hiring. We
                 include it properly.
               </span>
             </li>
             <li className="reveal">
-              <span className="check">?</span>
+              <span className="check">&#10003;</span>
               <span>
-                <strong>Passport photo slot</strong> — The photo most Nigerian employers still
+                <strong>Passport photo slot</strong> &mdash; The photo most Nigerian employers still
                 expect on a CV.
               </span>
             </li>
             <li className="reveal reveal-delay-1">
-              <span className="check">?</span>
+              <span className="check">&#10003;</span>
               <span>
-                <strong>Nigerian phone format</strong> — We validate 07X, 08X, 09X automatically.
+                <strong>Nigerian phone format</strong> &mdash; We validate 07X, 08X, 09X automatically.
                 No more embarrassing wrong numbers.
               </span>
             </li>
@@ -165,9 +165,9 @@ export default function Home() {
 
           <div style={{ position: "relative", paddingBottom: "40px" }}>
             <div className="cv-mock reveal reveal-delay-2">
-              <div className="cv-mock-badge">? Nigerian format</div>
+              <div className="cv-mock-badge">&#10003; Nigerian format</div>
               <div className="cv-mock-name">Adaeze Okafor</div>
-              <div className="cv-mock-role">Software Engineer • Lagos, Nigeria • 08012345678</div>
+              <div className="cv-mock-role">Software Engineer &bull; Lagos, Nigeria &bull; 08012345678</div>
               <div className="cv-mock-divider" />
               <div className="cv-mock-section">
                 <div className="cv-mock-label">Career Objective</div>
@@ -176,7 +176,7 @@ export default function Home() {
               </div>
               <div className="cv-mock-section">
                 <div className="cv-mock-label">NYSC Status</div>
-                <span className="cv-mock-nysc">DISCHARGED — 2023</span>
+                <span className="cv-mock-nysc">DISCHARGED &mdash; 2023</span>
               </div>
               <div className="cv-mock-section">
                 <div className="cv-mock-label">Education</div>
@@ -200,7 +200,7 @@ export default function Home() {
                   <div style={{ fontSize: "13px", color: "#1A1410", fontWeight: 600 }}>
                     CV Score
                   </div>
-                  <div style={{ fontSize: "11px", color: "#888" }}>Excellent — ready to send</div>
+                  <div style={{ fontSize: "11px", color: "#888" }}>Excellent &mdash; ready to send</div>
                 </div>
               </div>
             </div>
@@ -218,8 +218,19 @@ export default function Home() {
 
         <div className="features">
           <div className="feature reveal">
-            <div className="feature-icon">??</div>
-              <div className="feature-title">CV Score Check</div>
+            <div aria-hidden="true" className="feature-icon">
+              <svg fill="none" height="22" viewBox="0 0 24 24" width="22">
+                <path
+                  d="M6 18.5h12M7 15l2.2-2.2 2.1 1.7 4-4"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.8"
+                />
+                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.4" />
+              </svg>
+            </div>
+            <div className="feature-title">CV Score Check</div>
             <div className="feature-desc">
               Get a score out of 100 before you pay. See exactly which sections are hurting you and
               fix them in seconds. Five specific improvement tips, not vague advice.
@@ -227,16 +238,42 @@ export default function Home() {
             <span className="feature-tag">Free to check</span>
           </div>
           <div className="feature reveal reveal-delay-1">
-            <div className="feature-icon">??</div>
+            <div aria-hidden="true" className="feature-icon">
+              <svg fill="none" height="22" viewBox="0 0 24 24" width="22">
+                <rect height="14" rx="2.5" stroke="currentColor" strokeWidth="1.6" width="10" x="7" y="5" />
+                <path
+                  d="M10 9.5h4M10 12.5h4M10.8 16h2.4"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeWidth="1.6"
+                />
+              </svg>
+            </div>
             <div className="feature-title">WhatsApp-Ready Image</div>
             <div className="feature-desc">
               Nigerian recruiters often ask for CVs on WhatsApp. Get a high-resolution JPG of your
-              CV alongside the PDF — opens instantly on any phone, no PDF viewer needed.
+              CV alongside the PDF &mdash; opens instantly on any phone, no PDF viewer needed.
             </div>
             <span className="feature-tag">Included with download</span>
           </div>
           <div className="feature reveal reveal-delay-2">
-            <div className="feature-icon">??</div>
+            <div aria-hidden="true" className="feature-icon">
+              <svg fill="none" height="22" viewBox="0 0 24 24" width="22">
+                <path
+                  d="M5 18.5h14M8 15V9.5M12 15V6.5M16 15v-3"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeWidth="1.8"
+                />
+                <path
+                  d="M7 8.5 9.8 11 13 7.8 15.2 9.8 18 7"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.5"
+                />
+              </svg>
+            </div>
             <div className="feature-title">Nigerian Salary Database</div>
             <div className="feature-desc">
               Anonymous salary ranges by company, role, and state. Community-submitted. GTBank,
@@ -245,7 +282,14 @@ export default function Home() {
             <span className="feature-tag">Free, no account needed</span>
           </div>
           <div className="feature reveal reveal-delay-3">
-            <div className="feature-icon">??</div>
+            <div aria-hidden="true" className="feature-icon">
+              <svg fill="none" height="22" viewBox="0 0 24 24" width="22">
+                <rect height="4" rx="1.4" stroke="currentColor" strokeWidth="1.6" width="7" x="4" y="5" />
+                <rect height="4" rx="1.4" stroke="currentColor" strokeWidth="1.6" width="9" x="11" y="5" />
+                <rect height="4" rx="1.4" stroke="currentColor" strokeWidth="1.6" width="10" x="4" y="15" />
+                <rect height="4" rx="1.4" stroke="currentColor" strokeWidth="1.6" width="6" x="14" y="15" />
+              </svg>
+            </div>
             <div className="feature-title">Application Tracker</div>
             <div className="feature-desc">
               Track every job you apply to in one place. Applied, Interview, Rejected, Offer. When
@@ -272,7 +316,7 @@ export default function Home() {
           <div className="price-card reveal">
             <div className="price-tier">Free</div>
             <div className="price-amount">
-              <span className="currency">?</span>0
+              <span className="currency">&#8358;</span>0
             </div>
             <div className="price-desc">
               Build your full CV and see your score. No payment until you&apos;re happy with what you
@@ -293,7 +337,7 @@ export default function Home() {
           <div className="price-card featured reveal reveal-delay-1">
             <div className="price-tier">Paid download</div>
             <div className="price-amount">
-              <span className="currency">?</span>1,500
+              <span className="currency">&#8358;</span>1,500
             </div>
             <div className="price-desc">
               One-time payment. Remove watermark, get your PDF and WhatsApp image. Yours to keep
@@ -305,7 +349,7 @@ export default function Home() {
               <li>WhatsApp-ready JPG</li>
               <li>AI-polished objective</li>
               <li>Delivered to your inbox</li>
-              <li>Edit free, re-download ?500</li>
+              <li>Edit free, re-download &#8358;500</li>
             </ul>
             <Link href="/build" className="price-btn">
               Get my CV now
@@ -348,14 +392,14 @@ export default function Home() {
               </div>
               <div>
                 <div className="author-name">Adaeze O.</div>
-                <div className="author-role">NYSC corper · Rivers State</div>
+                <div className="author-role">NYSC corper &middot; Rivers State</div>
               </div>
             </div>
           </div>
           <div className="testimonial reveal reveal-delay-1">
             <p className="testimonial-text">
-              I paid ?1,500 and had my CV in my inbox in under 10 minutes. The WhatsApp image was
-              a genius addition — my recruiter actually asked me to send it that way.
+              I paid &#8358;1,500 and had my CV in my inbox in under 10 minutes. The WhatsApp image was
+              a genius addition &mdash; my recruiter actually asked me to send it that way.
             </p>
             <div className="testimonial-author">
               <div
@@ -366,13 +410,13 @@ export default function Home() {
               </div>
               <div>
                 <div className="author-name">Tunde K.</div>
-                <div className="author-role">Graduate trainee applicant · Lagos</div>
+                <div className="author-role">Graduate trainee applicant &middot; Lagos</div>
               </div>
             </div>
           </div>
           <div className="testimonial reveal reveal-delay-2">
             <p className="testimonial-text">
-              My CV scored 61 the first time. The tips told me exactly what to fix — added my NYSC
+              My CV scored 61 the first time. The tips told me exactly what to fix &mdash; added my NYSC
               year and two more skills. Scored 88 on the second check. Got called for an interview
               that same week.
             </p>
@@ -385,7 +429,7 @@ export default function Home() {
               </div>
               <div>
                 <div className="author-name">Chisom I.</div>
-                <div className="author-role">Entry-level accountant · Enugu</div>
+                <div className="author-role">Entry-level accountant &middot; Enugu</div>
               </div>
             </div>
           </div>
@@ -401,7 +445,7 @@ export default function Home() {
         <p className="cta-sub reveal reveal-delay-1">Build yours in 8 minutes. Free to start.</p>
         <div className="reveal reveal-delay-2">
           <Link href="/build" className="btn-primary" style={{ fontSize: "17px", padding: "20px 40px" }}>
-            Build my Nigerian CV — it&apos;s free <span className="arrow">&rarr;</span>
+            Build my Nigerian CV &mdash; it&apos;s free <span className="arrow">&rarr;</span>
           </Link>
         </div>
         <div className="payment-badges reveal reveal-delay-3">
@@ -435,7 +479,7 @@ export default function Home() {
             <Link href="/dashboard">Dashboard</Link>
           </li>
         </ul>
-        <div className="footer-copy">© 2026 CVPadi · Made for Nigeria</div>
+        <div className="footer-copy">&copy; 2026 CVPadi &middot; Made for Nigeria</div>
       </footer>
     </>
   );
